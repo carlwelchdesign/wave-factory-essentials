@@ -1,6 +1,7 @@
 set(goodband_root "${PROJECT_ROOT}/plugins/Goodband")
 set(scene_header "${goodband_root}/GoodbandSceneControl.h")
 set(backdrop_header "${goodband_root}/GoodbandBackdropControl.h")
+set(help_header "${goodband_root}/GoodbandHelpControl.h")
 set(vfx_renderer_header "${goodband_root}/ChiVfxRenderer.h")
 set(shuriken_header "${goodband_root}/IllustratedShurikenKnobControl.h")
 set(character_header "${goodband_root}/FightingGameCharacterControl.h")
@@ -100,6 +101,28 @@ foreach(required_backdrop_token
   string(FIND "${backdrop_contents}" "${required_backdrop_token}" backdrop_position)
   if(backdrop_position EQUAL -1)
     message(FATAL_ERROR "Goodband backdrop must include ${required_backdrop_token}")
+  endif()
+endforeach()
+
+file(READ "${help_header}" help_contents)
+foreach(required_help_token
+    "THE THREEFOLD MANUAL"
+    "Three-band compression, harmonic saturation and tonal shaping"
+    "CLEAN"
+    "WARM"
+    "PUNCH"
+    "WIDE"
+    "AMOUNT"
+    "MIX"
+    "OUTPUT"
+    "QUICK START"
+    "Wide is most effective on stereo material"
+    "HelpButtonBounds"
+    "CloseButtonBounds"
+    "bool IsHit")
+  string(FIND "${help_contents}" "${required_help_token}" help_token_position)
+  if(help_token_position EQUAL -1)
+    message(FATAL_ERROR "Goodband help panel must include ${required_help_token}")
   endif()
 endforeach()
 string(FIND "${backdrop_contents}" "FillCircle" backdrop_circle_position)
@@ -203,6 +226,15 @@ foreach(resource_path
     message(FATAL_ERROR "Goodband CMake resources must include ${resource_path}")
   endif()
 endforeach()
+
+string(FIND "${source_contents}" "GoodbandHelpControl" help_control_position)
+if(help_control_position EQUAL -1)
+  message(FATAL_ERROR "Goodband must attach its in-plugin help control")
+endif()
+string(FIND "${cmake_contents}" "GoodbandHelpControl.h" help_header_position)
+if(help_header_position EQUAL -1)
+  message(FATAL_ERROR "Goodband CMake sources must include its help control")
+endif()
 
 foreach(required_preset_token
     "IllustratedCharacterControl"

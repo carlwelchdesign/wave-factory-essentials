@@ -4,6 +4,7 @@ iplug_add_plugin(Goodband
     Goodband.h
     GoodbandBackdropControl.h
     GoodbandCharacterPresets.h
+    GoodbandHelpControl.h
     ChiVfxRenderer.h
     GoodbandSceneControl.h
     FightingGameCharacterControl.h

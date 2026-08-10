@@ -10,6 +10,7 @@
 #include "IControls.h"
 #include "GoodbandBackdropControl.h"
 #include "GoodbandCharacterPresets.h"
+#include "GoodbandHelpControl.h"
 #include "GoodbandSceneControl.h"
 #include "FightingGameCharacterControl.h"
 #include "IllustratedBitmapDrawing.h"
@@ -81,6 +82,7 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
 
     graphics->AttachControl(
         new threefold::AspectFitBitmapControl(bounds.GetScaledAboutCentre(kFrameOverscanScale), frame));
+    graphics->AttachControl(new GoodbandHelpControl(bounds));
   };
 #endif
 }
