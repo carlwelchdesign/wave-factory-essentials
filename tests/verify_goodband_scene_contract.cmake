@@ -6,21 +6,53 @@ set(character_header "${goodband_root}/FightingGameCharacterControl.h")
 set(plugin_source "${goodband_root}/Goodband.cpp")
 set(plugin_cmake "${goodband_root}/CMakeLists.txt")
 
+function(verify_png_dimensions asset_name expected_width expected_height)
+  set(asset_path "${goodband_root}/resources/img/${asset_name}")
+  file(READ "${asset_path}" png_header HEX LIMIT 24)
+  string(SUBSTRING "${png_header}" 32 8 width_hex)
+  string(SUBSTRING "${png_header}" 40 8 height_hex)
+  math(EXPR actual_width "0x${width_hex}")
+  math(EXPR actual_height "0x${height_hex}")
+  if(NOT actual_width EQUAL expected_width OR NOT actual_height EQUAL expected_height)
+    message(FATAL_ERROR
+      "${asset_name} must be ${expected_width}x${expected_height}, got ${actual_width}x${actual_height}")
+  endif()
+endfunction()
+
 foreach(asset_name
     "temple-of-mastery-bg.png"
     "temple-of-mastery-bg@2x.png"
     "temple-of-mastery-gesture-bg.png"
     "temple-of-mastery-gesture-bg@2x.png"
     "character-selector-unselected.png"
+    "character-selector-unselected@2x.png"
     "character-selector-selected.png"
+    "character-selector-selected@2x.png"
     "throwing-star-knob.png"
+    "throwing-star-knob@2x.png"
     "knob-arena.png"
+    "knob-arena@2x.png"
     "threefold-palm-wordmark.png"
-    "threefold-palm-frame.png")
+    "threefold-palm-wordmark@2x.png"
+    "threefold-palm-frame.png"
+    "threefold-palm-frame@2x.png")
   if(NOT EXISTS "${goodband_root}/resources/img/${asset_name}")
     message(FATAL_ERROR "Goodband scene asset is missing: ${asset_name}")
   endif()
 endforeach()
+
+verify_png_dimensions("threefold-palm-frame.png" 720 440)
+verify_png_dimensions("threefold-palm-frame@2x.png" 1440 880)
+verify_png_dimensions("threefold-palm-wordmark.png" 375 79)
+verify_png_dimensions("threefold-palm-wordmark@2x.png" 750 158)
+verify_png_dimensions("character-selector-unselected.png" 142 41)
+verify_png_dimensions("character-selector-unselected@2x.png" 284 82)
+verify_png_dimensions("character-selector-selected.png" 141 41)
+verify_png_dimensions("character-selector-selected@2x.png" 282 82)
+verify_png_dimensions("knob-arena.png" 128 126)
+verify_png_dimensions("knob-arena@2x.png" 256 252)
+verify_png_dimensions("throwing-star-knob.png" 108 105)
+verify_png_dimensions("throwing-star-knob@2x.png" 216 210)
 
 file(READ "${scene_header}" scene_contents)
 foreach(required_scene_token
@@ -109,11 +141,17 @@ foreach(resource_path
     "resources/img/temple-of-mastery-gesture-bg.png"
     "resources/img/temple-of-mastery-gesture-bg@2x.png"
     "resources/img/character-selector-unselected.png"
+    "resources/img/character-selector-unselected@2x.png"
     "resources/img/character-selector-selected.png"
+    "resources/img/character-selector-selected@2x.png"
     "resources/img/throwing-star-knob.png"
+    "resources/img/throwing-star-knob@2x.png"
     "resources/img/knob-arena.png"
+    "resources/img/knob-arena@2x.png"
     "resources/img/threefold-palm-wordmark.png"
-    "resources/img/threefold-palm-frame.png")
+    "resources/img/threefold-palm-wordmark@2x.png"
+    "resources/img/threefold-palm-frame.png"
+    "resources/img/threefold-palm-frame@2x.png")
   string(FIND "${cmake_contents}" "${resource_path}" asset_position)
   if(asset_position EQUAL -1)
     message(FATAL_ERROR "Goodband CMake resources must include ${resource_path}")

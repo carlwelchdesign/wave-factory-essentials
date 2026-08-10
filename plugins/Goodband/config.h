@@ -1,7 +1,7 @@
 #define PLUG_NAME "Threefold Palm"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010A00
-#define PLUG_VERSION_STR "0.1.10"
+#define PLUG_VERSION_HEX 0x00010B00
+#define PLUG_VERSION_STR "0.1.11"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"

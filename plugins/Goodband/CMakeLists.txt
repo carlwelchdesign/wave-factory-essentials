@@ -16,11 +16,17 @@ iplug_add_plugin(Goodband
     resources/img/temple-of-mastery-gesture-bg.png
     resources/img/temple-of-mastery-gesture-bg@2x.png
     resources/img/character-selector-unselected.png
+    resources/img/character-selector-unselected@2x.png
     resources/img/character-selector-selected.png
+    resources/img/character-selector-selected@2x.png
     resources/img/throwing-star-knob.png
+    resources/img/throwing-star-knob@2x.png
     resources/img/knob-arena.png
+    resources/img/knob-arena@2x.png
     resources/img/threefold-palm-wordmark.png
+    resources/img/threefold-palm-wordmark@2x.png
     resources/img/threefold-palm-frame.png
+    resources/img/threefold-palm-frame@2x.png
   FORMATS
     VST3 AU CLAP
   LINK
