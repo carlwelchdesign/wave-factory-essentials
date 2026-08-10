@@ -1,6 +1,7 @@
 set(goodband_root "${PROJECT_ROOT}/plugins/Goodband")
 set(scene_header "${goodband_root}/GoodbandSceneControl.h")
 set(backdrop_header "${goodband_root}/GoodbandBackdropControl.h")
+set(vfx_renderer_header "${goodband_root}/ChiVfxRenderer.h")
 set(shuriken_header "${goodband_root}/IllustratedShurikenKnobControl.h")
 set(character_header "${goodband_root}/FightingGameCharacterControl.h")
 set(plugin_source "${goodband_root}/Goodband.cpp")
@@ -35,7 +36,9 @@ foreach(asset_name
     "threefold-palm-wordmark.png"
     "threefold-palm-wordmark@2x.png"
     "threefold-palm-frame.png"
-    "threefold-palm-frame@2x.png")
+    "threefold-palm-frame@2x.png"
+    "chi-vfx-atlas.png"
+    "chi-vfx-atlas@2x.png")
   if(NOT EXISTS "${goodband_root}/resources/img/${asset_name}")
     message(FATAL_ERROR "Goodband scene asset is missing: ${asset_name}")
   endif()
@@ -53,6 +56,8 @@ verify_png_dimensions("knob-arena.png" 128 126)
 verify_png_dimensions("knob-arena@2x.png" 256 252)
 verify_png_dimensions("throwing-star-knob.png" 108 105)
 verify_png_dimensions("throwing-star-knob@2x.png" 216 210)
+verify_png_dimensions("chi-vfx-atlas.png" 512 512)
+verify_png_dimensions("chi-vfx-atlas@2x.png" 1024 1024)
 
 file(READ "${scene_header}" scene_contents)
 foreach(required_scene_token
@@ -62,8 +67,10 @@ foreach(required_scene_token
     "SetAnimation"
     "DrawRestingConstellation"
     "DrawMagicParticles"
+    "DrawChiRibbons"
     "PositionParticle"
-    "kMaximumAnimatedParticles = 84")
+    "DrawAtlasSprite"
+    "kMaximumAnimatedParticles = 64")
   string(FIND "${scene_contents}" "${required_scene_token}" token_position)
   if(token_position EQUAL -1)
     message(FATAL_ERROR "Goodband scene must include ${required_scene_token}")
@@ -74,18 +81,43 @@ string(FIND "${scene_contents}" "DrawLine" line_position)
 if(NOT line_position EQUAL -1)
   message(FATAL_ERROR "Goodband magical animation must use particles, not line effects")
 endif()
+string(FIND "${scene_contents}" "FillCircle" circle_position)
+if(NOT circle_position EQUAL -1)
+  message(FATAL_ERROR "Goodband parameter animation must use textured sprites instead of circle particles")
+endif()
 
 file(READ "${backdrop_header}" backdrop_contents)
 foreach(required_backdrop_token
     "kGestureCycleDurationMs = 20000"
     "kGestureWindowStart = 0.85F"
-    "kGestureParticleCount = 72"
+    "kGestureParticleCount = 56"
     "gestureBackground_"
+    "vfxAtlas_"
+    "DrawAtlasSprite"
+    "DrawChiRibbon"
     "DrawGestureEnergy"
     "OnEndAnimation")
   string(FIND "${backdrop_contents}" "${required_backdrop_token}" backdrop_position)
   if(backdrop_position EQUAL -1)
     message(FATAL_ERROR "Goodband backdrop must include ${required_backdrop_token}")
+  endif()
+endforeach()
+string(FIND "${backdrop_contents}" "FillCircle" backdrop_circle_position)
+if(NOT backdrop_circle_position EQUAL -1)
+  message(FATAL_ERROR "Goodband Sensei gesture must use textured sprites instead of circle particles")
+endif()
+
+file(READ "${vfx_renderer_header}" vfx_renderer_contents)
+foreach(required_vfx_token
+    "kAtlasColumns = 4"
+    "kAtlasRows = 4"
+    "DrawAtlasSprite"
+    "DrawChiRibbon"
+    "PathCubicBezierTo"
+    "PathStroke")
+  string(FIND "${vfx_renderer_contents}" "${required_vfx_token}" vfx_token_position)
+  if(vfx_token_position EQUAL -1)
+    message(FATAL_ERROR "Goodband chi VFX renderer must include ${required_vfx_token}")
   endif()
 endforeach()
 
@@ -160,7 +192,9 @@ foreach(resource_path
     "resources/img/threefold-palm-wordmark.png"
     "resources/img/threefold-palm-wordmark@2x.png"
     "resources/img/threefold-palm-frame.png"
-    "resources/img/threefold-palm-frame@2x.png")
+    "resources/img/threefold-palm-frame@2x.png"
+    "resources/img/chi-vfx-atlas.png"
+    "resources/img/chi-vfx-atlas@2x.png")
   string(FIND "${cmake_contents}" "${resource_path}" asset_position)
   if(asset_position EQUAL -1)
     message(FATAL_ERROR "Goodband CMake resources must include ${resource_path}")

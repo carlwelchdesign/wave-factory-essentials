@@ -6,11 +6,13 @@
 #include <cstdint>
 
 #include "IControls.h"
+#include "ChiVfxRenderer.h"
 
 class GoodbandSceneControl final : public IControl {
 public:
-  GoodbandSceneControl(const IRECT& bounds, int amountParam, int characterParam, int mixParam, int outputParam)
-      : IControl(bounds, {amountParam, characterParam, mixParam, outputParam}) {
+  GoodbandSceneControl(const IRECT& bounds, int amountParam, int characterParam, int mixParam, int outputParam,
+                       const IBitmap& vfxAtlas)
+      : IControl(bounds, {amountParam, characterParam, mixParam, outputParam}), vfxAtlas_(vfxAtlas) {
     SetIgnoreMouse(true);
   }
 
@@ -26,7 +28,13 @@ public:
     const auto handY = Y(139.0F);
 
     DrawRestingConstellation(graphics, character, energy, output, handX, handY);
+    DrawChiRibbons(graphics, character, energy, handX, handY);
     DrawMagicParticles(graphics, character, amount, mix, output, handX, handY);
+  }
+
+  void OnRescale() override {
+    IControl::OnRescale();
+    vfxAtlas_ = GetUI()->GetScaledBitmap(vfxAtlas_);
   }
 
   void SetValueFromDelegate(double value, int valueIndex = 0) override {
@@ -50,7 +58,7 @@ private:
   static constexpr int kAnimationDurationMs = 920;
   static constexpr float kPi = 3.14159265358979323846F;
   static constexpr float kTau = kPi * 2.0F;
-  static constexpr int kMaximumAnimatedParticles = 84;
+  static constexpr int kMaximumAnimatedParticles = 64;
 
   void AdvanceAnimation() {
     const auto progress = std::clamp(GetAnimationProgress(), 0.0, 1.0);
@@ -102,13 +110,30 @@ private:
       const auto distance = Scale(13.0F + HashUnit(index, 1, character) * (22.0F + energy * 18.0F));
       const auto x = handX + std::cos(angle) * distance;
       const auto y = handY + std::sin(angle) * distance * 0.72F;
-      const auto radius = Scale(0.8F + HashUnit(index, 2, character) * 1.6F + output * 0.8F);
-      const auto color = ParticleColor(character, index);
-      IBlend halo(EBlend::Add, 0.07F + energy * 0.12F);
-      IBlend core(EBlend::Add, 0.24F + energy * 0.24F);
-      graphics.FillCircle(color, x, y, radius * 4.4F, &halo);
-      graphics.FillCircle(color, x, y, radius, &core);
+      const auto size = Scale(5.0F + HashUnit(index, 2, character) * 7.0F + output * 2.0F);
+      const auto spriteRow = character == 1 ? 2 : (character == 3 ? 1 : 3);
+      const auto spriteIndex = spriteRow * 4 + index % 4;
+      const auto rotation = angle * 180.0F / kPi + HashUnit(index, 3, character) * 90.0F;
+      threefold::vfx::DrawAtlasSprite(graphics, vfxAtlas_, spriteIndex, x, y, size, rotation,
+                                     0.20F + energy * 0.30F);
     }
+  }
+
+  void DrawChiRibbons(IGraphics& graphics, int character, float energy, float handX, float handY) const {
+    const auto lifecycle = static_cast<float>(std::sin(animationPhase_ * kPi));
+    if (lifecycle <= 0.001F) {
+      return;
+    }
+
+    const auto intensity = lifecycle * (0.34F + energy * 0.66F);
+    const auto jade = ParticleColor(character == 2 ? 2 : 3, 1);
+    const auto gold = ParticleColor(1, 0);
+    const auto horizontalDirection = character == 3 ? -1.0F : 1.0F;
+    threefold::vfx::DrawChiRibbon(graphics, handX, handY, handX - Scale(148.0F) * horizontalDirection,
+                                 handY + Scale(72.0F), Scale(31.0F), jade, intensity, Scale(0.72F));
+    threefold::vfx::DrawChiRibbon(graphics, handX + Scale(3.0F), handY - Scale(4.0F),
+                                 handX - Scale(102.0F), handY - Scale(54.0F), -Scale(24.0F), gold,
+                                 intensity * 0.82F, Scale(0.52F));
   }
 
   void DrawMagicParticles(IGraphics& graphics, int character, float amount, float mix, float output, float handX,
@@ -135,14 +160,12 @@ private:
       PositionParticle(character, angle, seedB, seedC, localProgress, handX, handY, x, y);
 
       const auto lifecycle = std::sin(localProgress * kPi);
-      const auto radius = Scale(1.1F + seedC * 3.0F + amount * 1.8F + output * 0.8F);
-      const auto color = ParticleColor(character, index);
-      IBlend outerHalo(EBlend::Add, lifecycle * masterOpacity * 0.11F);
-      IBlend halo(EBlend::Add, lifecycle * masterOpacity * 0.28F);
-      IBlend core(EBlend::Add, lifecycle * masterOpacity * 0.96F);
-      graphics.FillCircle(color, x, y, radius * 6.0F, &outerHalo);
-      graphics.FillCircle(color, x, y, radius * 3.8F, &halo);
-      graphics.FillCircle(color, x, y, radius, &core);
+      const auto size = Scale(8.0F + seedC * 16.0F + amount * 6.0F + output * 2.0F);
+      const auto spriteRow = index % 7 == 0 ? 0 : (character == 1 ? 2 : (character == 3 ? 1 : 3));
+      const auto spriteIndex = spriteRow * 4 + index % 4;
+      const auto rotation = angle * 180.0F / kPi + localProgress * (90.0F + seedB * 210.0F);
+      threefold::vfx::DrawAtlasSprite(graphics, vfxAtlas_, spriteIndex, x, y, size, rotation,
+                                     lifecycle * masterOpacity * 0.92F);
     }
   }
 
@@ -185,4 +208,5 @@ private:
   std::array<double, kValueCount> start_{};
   std::array<double, kValueCount> target_{};
   double animationPhase_ = 1.0;
+  IBitmap vfxAtlas_;
 };

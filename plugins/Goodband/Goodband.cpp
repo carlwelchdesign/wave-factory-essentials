@@ -40,8 +40,9 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     const auto selectedPlate = graphics->LoadBitmap(THREEFOLD_PALM_SELECTED_PLATE_FN);
     const auto knobArena = graphics->LoadBitmap(THREEFOLD_PALM_KNOB_ARENA_FN);
     const auto shuriken = graphics->LoadBitmap(THREEFOLD_PALM_SHURIKEN_FN);
-    graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground));
-    graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim));
+    const auto vfxAtlas = graphics->LoadBitmap(THREEFOLD_PALM_CHI_VFX_ATLAS_FN);
+    graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground, vfxAtlas));
+    graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim, vfxAtlas));
 
     graphics->AttachControl(
         new threefold::AspectFitBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark));

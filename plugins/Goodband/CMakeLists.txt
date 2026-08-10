@@ -4,6 +4,7 @@ iplug_add_plugin(Goodband
     Goodband.h
     GoodbandBackdropControl.h
     GoodbandCharacterPresets.h
+    ChiVfxRenderer.h
     GoodbandSceneControl.h
     FightingGameCharacterControl.h
     IllustratedBitmapDrawing.h
@@ -27,6 +28,8 @@ iplug_add_plugin(Goodband
     resources/img/threefold-palm-wordmark@2x.png
     resources/img/threefold-palm-frame.png
     resources/img/threefold-palm-frame@2x.png
+    resources/img/chi-vfx-atlas.png
+    resources/img/chi-vfx-atlas@2x.png
   FORMATS
     VST3 AU CLAP
   LINK

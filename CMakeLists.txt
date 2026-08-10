@@ -4,7 +4,7 @@ if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum supported macOS version" FORCE)
 endif()
 
-project(WaveFactoryEssentials VERSION 0.1.12)
+project(WaveFactoryEssentials VERSION 0.1.13)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
