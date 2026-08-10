@@ -3,6 +3,7 @@
 
 #if IPLUG_EDITOR
 #include "IControls.h"
+#include "GoodbandSceneControl.h"
 #include "../shared/WaveFactoryUI.h"
 #endif
 
@@ -17,16 +18,22 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
   mLayoutFunc = [&](IGraphics* graphics) {
     const auto bounds = graphics->GetBounds();
     graphics->LoadFont(DEFAULT_FONT, "Arial", ETextStyle::Normal);
-    graphics->AttachPanelBackground(IColor(255, 18, 22, 25));
-    graphics->AttachControl(new ITextControl(bounds.GetFromTop(72.0F), "GOODBAND", IText(34.0F, COLOR_WHITE)));
-    graphics->AttachControl(new ITextControl(bounds.GetFromTop(118.0F).GetFromBottom(32.0F),
-                                             "MULTIBAND ENERGY · HONEST CONTROL", IText(14.0F, IColor(255, 150, 180, 170))));
-    const auto controls = bounds.GetReducedFromTop(130.0F).GetPadded(-34.0F);
+    const auto background = graphics->LoadBitmap(ARCADE_DOJO_BG_FN);
+    graphics->AttachControl(new GoodbandSceneControl(bounds, background, kAmount, kCharacter, kMix, kOutputTrim));
+
+    graphics->AttachControl(new ITextControl(IRECT(38.0F, 34.0F, 350.0F, 78.0F), "GOODBAND",
+                                             IText(32.0F, IColor(255, 244, 239, 222), "Arial", EAlign::Near)));
+    graphics->AttachControl(new ITextControl(IRECT(40.0F, 75.0F, 350.0F, 104.0F),
+                                             "MULTIBAND ENERGY · SENSEI CONTROL",
+                                             IText(13.0F, IColor(255, 151, 202, 185), "Arial", EAlign::Near)));
+
     const auto controlStyle = wfe::ui::MakeDarkControlStyle(IColor(255, 106, 224, 176));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 0, 1, 4).GetCentredInside(118.0F), kAmount, "Amount", controlStyle));
-    graphics->AttachControl(new IVMenuButtonControl(controls.GetGridCell(0, 1, 1, 4).GetCentredInside(138.0F, 54.0F), kCharacter, "Character", controlStyle));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 2, 1, 4).GetCentredInside(118.0F), kMix, "Mix", controlStyle));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 3, 1, 4).GetCentredInside(118.0F), kOutputTrim, "Output", controlStyle));
+    graphics->AttachControl(new IVKnobControl(IRECT(42.0F, 118.0F, 166.0F, 242.0F), kAmount, "Amount", controlStyle));
+    graphics->AttachControl(new IVKnobControl(IRECT(194.0F, 118.0F, 318.0F, 242.0F), kMix, "Mix", controlStyle));
+    graphics->AttachControl(new IVMenuButtonControl(IRECT(42.0F, 292.0F, 205.0F, 354.0F), kCharacter,
+                                                    "Character", controlStyle));
+    graphics->AttachControl(new IVKnobControl(IRECT(224.0F, 258.0F, 344.0F, 378.0F), kOutputTrim,
+                                              "Output", controlStyle));
   };
 #endif
 }

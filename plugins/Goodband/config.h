@@ -1,7 +1,7 @@
 #define PLUG_NAME "Goodband"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010200
-#define PLUG_VERSION_STR "0.1.2"
+#define PLUG_VERSION_HEX 0x00010300
+#define PLUG_VERSION_STR "0.1.3"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -52,3 +52,5 @@
 #define APP_MULT 1
 #define APP_COPY_AUV3 0
 #define APP_SIGNAL_VECTOR_SIZE 64
+
+#define ARCADE_DOJO_BG_FN "arcade-dojo-bg.png"

@@ -22,3 +22,10 @@ add_test(
     -DPROJECT_ROOT=${PROJECT_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/verify_ui_font_contract.cmake
 )
+
+add_test(
+  NAME goodband_scene_contract_test
+  COMMAND ${CMAKE_COMMAND}
+    -DPROJECT_ROOT=${PROJECT_SOURCE_DIR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/verify_goodband_scene_contract.cmake
+)
