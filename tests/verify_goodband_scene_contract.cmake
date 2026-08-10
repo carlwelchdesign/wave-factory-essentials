@@ -77,7 +77,8 @@ endif()
 
 file(READ "${backdrop_header}" backdrop_contents)
 foreach(required_backdrop_token
-    "kGestureCycleDurationMs = 60000"
+    "kGestureCycleDurationMs = 20000"
+    "kGestureWindowStart = 0.85F"
     "kGestureParticleCount = 72"
     "gestureBackground_"
     "DrawGestureEnergy"
@@ -116,6 +117,14 @@ foreach(required_character_token
 endforeach()
 
 file(READ "${plugin_source}" source_contents)
+foreach(required_frame_token
+    "kFrameOverscanScale = 1.048F"
+    "bounds.GetScaledAboutCentre(kFrameOverscanScale)")
+  string(FIND "${source_contents}" "${required_frame_token}" frame_token_position)
+  if(frame_token_position EQUAL -1)
+    message(FATAL_ERROR "Goodband frame must overscan to the plugin edges using ${required_frame_token}")
+  endif()
+endforeach()
 string(FIND "${source_contents}" "new threefold::AspectFitBitmapControl" aspect_fit_bitmap_position)
 if(aspect_fit_bitmap_position EQUAL -1)
   message(FATAL_ERROR "Goodband decorative bitmaps must preserve their natural aspect ratio")

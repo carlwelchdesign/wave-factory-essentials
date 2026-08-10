@@ -15,6 +15,10 @@
 #include "IllustratedBitmapDrawing.h"
 #include "IllustratedShurikenKnobControl.h"
 #include "../shared/WaveFactoryUI.h"
+
+namespace {
+constexpr float kFrameOverscanScale = 1.048F;
+}
 #endif
 
 Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kNumParams, 1)) {
@@ -74,7 +78,8 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     });
     graphics->AttachControl(characterControl);
 
-    graphics->AttachControl(new threefold::AspectFitBitmapControl(bounds, frame));
+    graphics->AttachControl(
+        new threefold::AspectFitBitmapControl(bounds.GetScaledAboutCentre(kFrameOverscanScale), frame));
   };
 #endif
 }

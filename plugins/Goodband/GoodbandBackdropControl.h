@@ -37,8 +37,8 @@ public:
   }
 
 private:
-  static constexpr int kGestureCycleDurationMs = 60000;
-  static constexpr float kGestureWindowStart = 0.95F;
+  static constexpr int kGestureCycleDurationMs = 20000;
+  static constexpr float kGestureWindowStart = 0.85F;
   static constexpr float kPi = 3.14159265358979323846F;
   static constexpr float kTau = kPi * 2.0F;
   static constexpr int kGestureParticleCount = 72;
