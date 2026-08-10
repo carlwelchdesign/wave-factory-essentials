@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include "IControls.h"
+#include "IllustratedBitmapDrawing.h"
 
 class IllustratedCharacterControl final : public IVTabSwitchControl {
 public:
@@ -26,7 +27,8 @@ public:
       const auto plateBounds = buttonBounds.GetPadded(2.0F + pulseScale, 4.0F + pulseScale,
                                                        2.0F + pulseScale, 4.0F + pulseScale);
       IBlend plateBlend(EBlend::Default, isMouseOver || isSelected ? 1.0F : 0.82F);
-      graphics.DrawFittedBitmap(isSelected ? selectedPlate_ : unselectedPlate_, plateBounds, &plateBlend);
+      threefold::DrawThreeSlicePlate(graphics, isSelected ? selectedPlate_ : unselectedPlate_, plateBounds,
+                                    &plateBlend);
 
       if (mTabLabels.Get(index)) {
         const auto textColor = isSelected ? IColor(255, 255, 232, 181)

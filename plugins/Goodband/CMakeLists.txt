@@ -6,7 +6,7 @@ iplug_add_plugin(Goodband
     GoodbandCharacterPresets.h
     GoodbandSceneControl.h
     FightingGameCharacterControl.h
-    FittedBitmapControl.h
+    IllustratedBitmapDrawing.h
     IllustratedShurikenKnobControl.h
     ../shared/WaveFactoryUI.h
     resources/resource.h

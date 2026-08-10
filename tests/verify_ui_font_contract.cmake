@@ -41,7 +41,7 @@ verify_plugin_ui_font("PitchTrails")
 
 file(READ "${PROJECT_ROOT}/plugins/Goodband/Goodband.cpp" goodband_source)
 string(FIND "${goodband_source}" "LoadBitmap(THREEFOLD_PALM_WORDMARK_FN)" wordmark_load_position)
-string(FIND "${goodband_source}" "new FittedBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark)" wordmark_control_position)
+string(FIND "${goodband_source}" "new threefold::AspectFitBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark)" wordmark_control_position)
 if(wordmark_load_position EQUAL -1 OR wordmark_control_position EQUAL -1 OR
    NOT wordmark_load_position LESS wordmark_control_position)
   message(FATAL_ERROR "Goodband must load its illustrated wordmark before attaching it")

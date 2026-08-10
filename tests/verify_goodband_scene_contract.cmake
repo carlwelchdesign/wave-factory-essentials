@@ -59,8 +59,8 @@ endforeach()
 file(READ "${shuriken_header}" shuriken_contents)
 foreach(required_shuriken_token
     "class IllustratedShurikenKnobControl"
-    "graphics.DrawFittedBitmap(arena_"
-    "graphics.DrawFittedBitmap(shuriken_"
+    "DrawBitmapAspectFit(graphics, arena_"
+    "DrawBitmapAspectFit(graphics, shuriken_"
     "DrawNeedle"
     "DrawSettingSparks")
   string(FIND "${shuriken_contents}" "${required_shuriken_token}" shuriken_position)
@@ -72,7 +72,7 @@ endforeach()
 file(READ "${character_header}" character_contents)
 foreach(required_character_token
     "class IllustratedCharacterControl"
-    "graphics.DrawFittedBitmap"
+    "DrawThreeSlicePlate"
     "unselectedPlate_"
     "selectedPlate_"
     "BeginEnergyStrike"
@@ -84,9 +84,9 @@ foreach(required_character_token
 endforeach()
 
 file(READ "${plugin_source}" source_contents)
-string(FIND "${source_contents}" "new FittedBitmapControl" fitted_bitmap_position)
-if(fitted_bitmap_position EQUAL -1)
-  message(FATAL_ERROR "Goodband decorative bitmaps must use fitted rendering")
+string(FIND "${source_contents}" "new threefold::AspectFitBitmapControl" aspect_fit_bitmap_position)
+if(aspect_fit_bitmap_position EQUAL -1)
+  message(FATAL_ERROR "Goodband decorative bitmaps must preserve their natural aspect ratio")
 endif()
 string(FIND "${source_contents}" "LoadBitmap(TEMPLE_OF_MASTERY_BG_FN)" bitmap_position)
 string(FIND "${source_contents}" "LoadBitmap(TEMPLE_OF_MASTERY_GESTURE_BG_FN)" gesture_bitmap_position)

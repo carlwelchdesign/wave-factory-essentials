@@ -12,7 +12,7 @@
 #include "GoodbandCharacterPresets.h"
 #include "GoodbandSceneControl.h"
 #include "FightingGameCharacterControl.h"
-#include "FittedBitmapControl.h"
+#include "IllustratedBitmapDrawing.h"
 #include "IllustratedShurikenKnobControl.h"
 #include "../shared/WaveFactoryUI.h"
 #endif
@@ -39,7 +39,8 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground));
     graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim));
 
-    graphics->AttachControl(new FittedBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark));
+    graphics->AttachControl(
+        new threefold::AspectFitBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark));
     graphics->AttachControl(new ITextControl(IRECT(39.0F, 91.0F, 394.0F, 111.0F),
                                              "WAVE FACTORY ESSENTIALS  /  MASTERING ENERGY",
                                              IText(9.5F, IColor(255, 183, 158, 108), DEFAULT_FONT, EAlign::Near)));
@@ -73,7 +74,7 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     });
     graphics->AttachControl(characterControl);
 
-    graphics->AttachControl(new FittedBitmapControl(bounds, frame));
+    graphics->AttachControl(new threefold::AspectFitBitmapControl(bounds, frame));
   };
 #endif
 }

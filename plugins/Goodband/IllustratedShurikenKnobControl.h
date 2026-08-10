@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "IControls.h"
+#include "IllustratedBitmapDrawing.h"
 
 class IllustratedShurikenKnobControl final : public IVKnobControl {
 public:
@@ -24,8 +25,9 @@ public:
     const auto angleDegrees = mAngle1 + static_cast<float>(GetValue()) * (mAngle2 - mAngle1);
     const auto angleRadians = (angleDegrees - 90.0F) * kPi / 180.0F;
 
-    graphics.DrawFittedBitmap(arena_, mWidgetBounds.GetScaledAboutCentre(1.25F));
-    graphics.DrawFittedBitmap(shuriken_, mWidgetBounds.GetScaledAboutCentre(0.93F));
+    const auto squareBounds = IRECT(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+    threefold::DrawBitmapAspectFit(graphics, arena_, squareBounds.GetScaledAboutCentre(1.25F));
+    threefold::DrawBitmapAspectFit(graphics, shuriken_, squareBounds.GetScaledAboutCentre(0.93F));
     DrawNeedle(graphics, centerX, centerY, radius, angleRadians);
 
     if (mMouseDown) {
