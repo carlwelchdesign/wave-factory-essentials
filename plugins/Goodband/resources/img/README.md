@@ -1,6 +1,6 @@
-# Goodband Arcade Dojo artwork
+# Goodband Temple of Mastery artwork
 
-`arcade-dojo-bg.png` and `arcade-dojo-bg@2x.png` are production crops derived from the Wave Factory Essentials Arcade Dojo concept generated on August 10, 2026.
+`temple-of-mastery-bg.png` and `temple-of-mastery-bg@2x.png` are production crops derived from the user-selected Wave Factory Essentials Temple of Motion concept generated on August 10, 2026.
 
 The user-supplied martial-arts photographs were used only as references for the elder-master archetype, costume silhouette, white hair, brows, beard, and hand gesture. The illustrated character is original and is not intended to reproduce the photographed actor's identity.
 

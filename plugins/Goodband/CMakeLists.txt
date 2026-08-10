@@ -2,12 +2,15 @@ iplug_add_plugin(Goodband
   SOURCES
     Goodband.cpp
     Goodband.h
+    GoodbandCharacterPresets.h
     GoodbandSceneControl.h
     ../shared/WaveFactoryUI.h
     resources/resource.h
   RESOURCES
-    resources/img/arcade-dojo-bg.png
-    resources/img/arcade-dojo-bg@2x.png
+    resources/fonts/MaShanZheng-Regular.ttf
+    resources/fonts/MaShanZheng-OFL.txt
+    resources/img/temple-of-mastery-bg.png
+    resources/img/temple-of-mastery-bg@2x.png
   FORMATS
     VST3 AU CLAP
   LINK

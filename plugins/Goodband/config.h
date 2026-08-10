@@ -1,7 +1,7 @@
 #define PLUG_NAME "Goodband"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010400
-#define PLUG_VERSION_STR "0.1.4"
+#define PLUG_VERSION_HEX 0x00010500
+#define PLUG_VERSION_STR "0.1.5"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -53,4 +53,5 @@
 #define APP_COPY_AUV3 0
 #define APP_SIGNAL_VECTOR_SIZE 64
 
-#define ARCADE_DOJO_BG_FN "arcade-dojo-bg.png"
+#define GOODBAND_TITLE_FONT_FN "MaShanZheng-Regular.ttf"
+#define TEMPLE_OF_MASTERY_BG_FN "temple-of-mastery-bg.png"

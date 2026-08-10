@@ -3,7 +3,7 @@ set(scene_header "${goodband_root}/GoodbandSceneControl.h")
 set(plugin_source "${goodband_root}/Goodband.cpp")
 set(plugin_cmake "${goodband_root}/CMakeLists.txt")
 
-foreach(asset_name "arcade-dojo-bg.png" "arcade-dojo-bg@2x.png")
+foreach(asset_name "temple-of-mastery-bg.png" "temple-of-mastery-bg@2x.png")
   if(NOT EXISTS "${goodband_root}/resources/img/${asset_name}")
     message(FATAL_ERROR "Goodband scene asset is missing: ${asset_name}")
   endif()
@@ -15,16 +15,23 @@ foreach(required_scene_token
     "SetIgnoreMouse(true)"
     "SetValueFromDelegate"
     "SetAnimation"
-    "DrawEnergyTrail"
-    "DrawCharacterGesture")
+    "DrawRestingConstellation"
+    "DrawMagicParticles"
+    "PositionParticle"
+    "kMaximumAnimatedParticles = 48")
   string(FIND "${scene_contents}" "${required_scene_token}" token_position)
   if(token_position EQUAL -1)
     message(FATAL_ERROR "Goodband scene must include ${required_scene_token}")
   endif()
 endforeach()
 
+string(FIND "${scene_contents}" "DrawLine" line_position)
+if(NOT line_position EQUAL -1)
+  message(FATAL_ERROR "Goodband magical animation must use particles, not line effects")
+endif()
+
 file(READ "${plugin_source}" source_contents)
-string(FIND "${source_contents}" "LoadBitmap(ARCADE_DOJO_BG_FN)" bitmap_position)
+string(FIND "${source_contents}" "LoadBitmap(TEMPLE_OF_MASTERY_BG_FN)" bitmap_position)
 string(FIND "${source_contents}" "new GoodbandSceneControl" scene_position)
 string(FIND "${source_contents}" "new IVKnobControl" knob_position)
 if(bitmap_position EQUAL -1 OR scene_position EQUAL -1 OR knob_position EQUAL -1)
@@ -35,9 +42,26 @@ if(NOT bitmap_position LESS scene_position OR NOT scene_position LESS knob_posit
 endif()
 
 file(READ "${plugin_cmake}" cmake_contents)
-foreach(asset_name "arcade-dojo-bg.png" "arcade-dojo-bg@2x.png")
-  string(FIND "${cmake_contents}" "resources/img/${asset_name}" asset_position)
+foreach(resource_path
+    "resources/img/temple-of-mastery-bg.png"
+    "resources/img/temple-of-mastery-bg@2x.png"
+    "resources/fonts/MaShanZheng-Regular.ttf"
+    "resources/fonts/MaShanZheng-OFL.txt")
+  string(FIND "${cmake_contents}" "${resource_path}" asset_position)
   if(asset_position EQUAL -1)
-    message(FATAL_ERROR "Goodband CMake resources must include ${asset_name}")
+    message(FATAL_ERROR "Goodband CMake resources must include ${resource_path}")
+  endif()
+endforeach()
+
+foreach(required_preset_token
+    "IVTabSwitchControl"
+    "ApplyCharacterPreset"
+    "GetGoodbandCharacterPreset"
+    "BeginInformHostOfParamChangeFromUI"
+    "SendParameterValueFromUI"
+    "ForControlWithParam")
+  string(FIND "${source_contents}" "${required_preset_token}" preset_position)
+  if(preset_position EQUAL -1)
+    message(FATAL_ERROR "Goodband Character selector must include ${required_preset_token}")
   endif()
 endforeach()

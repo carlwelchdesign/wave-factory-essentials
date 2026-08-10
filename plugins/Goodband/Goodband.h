@@ -25,5 +25,9 @@ class Goodband final : public Plugin {
 #endif
 
  private:
+#if IPLUG_EDITOR
+  void ApplyCharacterPreset(int characterIndex, IGraphics* graphics);
+#endif
+
   wfe::dsp::GoodbandProcessor processor_{};
 };

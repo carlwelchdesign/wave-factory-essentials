@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 
 #include "IControls.h"
 
@@ -16,35 +17,18 @@ public:
 
   void Draw(IGraphics& graphics) override {
     graphics.DrawBitmap(background_, mRECT);
-
-    const auto panel = IRECT(X(16.0F), Y(18.0F), X(374.0F), Y(420.0F));
-    graphics.FillRoundRect(IColor(188, 10, 14, 16), panel, 18.0F);
-    graphics.DrawRoundRect(IColor(110, 119, 231, 198), panel, 18.0F, nullptr, 1.0F);
+    graphics.FillRect(IColor(255, 174, 132, 64), IRECT(X(38.0F), Y(108.0F), X(101.0F), Y(110.0F)));
 
     const auto amount = static_cast<float>(current_[kAmountValue]);
-    const auto character = CharacterIndex();
     const auto mix = static_cast<float>(current_[kMixValue]);
     const auto output = static_cast<float>(current_[kOutputValue]);
     const auto energy = std::clamp(amount * mix, 0.0F, 1.0F);
-    const auto pulse = static_cast<float>(std::sin(animationPhase_ * 3.14159265358979323846));
-    const auto color = CharacterColor(character);
-    const auto handX = X(432.0F);
-    const auto handY = Y(220.0F);
-    const auto radius = Scale(18.0F + (energy * 34.0F) + (pulse * 10.0F));
+    const auto character = CharacterIndex();
+    const auto handX = X(431.0F);
+    const auto handY = Y(139.0F);
 
-    IBlend glowBlend(EBlend::Default, 0.08F + energy * 0.18F);
-    graphics.FillCircle(color, handX, handY, radius * 1.35F, &glowBlend);
-
-    IBlend ringBlend(EBlend::Default, 0.30F + energy * 0.65F);
-    graphics.DrawCircle(color, handX, handY, radius, &ringBlend, Scale(1.4F + energy * 2.2F));
-
-    DrawEnergyTrail(graphics, color, energy, character, pulse);
-    DrawCharacterGesture(graphics, color, energy, character, pulse, handX, handY, radius);
-
-    const auto gongStrength = std::clamp(0.12F + output * 0.30F + energy * 0.22F, 0.0F, 0.72F);
-    IBlend gongBlend(EBlend::Default, gongStrength);
-    graphics.DrawCircle(CharacterColor(character), X(300.0F), Y(158.0F), Scale(82.0F + output * 10.0F),
-                        &gongBlend, Scale(1.0F + output * 1.5F));
+    DrawRestingConstellation(graphics, character, energy, output, handX, handY);
+    DrawMagicParticles(graphics, character, amount, mix, output, handX, handY);
   }
 
   void OnRescale() override { background_ = GetUI()->GetScaledBitmap(background_); }
@@ -60,15 +44,17 @@ public:
     animationPhase_ = 0.0;
     SetAnimation(
         [](IControl* control) {
-          auto* scene = static_cast<GoodbandSceneControl*>(control);
-          scene->AdvanceAnimation();
+          static_cast<GoodbandSceneControl*>(control)->AdvanceAnimation();
         },
         kAnimationDurationMs);
   }
 
 private:
   enum ValueIndex { kAmountValue = 0, kCharacterValue, kMixValue, kOutputValue, kValueCount };
-  static constexpr int kAnimationDurationMs = 260;
+  static constexpr int kAnimationDurationMs = 920;
+  static constexpr float kPi = 3.14159265358979323846F;
+  static constexpr float kTau = kPi * 2.0F;
+  static constexpr int kMaximumAnimatedParticles = 48;
 
   void AdvanceAnimation() {
     const auto progress = std::clamp(GetAnimationProgress(), 0.0, 1.0);
@@ -88,65 +74,108 @@ private:
     return std::clamp(static_cast<int>(std::lround(target_[kCharacterValue] * 3.0)), 0, 3);
   }
 
-  IColor CharacterColor(int character) const {
+  static float HashUnit(int particleIndex, int channel, int character) {
+    auto value = static_cast<std::uint32_t>(particleIndex + 1) * 0x9E3779B9U;
+    value ^= static_cast<std::uint32_t>(channel + 7) * 0x85EBCA6BU;
+    value ^= static_cast<std::uint32_t>(character + 11) * 0xC2B2AE35U;
+    value ^= value >> 16U;
+    value *= 0x7FEB352DU;
+    value ^= value >> 15U;
+    return static_cast<float>(value & 0x00FFFFFFU) / static_cast<float>(0x01000000U);
+  }
+
+  IColor ParticleColor(int character, int particleIndex) const {
+    const auto highlight = particleIndex % 5 == 0;
     switch (character) {
       case 1:
-        return IColor(255, 226, 181, 94);
+        return highlight ? IColor(255, 255, 239, 190) : IColor(255, 224, 171, 72);
       case 2:
-        return IColor(255, 239, 112, 82);
+        return highlight ? IColor(255, 255, 225, 160) : IColor(255, 232, 91, 55);
       case 3:
-        return IColor(255, 100, 218, 232);
+        return highlight ? IColor(255, 222, 252, 246) : IColor(255, 76, 212, 190);
       default:
-        return IColor(255, 82, 232, 191);
+        return highlight ? IColor(255, 235, 250, 230) : IColor(255, 118, 205, 157);
     }
   }
 
-  void DrawEnergyTrail(IGraphics& graphics, const IColor& color, float energy, int character, float pulse) const {
-    const auto amplitude = Scale((character == 3 ? 24.0F : 12.0F) + energy * (character == 3 ? 34.0F : 20.0F));
-    const auto thickness = Scale(1.0F + energy * 2.2F);
-    const auto verticalCenter = Y(252.0F);
-    IBlend blend(EBlend::Default, 0.22F + energy * 0.62F);
-
-    constexpr int segments = 44;
-    for (int segment = 0; segment < segments; ++segment) {
-      const auto from = static_cast<float>(segment) / static_cast<float>(segments);
-      const auto to = static_cast<float>(segment + 1) / static_cast<float>(segments);
-      const auto x1 = X(22.0F + from * 430.0F);
-      const auto x2 = X(22.0F + to * 430.0F);
-      const auto cycles = character == 2 ? 4.0F : 2.0F;
-      const auto y1 = verticalCenter + std::sin((from * cycles + pulse * 0.22F) * 6.283185307F) * amplitude;
-      const auto y2 = verticalCenter + std::sin((to * cycles + pulse * 0.22F) * 6.283185307F) * amplitude;
-      graphics.DrawLine(color, x1, y1, x2, y2, &blend, thickness);
+  void DrawRestingConstellation(IGraphics& graphics, int character, float energy, float output, float handX,
+                                float handY) const {
+    constexpr int restingParticles = 9;
+    for (int index = 0; index < restingParticles; ++index) {
+      const auto angle = HashUnit(index, 0, character) * kTau;
+      const auto distance = Scale(13.0F + HashUnit(index, 1, character) * (22.0F + energy * 18.0F));
+      const auto x = handX + std::cos(angle) * distance;
+      const auto y = handY + std::sin(angle) * distance * 0.72F;
+      const auto radius = Scale(0.8F + HashUnit(index, 2, character) * 1.6F + output * 0.8F);
+      const auto color = ParticleColor(character, index);
+      IBlend halo(EBlend::Add, 0.04F + energy * 0.08F);
+      IBlend core(EBlend::Add, 0.16F + energy * 0.18F);
+      graphics.FillCircle(color, x, y, radius * 3.2F, &halo);
+      graphics.FillCircle(color, x, y, radius, &core);
     }
   }
 
-  void DrawCharacterGesture(IGraphics& graphics, const IColor& color, float energy, int character, float pulse,
-                            float handX, float handY, float radius) const {
-    if (character == 1) {
-      IBlend warmth(EBlend::Default, 0.10F + energy * 0.22F);
-      graphics.FillCircle(color, handX, handY, radius * 1.9F, &warmth);
-      return;
-    }
+  void DrawMagicParticles(IGraphics& graphics, int character, float amount, float mix, float output, float handX,
+                          float handY) const {
+    const auto count = std::clamp(14 + static_cast<int>(amount * 34.0F), 14, kMaximumAnimatedParticles);
+    const auto masterOpacity = std::clamp(0.30F + mix * 0.62F, 0.0F, 0.92F);
 
-    if (character == 2) {
-      IBlend impact(EBlend::Default, 0.25F + pulse * 0.70F);
-      for (int ray = 0; ray < 10; ++ray) {
-        const auto angle = static_cast<float>(ray) * 0.628318531F;
-        const auto inner = radius * 1.2F;
-        const auto outer = inner + Scale(10.0F + pulse * 28.0F);
-        graphics.DrawLine(color, handX + std::cos(angle) * inner, handY + std::sin(angle) * inner,
-                          handX + std::cos(angle) * outer, handY + std::sin(angle) * outer, &impact,
-                          Scale(1.0F + energy * 2.0F));
+    for (int index = 0; index < count; ++index) {
+      const auto delay = HashUnit(index, 3, character) * 0.24F;
+      const auto localProgress = std::clamp(
+          static_cast<float>((animationPhase_ - delay) / std::max(0.01, 1.0 - static_cast<double>(delay))),
+          0.0F, 1.0F);
+      if (localProgress <= 0.0F || localProgress >= 1.0F) {
+        continue;
       }
-      return;
-    }
 
-    if (character == 3) {
-      IBlend widthBlend(EBlend::Default, 0.20F + energy * 0.58F);
-      graphics.DrawArc(color, handX, handY, radius * 1.7F, 200.0F, 520.0F, &widthBlend,
-                       Scale(1.0F + energy * 2.0F));
-      graphics.DrawArc(color, handX, handY, radius * 2.2F, 210.0F, 510.0F, &widthBlend,
-                       Scale(0.8F + energy * 1.6F));
+      const auto seedA = HashUnit(index, 0, character);
+      const auto seedB = HashUnit(index, 1, character);
+      const auto seedC = HashUnit(index, 2, character);
+      const auto angle = seedA * kTau;
+      float x = handX;
+      float y = handY;
+
+      PositionParticle(character, angle, seedB, seedC, localProgress, handX, handY, x, y);
+
+      const auto lifecycle = std::sin(localProgress * kPi);
+      const auto radius = Scale(0.9F + seedC * 2.4F + amount * 1.3F + output * 0.6F);
+      const auto color = ParticleColor(character, index);
+      IBlend halo(EBlend::Add, lifecycle * masterOpacity * 0.20F);
+      IBlend core(EBlend::Add, lifecycle * masterOpacity * 0.82F);
+      graphics.FillCircle(color, x, y, radius * 3.8F, &halo);
+      graphics.FillCircle(color, x, y, radius, &core);
+    }
+  }
+
+  void PositionParticle(int character, float angle, float seedB, float seedC, float progress, float handX,
+                        float handY, float& x, float& y) const {
+    switch (character) {
+      case 1: {
+        const auto rise = Scale(progress * (52.0F + seedB * 92.0F));
+        x = handX + std::cos(angle) * Scale(10.0F + seedC * 42.0F) + std::sin(progress * kPi) * Scale(14.0F);
+        y = handY - rise + std::sin(angle) * Scale(14.0F);
+        break;
+      }
+      case 2: {
+        const auto distance = Scale(progress * (78.0F + seedB * 128.0F));
+        x = handX + std::cos(angle) * distance;
+        y = handY + std::sin(angle) * distance;
+        break;
+      }
+      case 3: {
+        const auto direction = seedB < 0.5F ? -1.0F : 1.0F;
+        x = handX + direction * Scale(progress * (90.0F + seedC * 172.0F));
+        y = handY + std::sin(angle + progress * kPi) * Scale(16.0F + seedB * 36.0F);
+        break;
+      }
+      default: {
+        const auto orbit = angle + progress * (1.4F + seedB * 1.8F);
+        const auto distance = Scale(14.0F + seedC * 48.0F + progress * 28.0F);
+        x = handX + std::cos(orbit) * distance;
+        y = handY + std::sin(orbit) * distance * 0.72F;
+        break;
+      }
     }
   }
 

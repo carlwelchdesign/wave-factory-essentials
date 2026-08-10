@@ -20,7 +20,12 @@ function(verify_plugin_ui_font plugin_name)
       "${plugin_name} text styles must reference DEFAULT_FONT, not the Arial system-font name")
   endif()
 
-  string(FIND "${source_contents}" "MakeDarkControlStyle" style_position)
+  if(plugin_name STREQUAL "Goodband")
+    set(style_factory "MakeCinematicControlStyle")
+  else()
+    set(style_factory "MakeDarkControlStyle")
+  endif()
+  string(FIND "${source_contents}" "${style_factory}" style_position)
   if(style_position EQUAL -1 OR parameter_control_position EQUAL -1 OR NOT style_position LESS parameter_control_position)
     message(FATAL_ERROR "${plugin_name} must create its high-contrast control style before attaching parameter controls")
   endif()
@@ -28,6 +33,13 @@ endfunction()
 
 verify_plugin_ui_font("Goodband")
 verify_plugin_ui_font("PitchTrails")
+
+file(READ "${PROJECT_ROOT}/plugins/Goodband/Goodband.cpp" goodband_source)
+string(FIND "${goodband_source}" "graphics->LoadFont(kGoodbandTitleFontId, GOODBAND_TITLE_FONT_FN);" title_font_position)
+string(FIND "${goodband_source}" "kGoodbandTitleFontId, EAlign::Near" title_text_position)
+if(title_font_position EQUAL -1 OR title_text_position EQUAL -1 OR NOT title_font_position LESS title_text_position)
+  message(FATAL_ERROR "Goodband must load its title font ID before using it")
+endif()
 
 file(READ "${PROJECT_ROOT}/plugins/shared/WaveFactoryUI.h" style_contents)
 foreach(required_style_token
