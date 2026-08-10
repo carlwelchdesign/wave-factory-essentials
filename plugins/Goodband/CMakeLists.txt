@@ -6,16 +6,20 @@ iplug_add_plugin(Goodband
     GoodbandCharacterPresets.h
     GoodbandSceneControl.h
     FightingGameCharacterControl.h
-    ShurikenKnobControl.h
+    IllustratedShurikenKnobControl.h
     ../shared/WaveFactoryUI.h
     resources/resource.h
   RESOURCES
-    resources/fonts/MaShanZheng-Regular.ttf
-    resources/fonts/MaShanZheng-OFL.txt
     resources/img/temple-of-mastery-bg.png
     resources/img/temple-of-mastery-bg@2x.png
     resources/img/temple-of-mastery-gesture-bg.png
     resources/img/temple-of-mastery-gesture-bg@2x.png
+    resources/img/character-selector-unselected.png
+    resources/img/character-selector-selected.png
+    resources/img/throwing-star-knob.png
+    resources/img/knob-arena.png
+    resources/img/threefold-palm-wordmark.png
+    resources/img/threefold-palm-frame.png
   FORMATS
     VST3 AU CLAP
   LINK

@@ -1,7 +1,7 @@
 #define PLUG_NAME "Threefold Palm"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010700
-#define PLUG_VERSION_STR "0.1.7"
+#define PLUG_VERSION_HEX 0x00010800
+#define PLUG_VERSION_STR "0.1.8"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -53,6 +53,11 @@
 #define APP_COPY_AUV3 0
 #define APP_SIGNAL_VECTOR_SIZE 64
 
-#define GOODBAND_TITLE_FONT_FN "MaShanZheng-Regular.ttf"
 #define TEMPLE_OF_MASTERY_BG_FN "temple-of-mastery-bg.png"
 #define TEMPLE_OF_MASTERY_GESTURE_BG_FN "temple-of-mastery-gesture-bg.png"
+#define THREEFOLD_PALM_WORDMARK_FN "threefold-palm-wordmark.png"
+#define THREEFOLD_PALM_FRAME_FN "threefold-palm-frame.png"
+#define THREEFOLD_PALM_UNSELECTED_PLATE_FN "character-selector-unselected.png"
+#define THREEFOLD_PALM_SELECTED_PLATE_FN "character-selector-selected.png"
+#define THREEFOLD_PALM_SHURIKEN_FN "throwing-star-knob.png"
+#define THREEFOLD_PALM_KNOB_ARENA_FN "knob-arena.png"

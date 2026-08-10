@@ -1,7 +1,7 @@
 set(goodband_root "${PROJECT_ROOT}/plugins/Goodband")
 set(scene_header "${goodband_root}/GoodbandSceneControl.h")
 set(backdrop_header "${goodband_root}/GoodbandBackdropControl.h")
-set(shuriken_header "${goodband_root}/ShurikenKnobControl.h")
+set(shuriken_header "${goodband_root}/IllustratedShurikenKnobControl.h")
 set(character_header "${goodband_root}/FightingGameCharacterControl.h")
 set(plugin_source "${goodband_root}/Goodband.cpp")
 set(plugin_cmake "${goodband_root}/CMakeLists.txt")
@@ -10,7 +10,13 @@ foreach(asset_name
     "temple-of-mastery-bg.png"
     "temple-of-mastery-bg@2x.png"
     "temple-of-mastery-gesture-bg.png"
-    "temple-of-mastery-gesture-bg@2x.png")
+    "temple-of-mastery-gesture-bg@2x.png"
+    "character-selector-unselected.png"
+    "character-selector-selected.png"
+    "throwing-star-knob.png"
+    "knob-arena.png"
+    "threefold-palm-wordmark.png"
+    "threefold-palm-frame.png")
   if(NOT EXISTS "${goodband_root}/resources/img/${asset_name}")
     message(FATAL_ERROR "Goodband scene asset is missing: ${asset_name}")
   endif()
@@ -52,11 +58,11 @@ endforeach()
 
 file(READ "${shuriken_header}" shuriken_contents)
 foreach(required_shuriken_token
-    "class ShurikenKnobControl"
-    "BuildShurikenPath"
-    "DrawIndicatorTrack"
-    "PathFill"
-    "PathStroke")
+    "class IllustratedShurikenKnobControl"
+    "graphics.DrawBitmap(arena_"
+    "graphics.DrawBitmap(shuriken_"
+    "DrawNeedle"
+    "DrawSettingSparks")
   string(FIND "${shuriken_contents}" "${required_shuriken_token}" shuriken_position)
   if(shuriken_position EQUAL -1)
     message(FATAL_ERROR "Goodband shuriken control must include ${required_shuriken_token}")
@@ -65,11 +71,12 @@ endforeach()
 
 file(READ "${character_header}" character_contents)
 foreach(required_character_token
-    "class FightingGameCharacterControl"
-    "BuildChamferedPlate"
+    "class IllustratedCharacterControl"
+    "graphics.DrawBitmap"
+    "unselectedPlate_"
+    "selectedPlate_"
     "BeginEnergyStrike"
-    "kEnergyStrikeDurationMs = 520"
-    "sealBounds")
+    "kEnergyStrikeDurationMs = 520")
   string(FIND "${character_contents}" "${required_character_token}" character_position)
   if(character_position EQUAL -1)
     message(FATAL_ERROR "Goodband fighting-game Character selector must include ${required_character_token}")
@@ -81,7 +88,7 @@ string(FIND "${source_contents}" "LoadBitmap(TEMPLE_OF_MASTERY_BG_FN)" bitmap_po
 string(FIND "${source_contents}" "LoadBitmap(TEMPLE_OF_MASTERY_GESTURE_BG_FN)" gesture_bitmap_position)
 string(FIND "${source_contents}" "new GoodbandBackdropControl" backdrop_position)
 string(FIND "${source_contents}" "new GoodbandSceneControl" scene_position)
-string(FIND "${source_contents}" "new ShurikenKnobControl" knob_position)
+string(FIND "${source_contents}" "new IllustratedShurikenKnobControl" knob_position)
 if(bitmap_position EQUAL -1 OR gesture_bitmap_position EQUAL -1 OR backdrop_position EQUAL -1 OR
    scene_position EQUAL -1 OR knob_position EQUAL -1)
   message(FATAL_ERROR "Goodband must load and attach its scene before parameter controls")
@@ -97,8 +104,12 @@ foreach(resource_path
     "resources/img/temple-of-mastery-bg@2x.png"
     "resources/img/temple-of-mastery-gesture-bg.png"
     "resources/img/temple-of-mastery-gesture-bg@2x.png"
-    "resources/fonts/MaShanZheng-Regular.ttf"
-    "resources/fonts/MaShanZheng-OFL.txt")
+    "resources/img/character-selector-unselected.png"
+    "resources/img/character-selector-selected.png"
+    "resources/img/throwing-star-knob.png"
+    "resources/img/knob-arena.png"
+    "resources/img/threefold-palm-wordmark.png"
+    "resources/img/threefold-palm-frame.png")
   string(FIND "${cmake_contents}" "${resource_path}" asset_position)
   if(asset_position EQUAL -1)
     message(FATAL_ERROR "Goodband CMake resources must include ${resource_path}")
@@ -106,7 +117,7 @@ foreach(resource_path
 endforeach()
 
 foreach(required_preset_token
-    "FightingGameCharacterControl"
+    "IllustratedCharacterControl"
     "ApplyCharacterPreset"
     "GetGoodbandCharacterPreset"
     "BeginInformHostOfParamChangeFromUI"
