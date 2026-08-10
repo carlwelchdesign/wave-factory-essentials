@@ -11,6 +11,7 @@
 #include "GoodbandBackdropControl.h"
 #include "GoodbandCharacterPresets.h"
 #include "GoodbandSceneControl.h"
+#include "FightingGameCharacterControl.h"
 #include "ShurikenKnobControl.h"
 #include "../shared/WaveFactoryUI.h"
 #endif
@@ -38,28 +39,33 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground));
     graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim));
 
-    graphics->AttachControl(new ITextControl(IRECT(35.0F, 18.0F, 390.0F, 80.0F), "THREEFOLD PALM",
-                                             IText(39.0F, IColor(255, 239, 226, 196),
+    graphics->AttachControl(new ITextControl(IRECT(32.0F, 10.0F, 402.0F, 79.0F), "THREEFOLD PALM",
+                                             IText(47.0F, IColor(255, 244, 224, 184),
                                                    kGoodbandTitleFontId, EAlign::Near)));
-    graphics->AttachControl(new ITextControl(IRECT(38.0F, 78.0F, 355.0F, 103.0F),
+    graphics->AttachControl(new ITextControl(IRECT(38.0F, 78.0F, 394.0F, 103.0F),
                                              "WAVE FACTORY ESSENTIALS  /  MASTERING ENERGY",
-                                             IText(10.0F, IColor(255, 170, 153, 116), DEFAULT_FONT, EAlign::Near)));
+                                             IText(9.5F, IColor(255, 183, 158, 108), DEFAULT_FONT, EAlign::Near)));
 
-    const auto controlStyle = wfe::ui::MakeCinematicControlStyle(IColor(255, 122, 203, 159));
+    const auto controlStyle = wfe::ui::MakeCinematicControlStyle(IColor(255, 111, 226, 183))
+                                  .WithLabelText(IText(12.0F, IColor(255, 232, 215, 177), DEFAULT_FONT,
+                                                           EAlign::Center, EVAlign::Middle))
+                                  .WithValueText(IText(15.0F, IColor(255, 238, 190, 99), DEFAULT_FONT,
+                                                           EAlign::Center, EVAlign::Bottom))
+                                  .WithLabelOrientation(EOrientation::North)
+                                  .WithWidgetFrac(0.88F);
     graphics->AttachControl(
-        new ShurikenKnobControl(IRECT(35.0F, 130.0F, 137.0F, 250.0F), kAmount, "AMOUNT", controlStyle));
+        new ShurikenKnobControl(IRECT(31.0F, 202.0F, 145.0F, 391.0F), kAmount, "AMOUNT", controlStyle));
     graphics->AttachControl(
-        new ShurikenKnobControl(IRECT(151.0F, 130.0F, 253.0F, 250.0F), kMix, "MIX", controlStyle));
+        new ShurikenKnobControl(IRECT(149.0F, 202.0F, 263.0F, 391.0F), kMix, "MIX", controlStyle));
     graphics->AttachControl(
-        new ShurikenKnobControl(IRECT(267.0F, 130.0F, 369.0F, 250.0F), kOutputTrim, "OUTPUT", controlStyle));
+        new ShurikenKnobControl(IRECT(267.0F, 202.0F, 381.0F, 391.0F), kOutputTrim, "OUTPUT", controlStyle));
 
-    const auto characterStyle = controlStyle.WithDrawFrame(true)
-                                    .WithRoundness(0.04F)
-                                    .WithWidgetFrac(0.70F)
-                                    .WithLabelText(IText(11.0F, IColor(255, 199, 187, 159)));
-    auto* characterControl = new IVTabSwitchControl(
-        IRECT(35.0F, 302.0F, 369.0F, 376.0F), kCharacter, {"CLEAN", "WARM", "PUNCH", "WIDE"},
-        "CHARACTER", characterStyle, EVShape::Rectangle, EDirection::Horizontal);
+    const auto characterStyle = controlStyle.WithShowLabel(false)
+                                    .WithShowValue(false)
+                                    .WithWidgetFrac(1.0F);
+    auto* characterControl = new FightingGameCharacterControl(
+        IRECT(32.0F, 119.0F, 398.0F, 178.0F), kCharacter, {"CLEAN", "WARM", "PUNCH", "WIDE"},
+        characterStyle);
     characterControl->SetActionFunction([this, graphics](IControl* caller) {
       const auto characterIndex = std::clamp(static_cast<int>(std::lround(caller->GetValue() * 3.0)), 0, 3);
       ApplyCharacterPreset(characterIndex, graphics);

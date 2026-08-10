@@ -5,6 +5,7 @@ iplug_add_plugin(Goodband
     GoodbandBackdropControl.h
     GoodbandCharacterPresets.h
     GoodbandSceneControl.h
+    FightingGameCharacterControl.h
     ShurikenKnobControl.h
     ../shared/WaveFactoryUI.h
     resources/resource.h

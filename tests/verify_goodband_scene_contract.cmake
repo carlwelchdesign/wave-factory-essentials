@@ -2,6 +2,7 @@ set(goodband_root "${PROJECT_ROOT}/plugins/Goodband")
 set(scene_header "${goodband_root}/GoodbandSceneControl.h")
 set(backdrop_header "${goodband_root}/GoodbandBackdropControl.h")
 set(shuriken_header "${goodband_root}/ShurikenKnobControl.h")
+set(character_header "${goodband_root}/FightingGameCharacterControl.h")
 set(plugin_source "${goodband_root}/Goodband.cpp")
 set(plugin_cmake "${goodband_root}/CMakeLists.txt")
 
@@ -62,6 +63,19 @@ foreach(required_shuriken_token
   endif()
 endforeach()
 
+file(READ "${character_header}" character_contents)
+foreach(required_character_token
+    "class FightingGameCharacterControl"
+    "BuildChamferedPlate"
+    "BeginEnergyStrike"
+    "kEnergyStrikeDurationMs = 520"
+    "sealBounds")
+  string(FIND "${character_contents}" "${required_character_token}" character_position)
+  if(character_position EQUAL -1)
+    message(FATAL_ERROR "Goodband fighting-game Character selector must include ${required_character_token}")
+  endif()
+endforeach()
+
 file(READ "${plugin_source}" source_contents)
 string(FIND "${source_contents}" "LoadBitmap(TEMPLE_OF_MASTERY_BG_FN)" bitmap_position)
 string(FIND "${source_contents}" "LoadBitmap(TEMPLE_OF_MASTERY_GESTURE_BG_FN)" gesture_bitmap_position)
@@ -92,7 +106,7 @@ foreach(resource_path
 endforeach()
 
 foreach(required_preset_token
-    "IVTabSwitchControl"
+    "FightingGameCharacterControl"
     "ApplyCharacterPreset"
     "GetGoodbandCharacterPreset"
     "BeginInformHostOfParamChangeFromUI"
