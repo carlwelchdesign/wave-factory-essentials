@@ -3,6 +3,7 @@
 
 #if IPLUG_EDITOR
 #include "IControls.h"
+#include "../shared/WaveFactoryUI.h"
 #endif
 
 PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kNumParams, 1)) {
@@ -22,11 +23,12 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
     graphics->AttachControl(new ITextControl(bounds.GetFromTop(118.0F).GetFromBottom(32.0F),
                                              "MOVEMENT WITHOUT DRAWN AUTOMATION", IText(14.0F, IColor(255, 194, 165, 230))));
     const auto controls = bounds.GetReducedFromTop(135.0F).GetPadded(-28.0F);
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 0, 1, 5).GetCentredInside(112.0F), kDelay, "Delay"));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 1, 1, 5).GetCentredInside(112.0F), kPitch, "Pitch"));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 2, 1, 5).GetCentredInside(112.0F), kFeedback, "Feedback"));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 3, 1, 5).GetCentredInside(112.0F), kDiffusion, "Diffusion"));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 4, 1, 5).GetCentredInside(112.0F), kMix, "Mix"));
+    const auto controlStyle = wfe::ui::MakeDarkControlStyle(IColor(255, 194, 165, 230));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 0, 1, 5).GetCentredInside(112.0F), kDelay, "Delay", controlStyle));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 1, 1, 5).GetCentredInside(112.0F), kPitch, "Pitch", controlStyle));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 2, 1, 5).GetCentredInside(112.0F), kFeedback, "Feedback", controlStyle));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 3, 1, 5).GetCentredInside(112.0F), kDiffusion, "Diffusion", controlStyle));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 4, 1, 5).GetCentredInside(112.0F), kMix, "Mix", controlStyle));
   };
 #endif
 }

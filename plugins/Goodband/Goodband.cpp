@@ -3,6 +3,7 @@
 
 #if IPLUG_EDITOR
 #include "IControls.h"
+#include "../shared/WaveFactoryUI.h"
 #endif
 
 Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kNumParams, 1)) {
@@ -21,10 +22,11 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->AttachControl(new ITextControl(bounds.GetFromTop(118.0F).GetFromBottom(32.0F),
                                              "MULTIBAND ENERGY · HONEST CONTROL", IText(14.0F, IColor(255, 150, 180, 170))));
     const auto controls = bounds.GetReducedFromTop(130.0F).GetPadded(-34.0F);
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 0, 1, 4).GetCentredInside(118.0F), kAmount, "Amount"));
-    graphics->AttachControl(new IVMenuButtonControl(controls.GetGridCell(0, 1, 1, 4).GetCentredInside(138.0F, 54.0F), kCharacter, "Character"));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 2, 1, 4).GetCentredInside(118.0F), kMix, "Mix"));
-    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 3, 1, 4).GetCentredInside(118.0F), kOutputTrim, "Output"));
+    const auto controlStyle = wfe::ui::MakeDarkControlStyle(IColor(255, 106, 224, 176));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 0, 1, 4).GetCentredInside(118.0F), kAmount, "Amount", controlStyle));
+    graphics->AttachControl(new IVMenuButtonControl(controls.GetGridCell(0, 1, 1, 4).GetCentredInside(138.0F, 54.0F), kCharacter, "Character", controlStyle));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 2, 1, 4).GetCentredInside(118.0F), kMix, "Mix", controlStyle));
+    graphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 3, 1, 4).GetCentredInside(118.0F), kOutputTrim, "Output", controlStyle));
   };
 #endif
 }
