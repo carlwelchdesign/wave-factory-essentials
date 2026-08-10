@@ -14,6 +14,12 @@ function(verify_plugin_ui_font plugin_name)
     message(FATAL_ERROR "${plugin_name} must load the UI font before attaching text controls")
   endif()
 
+  string(FIND "${source_contents}" ", \"Arial\", EAlign::" unregistered_font_id_position)
+  if(NOT unregistered_font_id_position EQUAL -1)
+    message(FATAL_ERROR
+      "${plugin_name} text styles must reference DEFAULT_FONT, not the Arial system-font name")
+  endif()
+
   string(FIND "${source_contents}" "MakeDarkControlStyle" style_position)
   if(style_position EQUAL -1 OR parameter_control_position EQUAL -1 OR NOT style_position LESS parameter_control_position)
     message(FATAL_ERROR "${plugin_name} must create its high-contrast control style before attaching parameter controls")

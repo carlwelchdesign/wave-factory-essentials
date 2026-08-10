@@ -22,10 +22,10 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->AttachControl(new GoodbandSceneControl(bounds, background, kAmount, kCharacter, kMix, kOutputTrim));
 
     graphics->AttachControl(new ITextControl(IRECT(38.0F, 34.0F, 350.0F, 78.0F), "GOODBAND",
-                                             IText(32.0F, IColor(255, 244, 239, 222), "Arial", EAlign::Near)));
+                                             IText(32.0F, IColor(255, 244, 239, 222), DEFAULT_FONT, EAlign::Near)));
     graphics->AttachControl(new ITextControl(IRECT(40.0F, 75.0F, 350.0F, 104.0F),
                                              "MULTIBAND ENERGY · SENSEI CONTROL",
-                                             IText(13.0F, IColor(255, 151, 202, 185), "Arial", EAlign::Near)));
+                                             IText(13.0F, IColor(255, 151, 202, 185), DEFAULT_FONT, EAlign::Near)));
 
     const auto controlStyle = wfe::ui::MakeDarkControlStyle(IColor(255, 106, 224, 176));
     graphics->AttachControl(new IVKnobControl(IRECT(42.0F, 118.0F, 166.0F, 242.0F), kAmount, "Amount", controlStyle));
