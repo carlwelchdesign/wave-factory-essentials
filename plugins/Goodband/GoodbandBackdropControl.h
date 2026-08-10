@@ -94,17 +94,17 @@ private:
       const auto y = centerY + std::sin(angle) * distance * 0.62F;
       const auto spriteRow = index % 6 == 0 ? 0 : (index % 3 == 0 ? 2 : 1);
       const auto spriteIndex = spriteRow * 4 + index % 4;
-      const auto size = Scale(9.0F + seedC * 20.0F + gestureAmount * 7.0F);
+      const auto size = Scale(12.0F + seedC * 24.0F + gestureAmount * 10.0F);
       const auto rotation = angle * 180.0F / kPi + orbitPhase * 18.0F;
       threefold::vfx::DrawAtlasSprite(graphics, vfxAtlas_, spriteIndex, x, y, size, rotation,
-                                     gestureAmount * 0.88F);
+                                     gestureAmount);
     }
 
     threefold::vfx::DrawChiRibbon(graphics, centerX, centerY, X(340.0F), Y(317.0F), Scale(46.0F),
-                                 IColor(255, 104, 227, 197), gestureAmount, Scale(0.88F));
+                                 IColor(255, 126, 255, 222), gestureAmount, Scale(1.28F));
     threefold::vfx::DrawChiRibbon(graphics, centerX, centerY - Scale(4.0F), X(420.0F), Y(164.0F),
-                                 -Scale(34.0F), IColor(255, 245, 190, 89), gestureAmount * 0.86F,
-                                 Scale(0.62F));
+                                 -Scale(34.0F), IColor(255, 255, 214, 111), gestureAmount,
+                                 Scale(0.96F));
   }
 
   float X(float coordinate) const { return mRECT.L + coordinate * (mRECT.W() / 720.0F); }

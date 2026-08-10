@@ -12,20 +12,20 @@
       <key>sandboxSafe</key><true/>
       <key>subtype</key><string>WfGb</string>
       <key>type</key><string>aufx</string>
-      <key>version</key><integer>68864</integer>
+      <key>version</key><integer>69120</integer>
     </dict>
   </array>
-  <key>AudioUnit Version</key><string>0x00010D00</string>
+  <key>AudioUnit Version</key><string>0x00010E00</string>
   <key>CFBundleDevelopmentRegion</key><string>English</string>
   <key>CFBundleExecutable</key><string>Goodband</string>
-  <key>CFBundleGetInfoString</key><string>Threefold Palm 0.1.13</string>
+  <key>CFBundleGetInfoString</key><string>Threefold Palm 0.1.14</string>
   <key>CFBundleIdentifier</key><string>com.wavefactoryessentials.audiounit.Goodband</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>Threefold Palm</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.13</string>
+  <key>CFBundleShortVersionString</key><string>0.1.14</string>
   <key>CFBundleSignature</key><string>WfGb</string>
-  <key>CFBundleVersion</key><string>0.1.13</string>
+  <key>CFBundleVersion</key><string>0.1.14</string>
   <key>CSResourcesFileMapped</key><true/>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSPrincipalClass</key><string>Goodband_View</string>

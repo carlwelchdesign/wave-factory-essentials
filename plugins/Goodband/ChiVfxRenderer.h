@@ -18,15 +18,21 @@ inline void DrawAtlasSprite(IGraphics& graphics, const IBitmap& atlas, int sprit
   const auto source = IRECT(column * cellWidth, row * cellHeight, (column + 1) * cellWidth,
                             (row + 1) * cellHeight);
 
-  graphics.PathTransformSave();
-  graphics.PathTransformTranslate(centerX, centerY);
-  graphics.PathTransformRotate(rotationDegrees);
-  graphics.PathTransformScale(size / source.W(), size / source.H());
-  IBlend spriteBlend(EBlend::Add, std::clamp(opacity, 0.0F, 1.0F));
-  graphics.DrawBitmap(atlas, IRECT(-source.W() * 0.5F, -source.H() * 0.5F, source.W() * 0.5F,
-                                   source.H() * 0.5F),
-                      static_cast<int>(source.L), static_cast<int>(source.T), &spriteBlend);
-  graphics.PathTransformRestore();
+  const auto drawLayer = [&](float layerSize, float layerOpacity) {
+    graphics.PathTransformSave();
+    graphics.PathTransformTranslate(centerX, centerY);
+    graphics.PathTransformRotate(rotationDegrees);
+    graphics.PathTransformScale(layerSize / source.W(), layerSize / source.H());
+    IBlend spriteBlend(EBlend::Add, std::clamp(layerOpacity, 0.0F, 1.0F));
+    graphics.DrawBitmap(atlas, IRECT(-source.W() * 0.5F, -source.H() * 0.5F, source.W() * 0.5F,
+                                     source.H() * 0.5F),
+                        static_cast<int>(source.L), static_cast<int>(source.T), &spriteBlend);
+    graphics.PathTransformRestore();
+  };
+
+  const auto clampedOpacity = std::clamp(opacity, 0.0F, 1.0F);
+  drawLayer(size * 1.24F, clampedOpacity * 0.52F);
+  drawLayer(size, std::min(1.0F, clampedOpacity * 1.42F));
 }
 
 inline void DrawChiRibbon(IGraphics& graphics, float startX, float startY, float endX, float endY,
@@ -38,8 +44,8 @@ inline void DrawChiRibbon(IGraphics& graphics, float startX, float startY, float
   const auto control2X = startX + deltaX * 0.70F;
   const auto control2Y = startY + deltaY * 0.82F + bend * 0.72F;
 
-  constexpr float kWidths[]{4.6F, 2.1F, 0.72F};
-  constexpr float kOpacities[]{0.075F, 0.22F, 0.78F};
+  constexpr float kWidths[]{7.2F, 3.4F, 1.15F};
+  constexpr float kOpacities[]{0.16F, 0.44F, 1.0F};
   for (int layer = 0; layer < 3; ++layer) {
     graphics.PathClear();
     graphics.PathMoveTo(startX, startY);

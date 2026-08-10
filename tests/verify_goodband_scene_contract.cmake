@@ -112,9 +112,12 @@ foreach(required_vfx_token
     "kAtlasColumns = 4"
     "kAtlasRows = 4"
     "DrawAtlasSprite"
+    "drawLayer(size * 1.24F"
+    "clampedOpacity * 1.42F"
     "DrawChiRibbon"
     "PathCubicBezierTo"
-    "PathStroke")
+    "PathStroke"
+    "kOpacities[]{0.16F, 0.44F, 1.0F}")
   string(FIND "${vfx_renderer_contents}" "${required_vfx_token}" vfx_token_position)
   if(vfx_token_position EQUAL -1)
     message(FATAL_ERROR "Goodband chi VFX renderer must include ${required_vfx_token}")

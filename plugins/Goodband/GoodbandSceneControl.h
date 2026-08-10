@@ -110,12 +110,12 @@ private:
       const auto distance = Scale(13.0F + HashUnit(index, 1, character) * (22.0F + energy * 18.0F));
       const auto x = handX + std::cos(angle) * distance;
       const auto y = handY + std::sin(angle) * distance * 0.72F;
-      const auto size = Scale(5.0F + HashUnit(index, 2, character) * 7.0F + output * 2.0F);
+      const auto size = Scale(7.0F + HashUnit(index, 2, character) * 9.0F + output * 3.0F);
       const auto spriteRow = character == 1 ? 2 : (character == 3 ? 1 : 3);
       const auto spriteIndex = spriteRow * 4 + index % 4;
       const auto rotation = angle * 180.0F / kPi + HashUnit(index, 3, character) * 90.0F;
       threefold::vfx::DrawAtlasSprite(graphics, vfxAtlas_, spriteIndex, x, y, size, rotation,
-                                     0.20F + energy * 0.30F);
+                                     0.38F + energy * 0.44F);
     }
   }
 
@@ -125,21 +125,21 @@ private:
       return;
     }
 
-    const auto intensity = lifecycle * (0.34F + energy * 0.66F);
+    const auto intensity = lifecycle * (0.62F + energy * 0.38F);
     const auto jade = ParticleColor(character == 2 ? 2 : 3, 1);
     const auto gold = ParticleColor(1, 0);
     const auto horizontalDirection = character == 3 ? -1.0F : 1.0F;
     threefold::vfx::DrawChiRibbon(graphics, handX, handY, handX - Scale(148.0F) * horizontalDirection,
-                                 handY + Scale(72.0F), Scale(31.0F), jade, intensity, Scale(0.72F));
+                                 handY + Scale(72.0F), Scale(31.0F), jade, intensity, Scale(1.02F));
     threefold::vfx::DrawChiRibbon(graphics, handX + Scale(3.0F), handY - Scale(4.0F),
                                  handX - Scale(102.0F), handY - Scale(54.0F), -Scale(24.0F), gold,
-                                 intensity * 0.82F, Scale(0.52F));
+                                 intensity * 0.94F, Scale(0.78F));
   }
 
   void DrawMagicParticles(IGraphics& graphics, int character, float amount, float mix, float output, float handX,
                           float handY) const {
     const auto count = std::clamp(24 + static_cast<int>(amount * 60.0F), 24, kMaximumAnimatedParticles);
-    const auto masterOpacity = std::clamp(0.44F + mix * 0.56F, 0.0F, 1.0F);
+    const auto masterOpacity = std::clamp(0.68F + mix * 0.32F, 0.0F, 1.0F);
 
     for (int index = 0; index < count; ++index) {
       const auto delay = HashUnit(index, 3, character) * 0.24F;
@@ -160,12 +160,12 @@ private:
       PositionParticle(character, angle, seedB, seedC, localProgress, handX, handY, x, y);
 
       const auto lifecycle = std::sin(localProgress * kPi);
-      const auto size = Scale(8.0F + seedC * 16.0F + amount * 6.0F + output * 2.0F);
+      const auto size = Scale(11.0F + seedC * 20.0F + amount * 8.0F + output * 3.0F);
       const auto spriteRow = index % 7 == 0 ? 0 : (character == 1 ? 2 : (character == 3 ? 1 : 3));
       const auto spriteIndex = spriteRow * 4 + index % 4;
       const auto rotation = angle * 180.0F / kPi + localProgress * (90.0F + seedB * 210.0F);
       threefold::vfx::DrawAtlasSprite(graphics, vfxAtlas_, spriteIndex, x, y, size, rotation,
-                                     lifecycle * masterOpacity * 0.92F);
+                                     lifecycle * masterOpacity);
     }
   }
 
