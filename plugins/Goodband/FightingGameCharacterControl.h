@@ -23,10 +23,10 @@ public:
       const auto isSelected = index == selected;
       const auto isMouseOver = index == mMouseOverButton;
       const auto pulseScale = isSelected ? static_cast<float>(energyStrike_) * 2.5F : 0.0F;
-      const auto plateBounds = buttonBounds.GetPadded(8.0F + pulseScale, 3.0F + pulseScale,
-                                                       8.0F + pulseScale, 3.0F + pulseScale);
+      const auto plateBounds = buttonBounds.GetPadded(2.0F + pulseScale, 4.0F + pulseScale,
+                                                       2.0F + pulseScale, 4.0F + pulseScale);
       IBlend plateBlend(EBlend::Default, isMouseOver || isSelected ? 1.0F : 0.82F);
-      graphics.DrawBitmap(isSelected ? selectedPlate_ : unselectedPlate_, plateBounds, 1, &plateBlend);
+      graphics.DrawFittedBitmap(isSelected ? selectedPlate_ : unselectedPlate_, plateBounds, &plateBlend);
 
       if (mTabLabels.Get(index)) {
         const auto textColor = isSelected ? IColor(255, 255, 232, 181)

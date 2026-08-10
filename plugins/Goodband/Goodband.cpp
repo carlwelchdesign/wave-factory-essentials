@@ -12,6 +12,7 @@
 #include "GoodbandCharacterPresets.h"
 #include "GoodbandSceneControl.h"
 #include "FightingGameCharacterControl.h"
+#include "FittedBitmapControl.h"
 #include "IllustratedShurikenKnobControl.h"
 #include "../shared/WaveFactoryUI.h"
 #endif
@@ -38,9 +39,7 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground));
     graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim));
 
-    auto* wordmarkControl = new IBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark);
-    wordmarkControl->SetIgnoreMouse(true);
-    graphics->AttachControl(wordmarkControl);
+    graphics->AttachControl(new FittedBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark));
     graphics->AttachControl(new ITextControl(IRECT(39.0F, 91.0F, 394.0F, 111.0F),
                                              "WAVE FACTORY ESSENTIALS  /  MASTERING ENERGY",
                                              IText(9.5F, IColor(255, 183, 158, 108), DEFAULT_FONT, EAlign::Near)));
@@ -66,7 +65,7 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
                                     .WithShowValue(false)
                                     .WithWidgetFrac(1.0F);
     auto* characterControl = new IllustratedCharacterControl(
-        IRECT(29.0F, 123.0F, 407.0F, 181.0F), kCharacter, {"CLEAN", "WARM", "PUNCH", "WIDE"},
+        IRECT(29.0F, 125.0F, 407.0F, 174.0F), kCharacter, {"CLEAN", "WARM", "PUNCH", "WIDE"},
         characterStyle, unselectedPlate, selectedPlate);
     characterControl->SetActionFunction([this, graphics](IControl* caller) {
       const auto characterIndex = std::clamp(static_cast<int>(std::lround(caller->GetValue() * 3.0)), 0, 3);
@@ -74,9 +73,7 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     });
     graphics->AttachControl(characterControl);
 
-    auto* frameControl = new IBitmapControl(bounds, frame);
-    frameControl->SetIgnoreMouse(true);
-    graphics->AttachControl(frameControl);
+    graphics->AttachControl(new FittedBitmapControl(bounds, frame));
   };
 #endif
 }

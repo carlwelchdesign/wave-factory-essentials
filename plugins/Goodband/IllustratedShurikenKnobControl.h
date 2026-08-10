@@ -24,8 +24,8 @@ public:
     const auto angleDegrees = mAngle1 + static_cast<float>(GetValue()) * (mAngle2 - mAngle1);
     const auto angleRadians = (angleDegrees - 90.0F) * kPi / 180.0F;
 
-    graphics.DrawBitmap(arena_, mWidgetBounds.GetScaledAboutCentre(1.25F));
-    graphics.DrawBitmap(shuriken_, mWidgetBounds.GetScaledAboutCentre(0.93F));
+    graphics.DrawFittedBitmap(arena_, mWidgetBounds.GetScaledAboutCentre(1.25F));
+    graphics.DrawFittedBitmap(shuriken_, mWidgetBounds.GetScaledAboutCentre(0.93F));
     DrawNeedle(graphics, centerX, centerY, radius, angleRadians);
 
     if (mMouseDown) {
