@@ -2,8 +2,10 @@ iplug_add_plugin(Goodband
   SOURCES
     Goodband.cpp
     Goodband.h
+    GoodbandBackdropControl.h
     GoodbandCharacterPresets.h
     GoodbandSceneControl.h
+    ShurikenKnobControl.h
     ../shared/WaveFactoryUI.h
     resources/resource.h
   RESOURCES
@@ -11,6 +13,8 @@ iplug_add_plugin(Goodband
     resources/fonts/MaShanZheng-OFL.txt
     resources/img/temple-of-mastery-bg.png
     resources/img/temple-of-mastery-bg@2x.png
+    resources/img/temple-of-mastery-gesture-bg.png
+    resources/img/temple-of-mastery-gesture-bg@2x.png
   FORMATS
     VST3 AU CLAP
   LINK

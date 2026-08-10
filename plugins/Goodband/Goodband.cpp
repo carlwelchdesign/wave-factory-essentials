@@ -8,8 +8,10 @@
 #include <utility>
 
 #include "IControls.h"
+#include "GoodbandBackdropControl.h"
 #include "GoodbandCharacterPresets.h"
 #include "GoodbandSceneControl.h"
+#include "ShurikenKnobControl.h"
 #include "../shared/WaveFactoryUI.h"
 #endif
 
@@ -32,22 +34,24 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->LoadFont(DEFAULT_FONT, "Arial", ETextStyle::Normal);
     graphics->LoadFont(kGoodbandTitleFontId, GOODBAND_TITLE_FONT_FN);
     const auto background = graphics->LoadBitmap(TEMPLE_OF_MASTERY_BG_FN);
-    graphics->AttachControl(new GoodbandSceneControl(bounds, background, kAmount, kCharacter, kMix, kOutputTrim));
+    const auto gestureBackground = graphics->LoadBitmap(TEMPLE_OF_MASTERY_GESTURE_BG_FN);
+    graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground));
+    graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim));
 
-    graphics->AttachControl(new ITextControl(IRECT(35.0F, 20.0F, 355.0F, 80.0F), "GOODBAND",
-                                             IText(46.0F, IColor(255, 239, 226, 196),
+    graphics->AttachControl(new ITextControl(IRECT(35.0F, 18.0F, 390.0F, 80.0F), "THREEFOLD PALM",
+                                             IText(39.0F, IColor(255, 239, 226, 196),
                                                    kGoodbandTitleFontId, EAlign::Near)));
     graphics->AttachControl(new ITextControl(IRECT(38.0F, 78.0F, 355.0F, 103.0F),
                                              "WAVE FACTORY ESSENTIALS  /  MASTERING ENERGY",
                                              IText(10.0F, IColor(255, 170, 153, 116), DEFAULT_FONT, EAlign::Near)));
 
     const auto controlStyle = wfe::ui::MakeCinematicControlStyle(IColor(255, 122, 203, 159));
-    graphics->AttachControl(new IVKnobControl(IRECT(35.0F, 130.0F, 137.0F, 250.0F), kAmount,
-                                              "AMOUNT", controlStyle));
-    graphics->AttachControl(new IVKnobControl(IRECT(151.0F, 130.0F, 253.0F, 250.0F), kMix,
-                                              "MIX", controlStyle));
-    graphics->AttachControl(new IVKnobControl(IRECT(267.0F, 130.0F, 369.0F, 250.0F), kOutputTrim,
-                                              "OUTPUT", controlStyle));
+    graphics->AttachControl(
+        new ShurikenKnobControl(IRECT(35.0F, 130.0F, 137.0F, 250.0F), kAmount, "AMOUNT", controlStyle));
+    graphics->AttachControl(
+        new ShurikenKnobControl(IRECT(151.0F, 130.0F, 253.0F, 250.0F), kMix, "MIX", controlStyle));
+    graphics->AttachControl(
+        new ShurikenKnobControl(IRECT(267.0F, 130.0F, 369.0F, 250.0F), kOutputTrim, "OUTPUT", controlStyle));
 
     const auto characterStyle = controlStyle.WithDrawFrame(true)
                                     .WithRoundness(0.04F)

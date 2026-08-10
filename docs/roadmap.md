@@ -5,14 +5,14 @@
 - [x] New standalone repository and dedicated feature branch
 - [x] Pinned iPlug2 dependency
 - [x] Framework-independent DSP library
-- [x] Goodband alpha processing path
+- [x] Threefold Palm alpha processing path
 - [x] Pitch Trails alpha processing path
 - [x] Thin plugin adapters and initial vector UIs
 - [x] Focused deterministic DSP tests
 - [ ] DAW-host validation
 - [ ] Listening review with Presstige and Wave Factory members
 
-## WFE-002 — Goodband listening alpha
+## WFE-002 — Threefold Palm listening alpha
 
 - refine crossover and character voicing using level-matched listening tests
 - add gain-reduction and band-energy meters

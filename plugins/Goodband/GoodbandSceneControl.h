@@ -9,14 +9,12 @@
 
 class GoodbandSceneControl final : public IControl {
 public:
-  GoodbandSceneControl(const IRECT& bounds, const IBitmap& background, int amountParam, int characterParam,
-                       int mixParam, int outputParam)
-      : IControl(bounds, {amountParam, characterParam, mixParam, outputParam}), background_(background) {
+  GoodbandSceneControl(const IRECT& bounds, int amountParam, int characterParam, int mixParam, int outputParam)
+      : IControl(bounds, {amountParam, characterParam, mixParam, outputParam}) {
     SetIgnoreMouse(true);
   }
 
   void Draw(IGraphics& graphics) override {
-    graphics.DrawBitmap(background_, mRECT);
     graphics.FillRect(IColor(255, 174, 132, 64), IRECT(X(38.0F), Y(108.0F), X(101.0F), Y(110.0F)));
 
     const auto amount = static_cast<float>(current_[kAmountValue]);
@@ -30,8 +28,6 @@ public:
     DrawRestingConstellation(graphics, character, energy, output, handX, handY);
     DrawMagicParticles(graphics, character, amount, mix, output, handX, handY);
   }
-
-  void OnRescale() override { background_ = GetUI()->GetScaledBitmap(background_); }
 
   void SetValueFromDelegate(double value, int valueIndex = 0) override {
     IControl::SetValueFromDelegate(value, valueIndex);
@@ -54,7 +50,7 @@ private:
   static constexpr int kAnimationDurationMs = 920;
   static constexpr float kPi = 3.14159265358979323846F;
   static constexpr float kTau = kPi * 2.0F;
-  static constexpr int kMaximumAnimatedParticles = 48;
+  static constexpr int kMaximumAnimatedParticles = 84;
 
   void AdvanceAnimation() {
     const auto progress = std::clamp(GetAnimationProgress(), 0.0, 1.0);
@@ -100,7 +96,7 @@ private:
 
   void DrawRestingConstellation(IGraphics& graphics, int character, float energy, float output, float handX,
                                 float handY) const {
-    constexpr int restingParticles = 9;
+    constexpr int restingParticles = 16;
     for (int index = 0; index < restingParticles; ++index) {
       const auto angle = HashUnit(index, 0, character) * kTau;
       const auto distance = Scale(13.0F + HashUnit(index, 1, character) * (22.0F + energy * 18.0F));
@@ -108,17 +104,17 @@ private:
       const auto y = handY + std::sin(angle) * distance * 0.72F;
       const auto radius = Scale(0.8F + HashUnit(index, 2, character) * 1.6F + output * 0.8F);
       const auto color = ParticleColor(character, index);
-      IBlend halo(EBlend::Add, 0.04F + energy * 0.08F);
-      IBlend core(EBlend::Add, 0.16F + energy * 0.18F);
-      graphics.FillCircle(color, x, y, radius * 3.2F, &halo);
+      IBlend halo(EBlend::Add, 0.07F + energy * 0.12F);
+      IBlend core(EBlend::Add, 0.24F + energy * 0.24F);
+      graphics.FillCircle(color, x, y, radius * 4.4F, &halo);
       graphics.FillCircle(color, x, y, radius, &core);
     }
   }
 
   void DrawMagicParticles(IGraphics& graphics, int character, float amount, float mix, float output, float handX,
                           float handY) const {
-    const auto count = std::clamp(14 + static_cast<int>(amount * 34.0F), 14, kMaximumAnimatedParticles);
-    const auto masterOpacity = std::clamp(0.30F + mix * 0.62F, 0.0F, 0.92F);
+    const auto count = std::clamp(24 + static_cast<int>(amount * 60.0F), 24, kMaximumAnimatedParticles);
+    const auto masterOpacity = std::clamp(0.44F + mix * 0.56F, 0.0F, 1.0F);
 
     for (int index = 0; index < count; ++index) {
       const auto delay = HashUnit(index, 3, character) * 0.24F;
@@ -139,10 +135,12 @@ private:
       PositionParticle(character, angle, seedB, seedC, localProgress, handX, handY, x, y);
 
       const auto lifecycle = std::sin(localProgress * kPi);
-      const auto radius = Scale(0.9F + seedC * 2.4F + amount * 1.3F + output * 0.6F);
+      const auto radius = Scale(1.1F + seedC * 3.0F + amount * 1.8F + output * 0.8F);
       const auto color = ParticleColor(character, index);
-      IBlend halo(EBlend::Add, lifecycle * masterOpacity * 0.20F);
-      IBlend core(EBlend::Add, lifecycle * masterOpacity * 0.82F);
+      IBlend outerHalo(EBlend::Add, lifecycle * masterOpacity * 0.11F);
+      IBlend halo(EBlend::Add, lifecycle * masterOpacity * 0.28F);
+      IBlend core(EBlend::Add, lifecycle * masterOpacity * 0.96F);
+      graphics.FillCircle(color, x, y, radius * 6.0F, &outerHalo);
       graphics.FillCircle(color, x, y, radius * 3.8F, &halo);
       graphics.FillCircle(color, x, y, radius, &core);
     }
@@ -183,7 +181,6 @@ private:
   float Y(float coordinate) const { return mRECT.T + coordinate * (mRECT.H() / 440.0F); }
   float Scale(float amount) const { return amount * std::min(mRECT.W() / 720.0F, mRECT.H() / 440.0F); }
 
-  IBitmap background_;
   std::array<double, kValueCount> current_{};
   std::array<double, kValueCount> start_{};
   std::array<double, kValueCount> target_{};

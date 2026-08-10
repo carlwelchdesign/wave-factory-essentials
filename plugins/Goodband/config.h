@@ -1,7 +1,7 @@
-#define PLUG_NAME "Goodband"
+#define PLUG_NAME "Threefold Palm"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010500
-#define PLUG_VERSION_STR "0.1.5"
+#define PLUG_VERSION_HEX 0x00010600
+#define PLUG_VERSION_STR "0.1.6"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -55,3 +55,4 @@
 
 #define GOODBAND_TITLE_FONT_FN "MaShanZheng-Regular.ttf"
 #define TEMPLE_OF_MASTERY_BG_FN "temple-of-mastery-bg.png"
+#define TEMPLE_OF_MASTERY_GESTURE_BG_FN "temple-of-mastery-gesture-bg.png"

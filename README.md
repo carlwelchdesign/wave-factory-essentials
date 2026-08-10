@@ -4,7 +4,7 @@ Wave Factory Essentials is a small line of free, offline audio plugins shaped by
 
 The first two products are:
 
-- **Goodband** — an approachable multiband dynamics and saturation processor that makes its processing understandable.
+- **Threefold Palm** — an approachable three-band dynamics and saturation processor that makes its processing understandable. The internal `Goodband` target and Audio Unit identity remain stable for compatibility with existing test sessions.
 - **Pitch Trails** — a pitch-shifting delay and diffusion effect that creates musical movement without drawn automation.
 
 ## Product boundaries

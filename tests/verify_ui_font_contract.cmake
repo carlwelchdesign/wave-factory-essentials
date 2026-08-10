@@ -4,7 +4,12 @@ function(verify_plugin_ui_font plugin_name)
 
   string(FIND "${source_contents}" "graphics->LoadFont(DEFAULT_FONT, \"Arial\", ETextStyle::Normal);" font_position)
   string(FIND "${source_contents}" "graphics->AttachControl" control_position)
-  string(FIND "${source_contents}" "new IVKnobControl" parameter_control_position)
+  if(plugin_name STREQUAL "Goodband")
+    set(parameter_control_type "new ShurikenKnobControl")
+  else()
+    set(parameter_control_type "new IVKnobControl")
+  endif()
+  string(FIND "${source_contents}" "${parameter_control_type}" parameter_control_position)
 
   if(font_position EQUAL -1)
     message(FATAL_ERROR "${plugin_name} must load the default UI font")
