@@ -15,19 +15,19 @@
       <key>version</key><integer>65536</integer>
     </dict>
   </array>
-  <key>AudioUnit Version</key><string>0x00010000</string>
+  <key>AudioUnit Version</key><string>0x00010100</string>
   <key>CFBundleDevelopmentRegion</key><string>English</string>
   <key>CFBundleExecutable</key><string>Goodband</string>
-  <key>CFBundleGetInfoString</key><string>Goodband 0.1.0</string>
+  <key>CFBundleGetInfoString</key><string>Goodband 0.1.1</string>
   <key>CFBundleIdentifier</key><string>com.wavefactoryessentials.audiounit.Goodband</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>Goodband</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleShortVersionString</key><string>0.1.1</string>
   <key>CFBundleSignature</key><string>WfGb</string>
-  <key>CFBundleVersion</key><string>0.1.0</string>
+  <key>CFBundleVersion</key><string>0.1.1</string>
   <key>CSResourcesFileMapped</key><true/>
-  <key>LSMinimumSystemVersion</key><string>10.13.0</string>
+  <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSPrincipalClass</key><string>Goodband_View</string>
 </dict>
 </plist>

@@ -4,15 +4,15 @@
 <dict>
   <key>CFBundleDevelopmentRegion</key><string>English</string>
   <key>CFBundleExecutable</key><string>Goodband</string>
-  <key>CFBundleGetInfoString</key><string>Goodband 0.1.0</string>
+  <key>CFBundleGetInfoString</key><string>Goodband 0.1.1</string>
   <key>CFBundleIdentifier</key><string>com.wavefactoryessentials.clap.Goodband</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>Goodband</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleShortVersionString</key><string>0.1.1</string>
   <key>CFBundleSignature</key><string>WfGb</string>
-  <key>CFBundleVersion</key><string>0.1.0</string>
+  <key>CFBundleVersion</key><string>0.1.1</string>
   <key>CSResourcesFileMapped</key><true/>
-  <key>LSMinimumSystemVersion</key><string>10.13.0</string>
+  <key>LSMinimumSystemVersion</key><string>11.0</string>
 </dict>
 </plist>

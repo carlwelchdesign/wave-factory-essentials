@@ -15,6 +15,7 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
   mMakeGraphicsFunc = [&]() { return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS); };
   mLayoutFunc = [&](IGraphics* graphics) {
     const auto bounds = graphics->GetBounds();
+    graphics->LoadFont(DEFAULT_FONT, "Arial", ETextStyle::Normal);
     graphics->AttachPanelBackground(IColor(255, 18, 22, 25));
     graphics->AttachControl(new ITextControl(bounds.GetFromTop(72.0F), "GOODBAND", IText(34.0F, COLOR_WHITE)));
     graphics->AttachControl(new ITextControl(bounds.GetFromTop(118.0F).GetFromBottom(32.0F),

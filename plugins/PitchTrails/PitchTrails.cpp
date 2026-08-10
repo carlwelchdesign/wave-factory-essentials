@@ -16,6 +16,7 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
   mMakeGraphicsFunc = [&]() { return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS); };
   mLayoutFunc = [&](IGraphics* graphics) {
     const auto bounds = graphics->GetBounds();
+    graphics->LoadFont(DEFAULT_FONT, "Arial", ETextStyle::Normal);
     graphics->AttachPanelBackground(IColor(255, 20, 18, 29));
     graphics->AttachControl(new ITextControl(bounds.GetFromTop(72.0F), "PITCH TRAILS", IText(34.0F, COLOR_WHITE)));
     graphics->AttachControl(new ITextControl(bounds.GetFromTop(118.0F).GetFromBottom(32.0F),

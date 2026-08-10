@@ -1,7 +1,7 @@
 #define PLUG_NAME "Pitch Trails"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010000
-#define PLUG_VERSION_STR "0.1.0"
+#define PLUG_VERSION_HEX 0x00010100
+#define PLUG_VERSION_STR "0.1.1"
 #define PLUG_UNIQUE_ID 'WfPt'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
