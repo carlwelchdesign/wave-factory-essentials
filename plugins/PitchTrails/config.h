@@ -10,7 +10,7 @@
 #define PLUG_CLASS_NAME PitchTrails
 
 #define BUNDLE_NAME "PitchTrails"
-#define BUNDLE_MFR "WaveFactoryEssentials"
+#define BUNDLE_MFR "wavefactoryessentials"
 #define BUNDLE_DOMAIN "com"
 #define SHARED_RESOURCES_SUBPATH "PitchTrails"
 

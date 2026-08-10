@@ -8,3 +8,10 @@ else()
 endif()
 
 add_test(NAME wave_factory_dsp_tests COMMAND wave_factory_dsp_tests)
+
+add_test(
+  NAME bundle_metadata_test
+  COMMAND ${CMAKE_COMMAND}
+    -DPROJECT_ROOT=${PROJECT_SOURCE_DIR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/verify_bundle_metadata.cmake
+)
