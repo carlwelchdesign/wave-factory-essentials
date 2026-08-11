@@ -190,7 +190,7 @@ endforeach()
 file(READ "${plugin_config}" config_contents)
 foreach(required_config_token
     "#define PLUG_NAME \"Valley Spirit\""
-    "#define PLUG_VERSION_STR \"0.1.5\""
+    "#define PLUG_VERSION_STR \"0.2.0\""
     "#define PLUG_UNIQUE_ID 'WfPt'"
     "#define BUNDLE_NAME \"PitchTrails\""
     "#define VALLEY_SPIRIT_FONT_FN \"Marcellus-Regular.ttf\"")
@@ -246,7 +246,7 @@ foreach(format_name AU VST3 CLAP)
   foreach(required_plist_token
       "<string>Valley Spirit</string>"
       "<string>PitchTrails</string>"
-      "<string>0.1.5</string>")
+      "<string>0.2.0</string>")
     string(FIND "${plist_contents}" "${required_plist_token}" token_position)
     if(token_position EQUAL -1)
       message(FATAL_ERROR "Valley Spirit ${format_name} metadata must include ${required_plist_token}")

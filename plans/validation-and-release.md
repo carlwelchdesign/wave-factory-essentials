@@ -4,10 +4,15 @@
 
 - Passed: focused DSP and contract tests.
 - Passed: local Universal macOS Audio Unit, VST3, and CLAP compilation for both plugins.
-- Passed: strict code-signature verification on both built Audio Units.
-- Pending: installation, Apple Audio Unit validation, Logic editor and sound testing, Windows CI, packaging, screenshots, versioning, and publication.
+- Passed: strict code-signature verification on both installed Audio Units.
+- Passed: installation of the **0.2.0** candidate Audio Units.
+- Passed: Apple Audio Unit validation, including custom editors, parameters, factory presets, channel layouts, and render tests.
+- Verified: Apple reports both component versions as **2.0.0 (`0x00020000`)**, matching the candidate metadata.
+- Pending: Logic editor and sound testing, Windows CI, packaging, screenshots, and publication.
 
-The development build has not replaced the currently installed tester plugins.
+The development build has replaced the locally installed tester plugins. The previous installed bundles were retained at `/private/tmp/cinematic-plugins-backup.PpS3sz` for this validation session.
+
+Candidate version: **0.2.0** for both products. The version is reserved for this expansion branch and is not a published release until every gate below passes.
 
 ## DSP and state
 
