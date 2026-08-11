@@ -1,7 +1,7 @@
 #define PLUG_NAME "Threefold Palm"
 #define PLUG_MFR "Carl Welch"
-#define PLUG_VERSION_HEX 0x00011000
-#define PLUG_VERSION_STR "0.1.16"
+#define PLUG_VERSION_HEX 0x00020000
+#define PLUG_VERSION_STR "0.2.0"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"

@@ -48,7 +48,8 @@ endif()
 
 file(READ "${scene_header}" scene_contents)
 foreach(required_scene_token
-    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam})"
+    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam,"
+    "freezeParam, pathParam})"
     "SetIgnoreMouse(true)"
     "SetValueFromDelegate"
     "SetAnimation"
@@ -71,7 +72,8 @@ endif()
 
 file(READ "${backdrop_header}" backdrop_contents)
 foreach(required_backdrop_token
-    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam})"
+    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam,"
+    "freezeParam, pathParam})"
     "kGestureCycleDurationMs = 12000"
     "kGestureWindowStart = 0.62F"
     "kGestureParticleCount = 58"
@@ -127,7 +129,9 @@ foreach(required_help_token
     "FEEDBACK"
     "DIFFUSION"
     "MIX"
-    "QUICK START"
+    "RITUAL CONTROLS"
+    "SYNC follows the host division"
+    "Reflection keeps pitch stable"
     "HelpButtonBounds"
     "CloseButtonBounds")
   string(FIND "${help_contents}" "${required_help_token}" token_position)
@@ -186,7 +190,7 @@ endforeach()
 file(READ "${plugin_config}" config_contents)
 foreach(required_config_token
     "#define PLUG_NAME \"Valley Spirit\""
-    "#define PLUG_VERSION_STR \"0.1.5\""
+    "#define PLUG_VERSION_STR \"0.2.0\""
     "#define PLUG_UNIQUE_ID 'WfPt'"
     "#define BUNDLE_NAME \"PitchTrails\""
     "#define VALLEY_SPIRIT_FONT_FN \"Marcellus-Regular.ttf\"")
@@ -242,7 +246,7 @@ foreach(format_name AU VST3 CLAP)
   foreach(required_plist_token
       "<string>Valley Spirit</string>"
       "<string>PitchTrails</string>"
-      "<string>0.1.5</string>")
+      "<string>0.2.0</string>")
     string(FIND "${plist_contents}" "${required_plist_token}" token_position)
     if(token_position EQUAL -1)
       message(FATAL_ERROR "Valley Spirit ${format_name} metadata must include ${required_plist_token}")

@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "plugins/Goodband/GoodbandCharacterPresets.h"
+#include "plugins/Goodband/GoodbandForms.h"
 
 int main() {
   using wfe::ui::GetGoodbandCharacterPreset;
@@ -27,4 +28,11 @@ int main() {
 
   assert(&GetGoodbandCharacterPreset(-1) == &wfe::ui::kGoodbandCharacterPresets.front());
   assert(&GetGoodbandCharacterPreset(99) == &wfe::ui::kGoodbandCharacterPresets.back());
+
+  const auto firstStance = wfe::ui::GetGoodbandForm(0);
+  assert(firstStance.character == 0);
+  assert(firstStance.autoGainMatch);
+  assert(wfe::ui::GetGoodbandForm(3).mixPercent == 48.0);
+  assert(&wfe::ui::GetGoodbandForm(-1) == &wfe::ui::kGoodbandForms.front());
+  assert(&wfe::ui::GetGoodbandForm(99) == &wfe::ui::kGoodbandForms.back());
 }

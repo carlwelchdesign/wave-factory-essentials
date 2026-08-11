@@ -9,6 +9,10 @@ enum EParams {
   kFeedback,
   kDiffusion,
   kMix,
+  kTempoSync,
+  kNoteDivision,
+  kFreeze,
+  kFeedbackPath,
   kNumParams,
 };
 

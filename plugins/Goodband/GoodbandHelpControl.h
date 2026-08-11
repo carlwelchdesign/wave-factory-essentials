@@ -89,13 +89,13 @@ private:
     DrawControl(graphics, 244.0F, "MIX", "Parallel blend between dry and processed signal");
     DrawControl(graphics, 283.0F, "OUTPUT", "Final gain trim for honest level matching");
 
-    graphics.FillRect(IColor(255, 84, 65, 35), IRECT(X(56.0F), Y(337.0F), X(664.0F), Y(338.0F)));
-    DrawText(graphics, "QUICK START", 10.8F, kGold,
-             IRECT(X(56.0F), Y(348.0F), X(150.0F), Y(369.0F)));
-    DrawText(graphics, "Choose a Character, raise Amount until the mix feels energized, then set Mix and level-match Output.",
-             11.0F, kIvory, IRECT(X(151.0F), Y(348.0F), X(664.0F), Y(369.0F)));
-    DrawText(graphics, "Tip: start subtly on a full mix. Wide is most effective on stereo material.",
-             10.4F, kMuted, IRECT(X(151.0F), Y(370.0F), X(664.0F), Y(391.0F)));
+    graphics.FillRect(IColor(255, 84, 65, 35), IRECT(X(56.0F), Y(329.0F), X(664.0F), Y(330.0F)));
+    DrawText(graphics, "FORMS / METERS / MATCH", 10.8F, kGold,
+             IRECT(X(56.0F), Y(339.0F), X(250.0F), Y(360.0F)));
+    DrawText(graphics, "Forms load complete starting stances. LOW, MID and HIGH show live gain reduction.",
+             11.0F, kIvory, IRECT(X(56.0F), Y(360.0F), X(664.0F), Y(379.0F)));
+    DrawText(graphics, "MATCH compensates perceived level; the GAIN COMP plaque shows the trim applied before OUTPUT.",
+             10.7F, kMuted, IRECT(X(56.0F), Y(379.0F), X(664.0F), Y(398.0F)));
   }
 
   void DrawMode(IGraphics& graphics, float y, const char* name, const char* description) const {

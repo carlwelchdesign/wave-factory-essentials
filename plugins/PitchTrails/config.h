@@ -1,7 +1,7 @@
 #define PLUG_NAME "Valley Spirit"
 #define PLUG_MFR "Carl Welch"
-#define PLUG_VERSION_HEX 0x00010500
-#define PLUG_VERSION_STR "0.1.5"
+#define PLUG_VERSION_HEX 0x00020000
+#define PLUG_VERSION_STR "0.2.0"
 #define PLUG_UNIQUE_ID 'WfPt'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"

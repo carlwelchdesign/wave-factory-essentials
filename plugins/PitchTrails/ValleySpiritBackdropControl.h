@@ -11,9 +11,11 @@ class ValleySpiritBackdropControl final : public IControl {
 public:
   ValleySpiritBackdropControl(const IRECT& bounds, int delayParam, int pitchParam,
                               int feedbackParam, int diffusionParam, int mixParam,
+                              int freezeParam, int pathParam,
                               const IBitmap& restingBackground,
                               const IBitmap& gestureBackground, const IBitmap& vfxAtlas)
-      : IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam}),
+      : IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam,
+                          freezeParam, pathParam}),
         restingBackground_(restingBackground),
         gestureBackground_(gestureBackground),
         vfxAtlas_(vfxAtlas) {
@@ -34,8 +36,10 @@ public:
     const auto feedback = static_cast<float>(GetValue(kFeedbackValue));
     const auto diffusion = static_cast<float>(GetValue(kDiffusionValue));
     const auto mix = static_cast<float>(GetValue(kMixValue));
+    const auto freeze = static_cast<float>(GetValue(kFreezeValue));
+    const auto path = static_cast<float>(GetValue(kPathValue));
     const auto energy = std::clamp(gestureAmount * (0.72F + mix * 0.52F) +
-                                       responsePulse_ * 0.42F,
+                                       responsePulse_ * 0.42F + freeze * 0.24F + path * 0.06F,
                                    0.0F, 1.0F);
     if (energy > 0.015F) {
       DrawGestureEnergy(graphics, gestureAmount, feedback, diffusion, mix, energy);
@@ -66,6 +70,8 @@ private:
     kFeedbackValue,
     kDiffusionValue,
     kMixValue,
+    kFreezeValue,
+    kPathValue,
   };
 
   static constexpr int kGestureCycleDurationMs = 12000;

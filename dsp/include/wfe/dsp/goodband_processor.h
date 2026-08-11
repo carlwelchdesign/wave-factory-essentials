@@ -17,6 +17,7 @@ struct GoodbandParameters {
   GoodbandCharacter character = GoodbandCharacter::Clean;
   float mix = 1.0F;
   float outputTrimDb = 0.0F;
+  bool autoGainMatch = false;
 };
 
 class GoodbandProcessor final {
@@ -26,6 +27,8 @@ class GoodbandProcessor final {
   void SetParameters(GoodbandParameters parameters) noexcept;
 
   [[nodiscard]] std::array<float, 2> ProcessFrame(float left, float right) noexcept;
+  [[nodiscard]] const std::array<float, 3>& GetGainReductionDb() const noexcept;
+  [[nodiscard]] float GetAutoGainCompensationDb() const noexcept;
 
  private:
   class OnePoleLowpass final {
@@ -62,6 +65,11 @@ class GoodbandProcessor final {
   std::array<ChannelState, 2> channels_{};
   std::array<EnvelopeFollower, 3> envelopes_{};
   GoodbandParameters parameters_{};
+  std::array<float, 3> gainReductionDb_{};
+  double sampleRate_ = 48000.0;
+  float dryEnergy_ = 0.0F;
+  float processedEnergy_ = 0.0F;
+  float autoGainCompensationDb_ = 0.0F;
 };
 
 }  // namespace wfe::dsp

@@ -8,28 +8,33 @@ This collection gives producers focused tools that solve concrete workflow probl
 
 Threefold Palm answers Presstige's request for a multiband “sound-good” processor that is not Maximus. Its differentiation is speed plus transparency: a producer should be able to improve energy and density quickly, level-match the result, and understand which bands are being changed. The development target remains `Goodband` so existing test sessions keep the same Audio Unit identity.
 
-Initial controls:
+Controls:
 
 - Amount
 - Character: Clean, Warm, Punch, Wide
 - Mix
 - Output trim
+- Auto Match
+- Factory Forms
 
-The current alpha implements a complementary three-band split, linked-stereo envelope control, character-dependent soft saturation, and output trim. Metering, oversampling, crossover controls, and a true loudness-matched audition mode remain future work.
+The current development build adds live low/mid/high gain-reduction meters, slowly smoothed automatic gain matching, and five complete factory Forms. Adjustable crossover controls and oversampling remain later work after the new judgment tools have been tested in real sessions.
 
 ## Valley Spirit
 
 Valley Spirit answers Presstige's request for pitch-shifting reverb and delay that does not require drawn automation. The name draws from the Daoist valley spirit: emptiness that remains responsive and inexhaustible. The product expression is “the valley answers without end”—a sound enters, travels, and returns transformed. Its development target remains `PitchTrails` so existing test sessions keep the same plug-in identity.
 
-Initial controls:
+Controls:
 
 - Delay time
 - Pitch in semitones
 - Feedback
 - Diffusion
 - Mix
+- Tempo Sync and note division
+- Freeze
+- Feedback Path: Reflection, Spiral, Cloud
 
-The current alpha implements dual crossfaded pitch-delay heads, bounded feedback, and a stereo diffusion tail. Its moonlit manual interface maps each control to visible spirit energy: time changes the path, pitch changes its rise or fall, feedback changes persistence, diffusion changes scatter, and mix changes intensity. Tempo sync, step sequencing, scale constraints, modulation modes, freeze, and selectable feedback-path placement remain future work.
+The current development build adds host-tempo divisions, a smoothly entered Freeze state, and explicit feedback topology. Reflection keeps the selected pitch interval stable, Spiral compounds pitch on each return, and Cloud compounds pitch plus diffusion. Its moonlit manual interface maps every control to visible spirit energy. Pitch sequencing, scale constraints, and envelope-driven movement remain later work.
 
 ## Free-offer boundary
 
