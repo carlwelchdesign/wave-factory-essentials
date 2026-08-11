@@ -1,4 +1,4 @@
-name: Threefold Palm tester builds
+name: Wave Factory Essentials tester builds
 
 on:
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
       - "dsp/**"
       - "packaging/**"
       - "plugins/Goodband/**"
+      - "plugins/PitchTrails/**"
       - "scripts/package-windows.ps1"
       - "tests/**"
       - "third_party/iPlug2"
@@ -38,10 +39,10 @@ jobs:
           -DIPLUG_DEPLOY_PLUGINS=OFF
           -DBUILD_TESTING=ON
 
-      - name: Build Threefold Palm and tests
+      - name: Build plug-ins and tests
         run: >-
           cmake --build build/windows --config Release
-          --target Goodband-vst3 Goodband-clap wave_factory_dsp_tests goodband_character_preset_tests
+          --target Goodband-vst3 Goodband-clap PitchTrails-vst3 PitchTrails-clap wave_factory_dsp_tests goodband_character_preset_tests
 
       - name: Run tests
         run: ctest --test-dir build/windows -C Release --output-on-failure

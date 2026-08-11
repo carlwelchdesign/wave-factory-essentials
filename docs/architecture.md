@@ -12,7 +12,7 @@ iPlug2 adapter targets
 wave_factory_dsp
   |              |
   v              v
-Threefold Palm  Pitch Trails
+Threefold Palm  Valley Spirit
 ```
 
 The DSP library has no dependency on iPlug2, a UI framework, networking, file I/O, or host state. Plugin adapters translate host parameters and buffers into the DSP API.
@@ -39,7 +39,7 @@ input
 
 The alpha uses subtractive complementary splits so the unprocessed bands reconstruct the input. The crossover implementation is intentionally isolated so it can later be replaced by a higher-order design without changing the plugin adapter.
 
-## Pitch Trails signal path
+## Valley Spirit signal path
 
 ```text
 input + bounded feedback

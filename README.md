@@ -63,9 +63,23 @@ These are pre-release builds:
 
 When reporting a problem, include your operating system, CPU, DAW and version, plugin format, reproduction steps, and whether the problem affects scanning, opening, audio, saved settings, visuals, or CPU use.
 
-## Pitch Trails
+## Valley Spirit
 
-Pitch Trails is the second Wave Factory Essentials concept: a pitch-shifting delay and diffusion effect for creating musical movement without drawing automation. It remains an earlier development build and is not included in the Threefold Palm tester release.
+Valley Spirit is a pitch-shifting delay and diffusion effect that turns a sound into a returning, evolving trail. Its name comes from the Daoist image of the valley: empty but responsive, receiving energy without holding it. The effect receives a sound, lets it travel, and returns it transformed.
+
+### Controls
+
+| Control | What it changes |
+| --- | --- |
+| **Echo Time** | Distance before the first return. |
+| **Pitch** | Raises or lowers every spectral return in semitones. |
+| **Feedback** | Length and persistence of the echo path. |
+| **Diffusion** | Softens each return into a wider, mist-like cloud. |
+| **Mix** | Blends the transformed path with the original source. |
+
+For a fast starting point, set Echo Time, choose a Pitch interval, then raise Feedback until the trail breathes. Use Diffusion to blur distinct repeats into atmosphere and Mix to place the effect behind or around the source. The interface includes an in-plugin **?** manual with the same guidance.
+
+Valley Spirit remains deterministic, offline DSP with no AI, accounts, telemetry, or uploads. The internal bundle filename remains `PitchTrails` so existing sessions and host identities stay compatible; DAWs display **Valley Spirit**.
 
 ## Build from source
 
@@ -98,7 +112,7 @@ Requirements:
 ```powershell
 git submodule update --init --recursive
 cmake -S . -B build/windows -G "Visual Studio 17 2022" -A x64 -DIPLUG_DEPLOY_PLUGINS=OFF -DBUILD_TESTING=ON
-cmake --build build/windows --config Release --target Goodband-vst3 Goodband-clap wave_factory_dsp_tests goodband_character_preset_tests
+cmake --build build/windows --config Release --target Goodband-vst3 Goodband-clap PitchTrails-vst3 PitchTrails-clap wave_factory_dsp_tests goodband_character_preset_tests
 ctest --test-dir build/windows -C Release --output-on-failure
 ./scripts/package-windows.ps1
 ```

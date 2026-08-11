@@ -1,0 +1,13 @@
+#pragma once
+#include "resource.h"
+#include "../config.h"
+
+VALLEY_SPIRIT_FONT_FN TTF VALLEY_SPIRIT_FONT_FN
+VALLEY_SPIRIT_BG_FN PNG VALLEY_SPIRIT_BG_FN
+"valley-spirit-bg@2x.png" PNG "valley-spirit-bg@2x.png"
+VALLEY_SPIRIT_FRAME_FN PNG VALLEY_SPIRIT_FRAME_FN
+"valley-spirit-frame@2x.png" PNG "valley-spirit-frame@2x.png"
+VALLEY_SPIRIT_MOONSTONE_DIAL_FN PNG VALLEY_SPIRIT_MOONSTONE_DIAL_FN
+"moonstone-dial@2x.png" PNG "moonstone-dial@2x.png"
+VALLEY_SPIRIT_JADE_DIAL_FN PNG VALLEY_SPIRIT_JADE_DIAL_FN
+"jade-dial@2x.png" PNG "jade-dial@2x.png"

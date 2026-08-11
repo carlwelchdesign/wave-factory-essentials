@@ -1,7 +1,7 @@
-#define PLUG_NAME "Pitch Trails"
+#define PLUG_NAME "Valley Spirit"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010200
-#define PLUG_VERSION_STR "0.1.2"
+#define PLUG_VERSION_HEX 0x00010300
+#define PLUG_VERSION_STR "0.1.3"
 #define PLUG_UNIQUE_ID 'WfPt'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -37,14 +37,14 @@
 #define AAX_TYPE_IDS 'WP01', 'WP02'
 #define AAX_TYPE_IDS_AUDIOSUITE 'WPA1', 'WPA2'
 #define AAX_PLUG_MFR_STR "Wave Factory Essentials"
-#define AAX_PLUG_NAME_STR "Pitch Trails\nPitchTrails"
+#define AAX_PLUG_NAME_STR "Valley Spirit\nPitchTrails"
 #define AAX_PLUG_CATEGORY_STR "Delay"
 #define AAX_DOES_AUDIOSUITE 0
 
 #define VST3_SUBCATEGORY "Fx|Delay|Reverb"
 #define CLAP_MANUAL_URL ""
 #define CLAP_SUPPORT_URL ""
-#define CLAP_DESCRIPTION "Pitch-shifting delay and diffusion without drawn automation"
+#define CLAP_DESCRIPTION "Pitch-shifting delay and diffusion inspired by returning energy"
 #define CLAP_FEATURES "audio-effect", "delay", "reverb"
 
 #define APP_NUM_CHANNELS 2
@@ -52,3 +52,10 @@
 #define APP_MULT 1
 #define APP_COPY_AUV3 0
 #define APP_SIGNAL_VECTOR_SIZE 64
+
+#define VALLEY_SPIRIT_FONT "ValleySpirit"
+#define VALLEY_SPIRIT_FONT_FN "Marcellus-Regular.ttf"
+#define VALLEY_SPIRIT_BG_FN "valley-spirit-bg.png"
+#define VALLEY_SPIRIT_FRAME_FN "valley-spirit-frame.png"
+#define VALLEY_SPIRIT_MOONSTONE_DIAL_FN "moonstone-dial.png"
+#define VALLEY_SPIRIT_JADE_DIAL_FN "jade-dial.png"
