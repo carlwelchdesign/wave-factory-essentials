@@ -8,6 +8,10 @@ set(plugin_source "${plugin_root}/PitchTrails.cpp")
 set(plugin_config "${plugin_root}/config.h")
 set(plugin_cmake "${plugin_root}/CMakeLists.txt")
 set(windows_resources "${plugin_root}/resources/main.rc")
+set(windows_packager "${PROJECT_ROOT}/scripts/package-windows.ps1")
+set(windows_installer "${PROJECT_ROOT}/packaging/Install-Valley-Spirit.ps1")
+set(windows_readme "${PROJECT_ROOT}/packaging/README-Valley-Spirit-Windows.txt")
+set(tester_workflow "${PROJECT_ROOT}/.github/workflows/tester-builds.yml")
 
 function(verify_png_dimensions asset_name expected_width expected_height)
   set(asset_path "${plugin_root}/resources/img/${asset_name}")
@@ -238,4 +242,52 @@ foreach(format_name AU VST3 CLAP)
       message(FATAL_ERROR "Valley Spirit ${format_name} metadata must include ${required_plist_token}")
     endif()
   endforeach()
+endforeach()
+
+foreach(required_file
+    "${windows_packager}"
+    "${windows_installer}"
+    "${windows_readme}"
+    "${tester_workflow}")
+  if(NOT EXISTS "${required_file}")
+    message(FATAL_ERROR "Valley Spirit Windows publication file is missing: ${required_file}")
+  endif()
+endforeach()
+
+file(READ "${windows_packager}" packager_contents)
+foreach(required_packager_token
+    "plugins/PitchTrails/config.h"
+    "Valley-Spirit-$valleySpiritVersion-Windows-x64"
+    "out/PitchTrails.vst3"
+    "out/PitchTrails.clap"
+    "Install-Valley-Spirit.ps1"
+    "README-Valley-Spirit-Windows.txt")
+  string(FIND "${packager_contents}" "${required_packager_token}" token_position)
+  if(token_position EQUAL -1)
+    message(FATAL_ERROR "Valley Spirit Windows packager must include ${required_packager_token}")
+  endif()
+endforeach()
+
+file(READ "${windows_installer}" installer_contents)
+foreach(required_installer_token
+    "PitchTrails.vst3"
+    "PitchTrails.clap"
+    "Programs\\Common"
+    "Installed Valley Spirit VST3 and CLAP test builds")
+  string(FIND "${installer_contents}" "${required_installer_token}" token_position)
+  if(token_position EQUAL -1)
+    message(FATAL_ERROR "Valley Spirit Windows installer must include ${required_installer_token}")
+  endif()
+endforeach()
+
+file(READ "${tester_workflow}" workflow_contents)
+foreach(required_workflow_token
+    "PitchTrails-vst3"
+    "PitchTrails-clap"
+    "Wave-Factory-Essentials-Windows-x64"
+    "dist/Valley-Spirit-*-Windows-x64.zip")
+  string(FIND "${workflow_contents}" "${required_workflow_token}" token_position)
+  if(token_position EQUAL -1)
+    message(FATAL_ERROR "Windows tester workflow must include ${required_workflow_token}")
+  endif()
 endforeach()

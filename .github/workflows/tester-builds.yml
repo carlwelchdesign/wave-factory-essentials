@@ -54,6 +54,8 @@ jobs:
       - name: Upload Windows tester ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Threefold-Palm-Windows-x64
-          path: dist/Threefold-Palm-*-Windows-x64.zip
+          name: Wave-Factory-Essentials-Windows-x64
+          path: |
+            dist/Threefold-Palm-*-Windows-x64.zip
+            dist/Valley-Spirit-*-Windows-x64.zip
           if-no-files-found: error
