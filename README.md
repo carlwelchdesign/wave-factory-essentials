@@ -2,6 +2,15 @@
 
 Free, offline audio tools shaped by requests from Wave Factory members. No AI, accounts, telemetry, uploads, or hosted services.
 
+## Tester downloads
+
+| Plug-in | macOS | Windows | Release notes |
+| --- | --- | --- | --- |
+| **Threefold Palm 0.1.15** | [Universal AU, VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.15/Threefold-Palm-0.1.15-macOS-Universal.zip) | [x64 VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.15/Threefold-Palm-0.1.15-Windows-x64.zip) | [View release](https://github.com/carlwelchdesign/wave-factory-essentials/releases/tag/v0.1.15) |
+| **Valley Spirit 0.1.4** | [Apple Silicon AU, VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.4/Valley-Spirit-0.1.4-macOS-Apple-Silicon.zip) | [x64 VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.4/Valley-Spirit-0.1.4-Windows-x64.zip) | [View release](https://github.com/carlwelchdesign/wave-factory-essentials/releases/tag/v0.1.4) |
+
+These are free, pre-release tester builds. Close every DAW before installing or replacing a plug-in.
+
 ![Threefold Palm visual direction](docs/images/threefold-palm-hero.png)
 
 > The hero image establishes the approved Threefold Palm visual direction. The current plugin UI is shown below in Logic Pro.
@@ -45,27 +54,57 @@ Selecting a Character also recalls a useful starting point for Amount, Mix, and 
 
 Start subtly on a full mix. **Wide** is most effective on stereo sources.
 
-## Download test builds
+## Valley Spirit
 
-Tester packages are available from the [latest GitHub release](https://github.com/carlwelchdesign/wave-factory-essentials/releases/latest).
+Valley Spirit is a pitch-shifting delay and diffusion effect that turns a sound into a returning, evolving trail. Its name comes from the Daoist image of the valley: empty but responsive, receiving energy without holding it. The effect receives a sound, lets it travel, and returns it transformed.
 
-| Platform | Architectures | Formats |
-| --- | --- | --- |
-| macOS 11+ | Apple Silicon and Intel | Audio Unit, VST3, CLAP |
-| Windows 10/11 | x64 Intel/AMD | VST3, CLAP |
+| Resting technique | Sensei energy gesture |
+| :---: | :---: |
+| ![Valley Spirit resting interface](docs/images/valley-spirit-resting.png) | ![Valley Spirit Sensei energy-channeling gesture](docs/images/valley-spirit-gesture.png) |
 
-These are pre-release builds:
+These screenshots come directly from the 0.1.4 renderer. The engraved frame reaches the plug-in edges, while the animated state replaces the Sensei's pose and gathers brighter returning energy around his hand.
 
-- macOS bundles are ad-hoc signed but not notarized.
-- Windows binaries are unsigned and may produce a security warning.
-- The internal bundle filename remains `Goodband` to preserve compatibility with existing sessions; DAWs display **Threefold Palm**.
-- Close every DAW before installing or replacing a build.
+### Controls
 
-When reporting a problem, include your operating system, CPU, DAW and version, plugin format, reproduction steps, and whether the problem affects scanning, opening, audio, saved settings, visuals, or CPU use.
+| Control | What it changes |
+| --- | --- |
+| **Echo Time** | Distance before the first return. |
+| **Pitch** | Raises or lowers every spectral return in semitones. |
+| **Feedback** | Length and persistence of the echo path. |
+| **Diffusion** | Softens each return into a wider, mist-like cloud. |
+| **Mix** | Blends the transformed path with the original source. |
 
-## Pitch Trails
+For a fast starting point, set Echo Time, choose a Pitch interval, then raise Feedback until the trail breathes. Use Diffusion to blur distinct repeats into atmosphere and Mix to place the effect behind or around the source. The interface includes an in-plugin **?** manual with the same guidance.
 
-Pitch Trails is the second Wave Factory Essentials concept: a pitch-shifting delay and diffusion effect for creating musical movement without drawing automation. It remains an earlier development build and is not included in the Threefold Palm tester release.
+The moonlit interface is alive without covering the controls: textured spirit wisps respond to all five parameters, and the Sensei periodically shifts from a resting stance into an energy-channeling gesture as the returning trails converge around his hand.
+
+Valley Spirit remains deterministic, offline DSP with no AI, accounts, telemetry, or uploads. The internal bundle filename remains `PitchTrails` so existing sessions and host identities stay compatible; DAWs display **Valley Spirit**.
+
+### Quick start
+
+1. Insert Valley Spirit on a vocal, lead, instrument, or effects send.
+2. Set **Echo Time** to establish the spacing of the trail.
+3. Choose a **Pitch** interval. Try `+7 st` or `+12 st` for rising spirits, or a negative interval for descending shadows.
+4. Raise **Feedback** until the trail lasts as long as the phrase needs.
+5. Add **Diffusion** to turn distinct repeats into a softer cloud.
+6. Use **Mix** to place the transformed trail behind or around the original sound.
+
+Keep Feedback conservative while learning the effect. The DSP bounds feedback internally, but dense pitch-shifted repeats can still become intense.
+
+## Installation and compatibility
+
+| Build | Operating system | Architectures | Formats |
+| --- | --- | --- | --- |
+| Threefold Palm 0.1.15 | macOS 11+ | Apple Silicon and Intel | Audio Unit, VST3, CLAP |
+| Threefold Palm 0.1.15 | Windows 10/11 | x64 Intel/AMD | VST3, CLAP |
+| Valley Spirit 0.1.4 | macOS 11+ | Apple Silicon | Audio Unit, VST3, CLAP |
+| Valley Spirit 0.1.4 | Windows 10/11 | x64 Intel/AMD | VST3, CLAP |
+
+Each ZIP includes installation instructions. The macOS bundles are ad-hoc signed but not notarized. The Windows binaries are unsigned and may produce a security warning.
+
+The internal filenames remain `Goodband` for Threefold Palm and `PitchTrails` for Valley Spirit. This preserves compatibility with existing sessions even though DAWs show the finished product names.
+
+When reporting a problem, include your operating system, CPU, DAW and version, plug-in format, reproduction steps, and whether the problem affects scanning, opening, audio, saved settings, visuals, or CPU use.
 
 ## Build from source
 
@@ -98,7 +137,7 @@ Requirements:
 ```powershell
 git submodule update --init --recursive
 cmake -S . -B build/windows -G "Visual Studio 17 2022" -A x64 -DIPLUG_DEPLOY_PLUGINS=OFF -DBUILD_TESTING=ON
-cmake --build build/windows --config Release --target Goodband-vst3 Goodband-clap wave_factory_dsp_tests goodband_character_preset_tests
+cmake --build build/windows --config Release --target Goodband-vst3 Goodband-clap PitchTrails-vst3 PitchTrails-clap wave_factory_dsp_tests goodband_character_preset_tests
 ctest --test-dir build/windows -C Release --output-on-failure
 ./scripts/package-windows.ps1
 ```

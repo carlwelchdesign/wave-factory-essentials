@@ -5,27 +5,27 @@
   <key>AudioComponents</key>
   <array>
     <dict>
-      <key>description</key><string>Pitch Trails</string>
+      <key>description</key><string>Valley Spirit</string>
       <key>factoryFunction</key><string>PitchTrails_Factory</string>
       <key>manufacturer</key><string>WvFy</string>
-      <key>name</key><string>Wave Factory Essentials: Pitch Trails</string>
+      <key>name</key><string>Wave Factory Essentials: Valley Spirit</string>
       <key>sandboxSafe</key><true/>
       <key>subtype</key><string>WfPt</string>
       <key>type</key><string>aufx</string>
-      <key>version</key><integer>65536</integer>
+      <key>version</key><integer>66560</integer>
     </dict>
   </array>
-  <key>AudioUnit Version</key><string>0x00010200</string>
+  <key>AudioUnit Version</key><string>0x00010400</string>
   <key>CFBundleDevelopmentRegion</key><string>English</string>
   <key>CFBundleExecutable</key><string>PitchTrails</string>
-  <key>CFBundleGetInfoString</key><string>Pitch Trails 0.1.2</string>
+  <key>CFBundleGetInfoString</key><string>Valley Spirit 0.1.4</string>
   <key>CFBundleIdentifier</key><string>com.wavefactoryessentials.audiounit.PitchTrails</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-  <key>CFBundleName</key><string>Pitch Trails</string>
+  <key>CFBundleName</key><string>Valley Spirit</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.2</string>
+  <key>CFBundleShortVersionString</key><string>0.1.4</string>
   <key>CFBundleSignature</key><string>WfPt</string>
-  <key>CFBundleVersion</key><string>0.1.2</string>
+  <key>CFBundleVersion</key><string>0.1.4</string>
   <key>CSResourcesFileMapped</key><true/>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSPrincipalClass</key><string>PitchTrails_View</string>

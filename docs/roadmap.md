@@ -6,7 +6,7 @@
 - [x] Pinned iPlug2 dependency
 - [x] Framework-independent DSP library
 - [x] Threefold Palm alpha processing path
-- [x] Pitch Trails alpha processing path
+- [x] Valley Spirit alpha processing path
 - [x] Thin plugin adapters and initial vector UIs
 - [x] Focused deterministic DSP tests
 - [ ] DAW-host validation
@@ -20,7 +20,12 @@
 - create factory presets with documented intent
 - test mono, stereo, sample-rate changes, automation, and state restoration
 
-## WFE-003 — Pitch Trails motion alpha
+## WFE-003 — Valley Spirit motion alpha
+
+- [x] Moonlit Secret Technique Manual visual system
+- [x] Illustrated moonstone and jade controls with live values
+- [x] Parameter-driven returning-energy animation
+- [x] In-plugin philosophy, control guide, and quick start
 
 - tempo-synced delay values
 - pitch step sequencer
