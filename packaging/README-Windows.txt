@@ -1,11 +1,11 @@
-THREEFOLD PALM 0.1.15 - WINDOWS x64 TEST BUILD
+THREEFOLD PALM 0.1.16 - WINDOWS x64 TEST BUILD
 
 Formats
 - VST3: Goodband.vst3
 - CLAP: Goodband.clap
 
 The internal filename remains Goodband for compatibility with existing sessions.
-Your DAW should display the plugin as Threefold Palm by Wave Factory Essentials.
+Your DAW should display the plugin as Threefold Palm by Carl Welch.
 
 Installation
 1. Close every DAW.

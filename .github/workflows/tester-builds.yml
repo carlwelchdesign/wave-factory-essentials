@@ -1,4 +1,4 @@
-name: Wave Factory Essentials tester builds
+name: Threefold Palm and Valley Spirit tester builds
 
 on:
   workflow_dispatch:
@@ -54,7 +54,7 @@ jobs:
       - name: Upload Windows tester ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Wave-Factory-Essentials-Windows-x64
+          name: Threefold-Palm-and-Valley-Spirit-Windows-x64
           path: |
             dist/Threefold-Palm-*-Windows-x64.zip
             dist/Valley-Spirit-*-Windows-x64.zip

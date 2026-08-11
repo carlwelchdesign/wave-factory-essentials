@@ -48,7 +48,7 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->AttachControl(
         new threefold::AspectFitBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark));
     graphics->AttachControl(new ITextControl(IRECT(39.0F, 91.0F, 394.0F, 111.0F),
-                                             "WAVE FACTORY ESSENTIALS  /  MASTERING ENERGY",
+                                             "THREE-BAND DYNAMICS  /  MASTERING ENERGY",
                                              IText(9.5F, IColor(255, 183, 158, 108), DEFAULT_FONT, EAlign::Near)));
 
     const auto controlStyle = wfe::ui::MakeCinematicControlStyle(IColor(255, 111, 226, 183))

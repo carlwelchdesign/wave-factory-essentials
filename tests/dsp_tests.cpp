@@ -103,6 +103,6 @@ int main() {
   TestPitchTrailsDryIdentity();
   TestPitchTrailsImpulseDelay();
   TestPitchTrailsShiftedFeedbackStaysBounded();
-  std::cout << "All Wave Factory DSP tests passed\n";
+  std::cout << "All plugin DSP tests passed\n";
   return EXIT_SUCCESS;
 }

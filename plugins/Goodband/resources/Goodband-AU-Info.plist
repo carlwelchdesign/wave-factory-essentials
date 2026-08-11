@@ -8,24 +8,24 @@
       <key>description</key><string>Threefold Palm</string>
       <key>factoryFunction</key><string>Goodband_Factory</string>
       <key>manufacturer</key><string>WvFy</string>
-      <key>name</key><string>Wave Factory Essentials: Threefold Palm</string>
+      <key>name</key><string>Carl Welch: Threefold Palm</string>
       <key>sandboxSafe</key><true/>
       <key>subtype</key><string>WfGb</string>
       <key>type</key><string>aufx</string>
-      <key>version</key><integer>69376</integer>
+      <key>version</key><integer>69632</integer>
     </dict>
   </array>
-  <key>AudioUnit Version</key><string>0x00010F00</string>
+  <key>AudioUnit Version</key><string>0x00011000</string>
   <key>CFBundleDevelopmentRegion</key><string>English</string>
   <key>CFBundleExecutable</key><string>Goodband</string>
-  <key>CFBundleGetInfoString</key><string>Threefold Palm 0.1.15</string>
+  <key>CFBundleGetInfoString</key><string>Threefold Palm 0.1.16</string>
   <key>CFBundleIdentifier</key><string>com.wavefactoryessentials.audiounit.Goodband</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>Threefold Palm</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>0.1.15</string>
+  <key>CFBundleShortVersionString</key><string>0.1.16</string>
   <key>CFBundleSignature</key><string>WfGb</string>
-  <key>CFBundleVersion</key><string>0.1.15</string>
+  <key>CFBundleVersion</key><string>0.1.16</string>
   <key>CSResourcesFileMapped</key><true/>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSPrincipalClass</key><string>Goodband_View</string>
