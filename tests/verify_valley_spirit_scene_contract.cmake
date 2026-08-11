@@ -1,5 +1,7 @@
 set(plugin_root "${PROJECT_ROOT}/plugins/PitchTrails")
 set(scene_header "${plugin_root}/ValleySpiritSceneControl.h")
+set(backdrop_header "${plugin_root}/ValleySpiritBackdropControl.h")
+set(vfx_renderer_header "${plugin_root}/ValleySpiritVfxRenderer.h")
 set(help_header "${plugin_root}/ValleySpiritHelpControl.h")
 set(dial_header "${plugin_root}/IllustratedSpiritDialControl.h")
 set(plugin_source "${plugin_root}/PitchTrails.cpp")
@@ -25,12 +27,16 @@ endfunction()
 
 verify_png_dimensions("valley-spirit-bg.png" 760 460)
 verify_png_dimensions("valley-spirit-bg@2x.png" 1520 920)
+verify_png_dimensions("valley-spirit-gesture-bg.png" 760 460)
+verify_png_dimensions("valley-spirit-gesture-bg@2x.png" 1520 920)
 verify_png_dimensions("valley-spirit-frame.png" 760 460)
 verify_png_dimensions("valley-spirit-frame@2x.png" 1520 920)
 verify_png_dimensions("moonstone-dial.png" 256 256)
 verify_png_dimensions("moonstone-dial@2x.png" 512 512)
 verify_png_dimensions("jade-dial.png" 192 192)
 verify_png_dimensions("jade-dial@2x.png" 384 384)
+verify_png_dimensions("spirit-vfx-atlas.png" 512 512)
+verify_png_dimensions("spirit-vfx-atlas@2x.png" 1024 1024)
 
 if(NOT EXISTS "${plugin_root}/resources/fonts/Marcellus-Regular.ttf")
   message(FATAL_ERROR "Valley Spirit must bundle its title and control font")
@@ -45,11 +51,50 @@ foreach(required_scene_token
     "DrawReturningRibbons"
     "DrawEchoFragments"
     "PathCubicBezierTo"
-    "FillTriangle"
+    "DrawAtlasSprite"
     "kMaximumFragments = 52")
   string(FIND "${scene_contents}" "${required_scene_token}" token_position)
   if(token_position EQUAL -1)
     message(FATAL_ERROR "Valley Spirit scene must include ${required_scene_token}")
+  endif()
+endforeach()
+
+string(FIND "${scene_contents}" "FillTriangle" scene_triangle_position)
+string(FIND "${scene_contents}" "DrawLine" scene_line_position)
+if(NOT scene_triangle_position EQUAL -1 OR NOT scene_line_position EQUAL -1)
+  message(FATAL_ERROR "Valley Spirit ambient motion must use textured sprites, not geometric particles")
+endif()
+
+file(READ "${backdrop_header}" backdrop_contents)
+foreach(required_backdrop_token
+    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam})"
+    "kGestureCycleDurationMs = 12000"
+    "kGestureWindowStart = 0.62F"
+    "kGestureParticleCount = 58"
+    "GestureAmount"
+    "DrawGestureEnergy"
+    "gestureBackground_"
+    "DrawAtlasSprite"
+    "DrawSpiritRibbon"
+    "SetValueFromDelegate"
+    "OnEndAnimation")
+  string(FIND "${backdrop_contents}" "${required_backdrop_token}" token_position)
+  if(token_position EQUAL -1)
+    message(FATAL_ERROR "Valley Spirit Sensei gesture must include ${required_backdrop_token}")
+  endif()
+endforeach()
+
+file(READ "${vfx_renderer_header}" vfx_contents)
+foreach(required_vfx_token
+    "kAtlasColumns = 4"
+    "kAtlasRows = 4"
+    "DrawAtlasSprite"
+    "DrawSpiritRibbon"
+    "PathCubicBezierTo"
+    "drawLayer(size * 1.32F")
+  string(FIND "${vfx_contents}" "${required_vfx_token}" token_position)
+  if(token_position EQUAL -1)
+    message(FATAL_ERROR "Valley Spirit VFX renderer must include ${required_vfx_token}")
   endif()
 endforeach()
 
@@ -90,11 +135,14 @@ file(READ "${plugin_source}" source_contents)
 foreach(required_source_token
     "LoadFont(VALLEY_SPIRIT_FONT, VALLEY_SPIRIT_FONT_FN)"
     "LoadBitmap(VALLEY_SPIRIT_BG_FN)"
+    "LoadBitmap(VALLEY_SPIRIT_GESTURE_BG_FN)"
     "LoadBitmap(VALLEY_SPIRIT_FRAME_FN)"
     "LoadBitmap(VALLEY_SPIRIT_MOONSTONE_DIAL_FN)"
     "LoadBitmap(VALLEY_SPIRIT_JADE_DIAL_FN)"
+    "LoadBitmap(VALLEY_SPIRIT_VFX_ATLAS_FN)"
     "VALLEY SPIRIT"
     "THE VALLEY ANSWERS WITHOUT END"
+    "new ValleySpiritBackdropControl"
     "new ValleySpiritSceneControl"
     "new IllustratedSpiritDialControl"
     "new ValleySpiritHelpControl")
@@ -104,10 +152,10 @@ foreach(required_source_token
   endif()
 endforeach()
 
-string(FIND "${source_contents}" "new ValleySpiritBitmapControl(bounds, background)" background_position)
+string(FIND "${source_contents}" "new ValleySpiritBackdropControl" background_position)
 string(FIND "${source_contents}" "new ValleySpiritSceneControl" scene_position)
 string(FIND "${source_contents}" "new IllustratedSpiritDialControl" dial_position)
-string(FIND "${source_contents}" "new ValleySpiritBitmapControl(bounds, frame)" frame_position)
+string(FIND "${source_contents}" "bounds.GetScaledAboutCentre(kFrameOverscanScale)" frame_position)
 string(FIND "${source_contents}" "new ValleySpiritHelpControl" help_position)
 if(background_position EQUAL -1 OR scene_position EQUAL -1 OR dial_position EQUAL -1 OR
    frame_position EQUAL -1 OR help_position EQUAL -1 OR
@@ -116,10 +164,19 @@ if(background_position EQUAL -1 OR scene_position EQUAL -1 OR dial_position EQUA
   message(FATAL_ERROR "Valley Spirit scene layering order is invalid")
 endif()
 
+foreach(required_frame_token
+    "kFrameOverscanScale = 1.048F"
+    "bounds.GetScaledAboutCentre(kFrameOverscanScale)")
+  string(FIND "${source_contents}" "${required_frame_token}" token_position)
+  if(token_position EQUAL -1)
+    message(FATAL_ERROR "Valley Spirit frame must reach the plug-in edges using ${required_frame_token}")
+  endif()
+endforeach()
+
 file(READ "${plugin_config}" config_contents)
 foreach(required_config_token
     "#define PLUG_NAME \"Valley Spirit\""
-    "#define PLUG_VERSION_STR \"0.1.3\""
+    "#define PLUG_VERSION_STR \"0.1.4\""
     "#define PLUG_UNIQUE_ID 'WfPt'"
     "#define BUNDLE_NAME \"PitchTrails\""
     "#define VALLEY_SPIRIT_FONT_FN \"Marcellus-Regular.ttf\"")
@@ -132,13 +189,16 @@ endforeach()
 file(READ "${plugin_cmake}" cmake_contents)
 foreach(required_cmake_token
     "IllustratedSpiritDialControl.h"
+    "ValleySpiritBackdropControl.h"
     "ValleySpiritHelpControl.h"
     "ValleySpiritSceneControl.h"
     "resources/fonts/Marcellus-Regular.ttf"
     "resources/img/valley-spirit-bg@2x.png"
+    "resources/img/valley-spirit-gesture-bg@2x.png"
     "resources/img/valley-spirit-frame@2x.png"
     "resources/img/moonstone-dial@2x.png"
     "resources/img/jade-dial@2x.png"
+    "resources/img/spirit-vfx-atlas@2x.png"
     "if(WIN32)"
     "resources/main.rc"
     "PitchTrails-vst3"
@@ -154,9 +214,13 @@ foreach(required_windows_token
     "VALLEY_SPIRIT_FONT_FN TTF"
     "VALLEY_SPIRIT_BG_FN PNG"
     "valley-spirit-bg@2x.png"
+    "VALLEY_SPIRIT_GESTURE_BG_FN PNG"
+    "valley-spirit-gesture-bg@2x.png"
     "VALLEY_SPIRIT_FRAME_FN PNG"
     "VALLEY_SPIRIT_MOONSTONE_DIAL_FN PNG"
-    "VALLEY_SPIRIT_JADE_DIAL_FN PNG")
+    "VALLEY_SPIRIT_JADE_DIAL_FN PNG"
+    "VALLEY_SPIRIT_VFX_ATLAS_FN PNG"
+    "spirit-vfx-atlas@2x.png")
   string(FIND "${windows_resource_contents}" "${required_windows_token}" token_position)
   if(token_position EQUAL -1)
     message(FATAL_ERROR "Valley Spirit Windows resources must include ${required_windows_token}")
@@ -168,7 +232,7 @@ foreach(format_name AU VST3 CLAP)
   foreach(required_plist_token
       "<string>Valley Spirit</string>"
       "<string>PitchTrails</string>"
-      "<string>0.1.3</string>")
+      "<string>0.1.4</string>")
     string(FIND "${plist_contents}" "${required_plist_token}" token_position)
     if(token_position EQUAL -1)
       message(FATAL_ERROR "Valley Spirit ${format_name} metadata must include ${required_plist_token}")

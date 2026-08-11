@@ -6,12 +6,14 @@
 #include <cstdint>
 
 #include "IControls.h"
+#include "ValleySpiritVfxRenderer.h"
 
 class ValleySpiritSceneControl final : public IControl {
 public:
   ValleySpiritSceneControl(const IRECT& bounds, int delayParam, int pitchParam, int feedbackParam,
-                           int diffusionParam, int mixParam)
-      : IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam}) {
+                           int diffusionParam, int mixParam, const IBitmap& vfxAtlas)
+      : IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam}),
+        vfxAtlas_(vfxAtlas) {
     SetIgnoreMouse(true);
   }
 
@@ -39,6 +41,8 @@ public:
     IControl::OnEndAnimation();
     BeginMotionCycle();
   }
+
+  void OnRescale() override { vfxAtlas_ = GetUI()->GetScaledBitmap(vfxAtlas_); }
 
 private:
   enum ValueIndex {
@@ -133,20 +137,12 @@ private:
       const auto y = Y(274.0F) - arc - eased * pitchLift + scatter;
       const auto lifecycle = std::sin(progress * kPi);
       const auto opacity = lifecycle * intensity * (0.28F + feedback * 0.62F);
-      const auto length = Scale(2.2F + seedC * 6.8F + diffusion * 3.4F);
-      const auto color = index % 5 == 0 ? IColor(255, 214, 239, 255)
-                                       : IColor(255, 151, 132, 238);
-      IBlend glow(EBlend::Add, std::clamp(opacity, 0.0F, 1.0F));
-
-      if (index % 4 == 0) {
-        graphics.FillTriangle(color, x, y - length, x + length * 0.58F, y + length * 0.45F,
-                              x - length * 0.58F, y + length * 0.45F, &glow);
-      } else {
-        const auto angle = (seedA - 0.5F) * 0.9F + pitchLift * 0.002F;
-        graphics.DrawLine(color, x - std::cos(angle) * length, y - std::sin(angle) * length,
-                          x + std::cos(angle) * length, y + std::sin(angle) * length, &glow,
-                          Scale(0.55F + seedC * 0.55F));
-      }
+      const auto size = Scale(6.0F + seedC * 15.0F + diffusion * 7.0F);
+      const auto spriteRow = index % 6 == 0 ? 0 : (index % 3 == 0 ? 2 : 1);
+      const auto spriteIndex = spriteRow * 4 + index % 4;
+      const auto rotation = (seedA - 0.5F) * 110.0F + cyclePhase_ * 240.0F;
+      valleyspirit::vfx::DrawAtlasSprite(graphics, vfxAtlas_, spriteIndex, x, y, size,
+                                        rotation, opacity);
     }
   }
 
@@ -168,4 +164,5 @@ private:
 
   float cyclePhase_ = 0.0F;
   float responsePulse_ = 0.0F;
+  IBitmap vfxAtlas_;
 };

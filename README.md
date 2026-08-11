@@ -79,6 +79,8 @@ Valley Spirit is a pitch-shifting delay and diffusion effect that turns a sound 
 
 For a fast starting point, set Echo Time, choose a Pitch interval, then raise Feedback until the trail breathes. Use Diffusion to blur distinct repeats into atmosphere and Mix to place the effect behind or around the source. The interface includes an in-plugin **?** manual with the same guidance.
 
+The moonlit interface is alive without covering the controls: textured spirit wisps respond to all five parameters, and the Sensei periodically shifts from a resting stance into an energy-channeling gesture as the returning trails converge around his hand.
+
 Valley Spirit remains deterministic, offline DSP with no AI, accounts, telemetry, or uploads. The internal bundle filename remains `PitchTrails` so existing sessions and host identities stay compatible; DAWs display **Valley Spirit**.
 
 ## Build from source

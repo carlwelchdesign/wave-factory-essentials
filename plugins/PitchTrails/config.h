@@ -1,7 +1,7 @@
 #define PLUG_NAME "Valley Spirit"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010300
-#define PLUG_VERSION_STR "0.1.3"
+#define PLUG_VERSION_HEX 0x00010400
+#define PLUG_VERSION_STR "0.1.4"
 #define PLUG_UNIQUE_ID 'WfPt'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -56,6 +56,8 @@
 #define VALLEY_SPIRIT_FONT "ValleySpirit"
 #define VALLEY_SPIRIT_FONT_FN "Marcellus-Regular.ttf"
 #define VALLEY_SPIRIT_BG_FN "valley-spirit-bg.png"
+#define VALLEY_SPIRIT_GESTURE_BG_FN "valley-spirit-gesture-bg.png"
 #define VALLEY_SPIRIT_FRAME_FN "valley-spirit-frame.png"
 #define VALLEY_SPIRIT_MOONSTONE_DIAL_FN "moonstone-dial.png"
 #define VALLEY_SPIRIT_JADE_DIAL_FN "jade-dial.png"
+#define VALLEY_SPIRIT_VFX_ATLAS_FN "spirit-vfx-atlas.png"

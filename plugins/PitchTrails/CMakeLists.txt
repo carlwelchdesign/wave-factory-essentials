@@ -3,21 +3,27 @@ iplug_add_plugin(PitchTrails
     PitchTrails.cpp
     PitchTrails.h
     IllustratedSpiritDialControl.h
+    ValleySpiritBackdropControl.h
     ValleySpiritBitmapControl.h
     ValleySpiritHelpControl.h
     ValleySpiritSceneControl.h
+    ValleySpiritVfxRenderer.h
     ../shared/WaveFactoryUI.h
     resources/resource.h
   RESOURCES
     resources/fonts/Marcellus-Regular.ttf
     resources/img/valley-spirit-bg.png
     resources/img/valley-spirit-bg@2x.png
+    resources/img/valley-spirit-gesture-bg.png
+    resources/img/valley-spirit-gesture-bg@2x.png
     resources/img/valley-spirit-frame.png
     resources/img/valley-spirit-frame@2x.png
     resources/img/moonstone-dial.png
     resources/img/moonstone-dial@2x.png
     resources/img/jade-dial.png
     resources/img/jade-dial@2x.png
+    resources/img/spirit-vfx-atlas.png
+    resources/img/spirit-vfx-atlas@2x.png
   FORMATS
     VST3 AU CLAP
   LINK

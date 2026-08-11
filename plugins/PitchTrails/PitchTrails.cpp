@@ -4,10 +4,15 @@
 #if IPLUG_EDITOR
 #include "IControls.h"
 #include "IllustratedSpiritDialControl.h"
+#include "ValleySpiritBackdropControl.h"
 #include "ValleySpiritBitmapControl.h"
 #include "ValleySpiritHelpControl.h"
 #include "ValleySpiritSceneControl.h"
 #include "../shared/WaveFactoryUI.h"
+
+namespace {
+constexpr float kFrameOverscanScale = 1.048F;
+}
 #endif
 
 PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kNumParams, 1)) {
@@ -25,13 +30,17 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
     graphics->LoadFont(VALLEY_SPIRIT_FONT, VALLEY_SPIRIT_FONT_FN);
 
     const auto background = graphics->LoadBitmap(VALLEY_SPIRIT_BG_FN);
+    const auto gestureBackground = graphics->LoadBitmap(VALLEY_SPIRIT_GESTURE_BG_FN);
     const auto frame = graphics->LoadBitmap(VALLEY_SPIRIT_FRAME_FN);
     const auto moonstoneDial = graphics->LoadBitmap(VALLEY_SPIRIT_MOONSTONE_DIAL_FN);
     const auto jadeDial = graphics->LoadBitmap(VALLEY_SPIRIT_JADE_DIAL_FN);
+    const auto vfxAtlas = graphics->LoadBitmap(VALLEY_SPIRIT_VFX_ATLAS_FN);
 
-    graphics->AttachControl(new ValleySpiritBitmapControl(bounds, background));
-    graphics->AttachControl(
-        new ValleySpiritSceneControl(bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix));
+    graphics->AttachControl(new ValleySpiritBackdropControl(
+        bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix, background, gestureBackground,
+        vfxAtlas));
+    graphics->AttachControl(new ValleySpiritSceneControl(
+        bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix, vfxAtlas));
 
     graphics->AttachControl(new ITextControl(
         IRECT(42.0F, 30.0F, 402.0F, 84.0F), "VALLEY SPIRIT",
@@ -74,7 +83,8 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
         IRECT(215.0F, 307.0F, 321.0F, 449.0F), kMix, "MIX", secondaryStyle, jadeDial,
         1.04F));
 
-    graphics->AttachControl(new ValleySpiritBitmapControl(bounds, frame));
+    graphics->AttachControl(new ValleySpiritBitmapControl(
+        bounds.GetScaledAboutCentre(kFrameOverscanScale), frame));
     graphics->AttachControl(new ValleySpiritHelpControl(bounds));
   };
 #endif
