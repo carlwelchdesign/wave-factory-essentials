@@ -240,8 +240,9 @@ endif()
 foreach(required_windows_cmake_token
     "if(WIN32)"
     "resources/main.rc"
-    "target_sources(Goodband-vst3"
-    "target_sources(Goodband-clap")
+    "Goodband-vst3"
+    "Goodband-clap"
+    "if(TARGET \${goodband_windows_target})")
   string(FIND "${cmake_contents}" "${required_windows_cmake_token}" windows_cmake_position)
   if(windows_cmake_position EQUAL -1)
     message(FATAL_ERROR "Goodband Windows build must include ${required_windows_cmake_token}")
