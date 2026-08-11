@@ -59,12 +59,12 @@ private:
     graphics.DrawRect(kBronze, panel, nullptr, Scale(1.5F));
     graphics.DrawRect(IColor(220, 68, 73, 78), panel.GetPadded(-5.0F), nullptr, Scale(0.8F));
 
-    DrawText(graphics, "THE VALLEY SPIRIT MANUAL", 19.0F, kMoonstone,
-             IRECT(X(58.0F), Y(45.0F), X(550.0F), Y(75.0F)), EAlign::Near,
+    DrawText(graphics, "THE VALLEY SPIRIT MANUAL", 22.0F, kMoonstone,
+             IRECT(X(58.0F), Y(43.0F), X(550.0F), Y(77.0F)), EAlign::Near,
              VALLEY_SPIRIT_FONT);
-    DrawText(graphics, "PITCH-SHIFTING DELAY / RETURNING ENERGY", 8.6F, kBronze,
-             IRECT(X(59.0F), Y(73.0F), X(500.0F), Y(91.0F)));
-    graphics.FillRect(kBronze, IRECT(X(59.0F), Y(96.0F), X(695.0F), Y(97.2F)));
+    DrawText(graphics, "PITCH-SHIFTING DELAY / RETURNING ENERGY", 10.5F, kBronze,
+             IRECT(X(59.0F), Y(75.0F), X(500.0F), Y(95.0F)));
+    graphics.FillRect(kBronze, IRECT(X(59.0F), Y(100.0F), X(695.0F), Y(101.2F)));
 
     graphics.FillCircle(kDeepInk, CloseButtonBounds().MW(), CloseButtonBounds().MH(), Scale(13.0F));
     graphics.DrawCircle(kSoftBronze, CloseButtonBounds().MW(), CloseButtonBounds().MH(),
@@ -72,41 +72,41 @@ private:
     DrawText(graphics, "X", 10.5F, kMoonstone, CloseButtonBounds(), EAlign::Center,
              VALLEY_SPIRIT_FONT);
 
-    DrawText(graphics, "THE PHILOSOPHY", 10.0F, kJade,
-             IRECT(X(59.0F), Y(109.0F), X(260.0F), Y(129.0F)));
+    DrawText(graphics, "THE PHILOSOPHY", 11.5F, kJade,
+             IRECT(X(59.0F), Y(111.0F), X(260.0F), Y(133.0F)));
     DrawText(graphics,
              "In Daoist thought, the valley is empty yet responsive. It receives energy without holding it.",
-             10.7F, kMoonstone, IRECT(X(59.0F), Y(130.0F), X(695.0F), Y(149.0F)));
+             12.1F, kMoonstone, IRECT(X(59.0F), Y(133.0F), X(695.0F), Y(154.0F)));
     DrawText(graphics,
              "Valley Spirit receives a sound, lets it travel, and returns it transformed.",
-             10.1F, kMuted, IRECT(X(59.0F), Y(149.0F), X(695.0F), Y(168.0F)));
+             11.5F, kMuted, IRECT(X(59.0F), Y(155.0F), X(695.0F), Y(176.0F)));
 
-    DrawText(graphics, "THE TECHNIQUE", 10.0F, kJade,
-             IRECT(X(59.0F), Y(184.0F), X(320.0F), Y(204.0F)));
-    DrawControl(graphics, 208.0F, "ECHO TIME", "Distance before the first return", 59.0F);
-    DrawControl(graphics, 242.0F, "PITCH", "Raises or lowers every spectral return", 59.0F);
-    DrawControl(graphics, 276.0F, "FEEDBACK", "Length and persistence of the echo path", 59.0F);
-    DrawControl(graphics, 208.0F, "DIFFUSION", "Softens each return into a wider cloud", 382.0F);
-    DrawControl(graphics, 259.0F, "MIX", "Blends the transformed path with the source", 382.0F);
+    DrawText(graphics, "THE TECHNIQUE", 11.5F, kJade,
+             IRECT(X(59.0F), Y(188.0F), X(320.0F), Y(210.0F)));
+    DrawControl(graphics, 212.0F, "ECHO TIME", "Distance before the first return", 59.0F);
+    DrawControl(graphics, 248.0F, "PITCH", "Raises or lowers every spectral return", 59.0F);
+    DrawControl(graphics, 284.0F, "FEEDBACK", "Length and persistence of the echo path", 59.0F);
+    DrawControl(graphics, 212.0F, "DIFFUSION", "Softens each return into a wider cloud", 382.0F);
+    DrawControl(graphics, 266.0F, "MIX", "Blends the transformed path with the source", 382.0F);
 
     graphics.FillRect(IColor(255, 66, 65, 61), IRECT(X(59.0F), Y(328.0F), X(695.0F), Y(329.0F)));
-    DrawText(graphics, "QUICK START", 9.5F, kBronze,
+    DrawText(graphics, "QUICK START", 10.8F, kBronze,
              IRECT(X(59.0F), Y(342.0F), X(155.0F), Y(363.0F)));
     DrawText(graphics, "Set Echo Time, choose a Pitch interval, then raise Feedback until the trail breathes.",
-             9.8F, kMoonstone, IRECT(X(159.0F), Y(342.0F), X(695.0F), Y(363.0F)));
+             11.2F, kMoonstone, IRECT(X(159.0F), Y(342.0F), X(695.0F), Y(363.0F)));
     DrawText(graphics, "Use Diffusion for mist and Mix to place the technique behind or around the source.",
-             9.3F, kMuted, IRECT(X(159.0F), Y(364.0F), X(695.0F), Y(384.0F)));
+             10.8F, kMuted, IRECT(X(159.0F), Y(365.0F), X(695.0F), Y(385.0F)));
     DrawText(graphics, "Tip: +7 or +12 semitones creates rising spirits; negative intervals create descending shadows.",
-             9.0F, kMuted, IRECT(X(159.0F), Y(386.0F), X(695.0F), Y(407.0F)));
+             10.5F, kMuted, IRECT(X(159.0F), Y(388.0F), X(695.0F), Y(409.0F)));
   }
 
   void DrawControl(IGraphics& graphics, float y, const char* name, const char* description,
                    float x) const {
-    DrawText(graphics, name, 10.4F, kBronze,
-             IRECT(X(x), Y(y), X(x + 285.0F), Y(y + 17.0F)), EAlign::Near,
+    DrawText(graphics, name, 11.5F, kBronze,
+             IRECT(X(x), Y(y), X(x + 285.0F), Y(y + 18.0F)), EAlign::Near,
              VALLEY_SPIRIT_FONT);
-    DrawText(graphics, description, 9.2F, kMuted,
-             IRECT(X(x), Y(y + 16.0F), X(x + 285.0F), Y(y + 32.0F)));
+    DrawText(graphics, description, 10.8F, kMuted,
+             IRECT(X(x), Y(y + 17.0F), X(x + 285.0F), Y(y + 35.0F)));
   }
 
   void DrawText(IGraphics& graphics, const char* text, float size, const IColor& color,

@@ -1,11 +1,11 @@
-VALLEY SPIRIT 0.1.4 - WINDOWS x64 TEST BUILD
+VALLEY SPIRIT 0.1.5 - WINDOWS x64 TEST BUILD
 
 Formats
 - VST3: PitchTrails.vst3
 - CLAP: PitchTrails.clap
 
 The internal filename remains PitchTrails for compatibility with existing sessions.
-Your DAW should display the plug-in as Valley Spirit by Wave Factory Essentials.
+Your DAW should display the plug-in as Valley Spirit by Carl Welch.
 
 Installation
 1. Close every DAW.

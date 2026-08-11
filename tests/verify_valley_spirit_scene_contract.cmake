@@ -118,6 +118,7 @@ endforeach()
 file(READ "${help_header}" help_contents)
 foreach(required_help_token
     "THE VALLEY SPIRIT MANUAL"
+    "\"THE VALLEY SPIRIT MANUAL\", 22.0F"
     "PITCH-SHIFTING DELAY / RETURNING ENERGY"
     "the valley is empty yet responsive"
     "returns it transformed"
@@ -146,6 +147,11 @@ foreach(required_source_token
     "LoadBitmap(VALLEY_SPIRIT_VFX_ATLAS_FN)"
     "VALLEY SPIRIT"
     "THE VALLEY ANSWERS WITHOUT END"
+    "IRECT(24.0F, 27.0F, 384.0F, 86.0F)"
+    "IText(43.0F"
+    "IRECT(24.0F, 82.0F, 384.0F, 106.0F)"
+    "IText(10.5F"
+    "EAlign::Center"
     "new ValleySpiritBackdropControl"
     "new ValleySpiritSceneControl"
     "new IllustratedSpiritDialControl"
@@ -180,7 +186,7 @@ endforeach()
 file(READ "${plugin_config}" config_contents)
 foreach(required_config_token
     "#define PLUG_NAME \"Valley Spirit\""
-    "#define PLUG_VERSION_STR \"0.1.4\""
+    "#define PLUG_VERSION_STR \"0.1.5\""
     "#define PLUG_UNIQUE_ID 'WfPt'"
     "#define BUNDLE_NAME \"PitchTrails\""
     "#define VALLEY_SPIRIT_FONT_FN \"Marcellus-Regular.ttf\"")
@@ -236,7 +242,7 @@ foreach(format_name AU VST3 CLAP)
   foreach(required_plist_token
       "<string>Valley Spirit</string>"
       "<string>PitchTrails</string>"
-      "<string>0.1.4</string>")
+      "<string>0.1.5</string>")
     string(FIND "${plist_contents}" "${required_plist_token}" token_position)
     if(token_position EQUAL -1)
       message(FATAL_ERROR "Valley Spirit ${format_name} metadata must include ${required_plist_token}")
@@ -284,7 +290,7 @@ file(READ "${tester_workflow}" workflow_contents)
 foreach(required_workflow_token
     "PitchTrails-vst3"
     "PitchTrails-clap"
-    "Wave-Factory-Essentials-Windows-x64"
+    "Threefold-Palm-and-Valley-Spirit-Windows-x64"
     "dist/Valley-Spirit-*-Windows-x64.zip")
   string(FIND "${workflow_contents}" "${required_workflow_token}" token_position)
   if(token_position EQUAL -1)

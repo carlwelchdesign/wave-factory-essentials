@@ -2,7 +2,7 @@
 
 ## Promise
 
-Wave Factory Essentials gives producers focused tools that solve concrete workflow problems without subscriptions, accounts, AI inference, or hidden audio uploads.
+This collection gives producers focused tools that solve concrete workflow problems without subscriptions, accounts, AI inference, or hidden audio uploads.
 
 ## Threefold Palm
 

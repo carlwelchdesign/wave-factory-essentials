@@ -108,6 +108,7 @@ endforeach()
 file(READ "${help_header}" help_contents)
 foreach(required_help_token
     "THE THREEFOLD MANUAL"
+    "\"THE THREEFOLD MANUAL\", 22.0F"
     "Three-band compression, harmonic saturation and tonal shaping"
     "CLEAN"
     "WARM"

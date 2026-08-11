@@ -43,12 +43,12 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
         bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix, vfxAtlas));
 
     graphics->AttachControl(new ITextControl(
-        IRECT(42.0F, 30.0F, 402.0F, 84.0F), "VALLEY SPIRIT",
-        IText(37.0F, IColor(255, 222, 214, 196), VALLEY_SPIRIT_FONT, EAlign::Near,
+        IRECT(24.0F, 27.0F, 384.0F, 86.0F), "VALLEY SPIRIT",
+        IText(43.0F, IColor(255, 222, 214, 196), VALLEY_SPIRIT_FONT, EAlign::Center,
               EVAlign::Middle)));
     graphics->AttachControl(new ITextControl(
-        IRECT(77.0F, 82.0F, 390.0F, 104.0F), "THE VALLEY ANSWERS WITHOUT END",
-        IText(9.0F, IColor(255, 181, 153, 107), VALLEY_SPIRIT_FONT, EAlign::Near,
+        IRECT(24.0F, 82.0F, 384.0F, 106.0F), "THE VALLEY ANSWERS WITHOUT END",
+        IText(10.5F, IColor(255, 181, 153, 107), VALLEY_SPIRIT_FONT, EAlign::Center,
               EVAlign::Middle)));
 
     const auto primaryStyle =

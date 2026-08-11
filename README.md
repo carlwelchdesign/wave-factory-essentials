@@ -1,27 +1,21 @@
-# Wave Factory Essentials
+# Threefold Palm + Valley Spirit
 
-Free, offline audio tools shaped by requests from Wave Factory members. No AI, accounts, telemetry, uploads, or hosted services.
+Independent, offline audio tools shaped by producer requests. No AI, accounts, telemetry, uploads, or hosted services.
 
 ## Tester downloads
 
 | Plug-in | macOS | Windows | Release notes |
 | --- | --- | --- | --- |
-| **Threefold Palm 0.1.15** | [Universal AU, VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.15/Threefold-Palm-0.1.15-macOS-Universal.zip) | [x64 VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.15/Threefold-Palm-0.1.15-Windows-x64.zip) | [View release](https://github.com/carlwelchdesign/wave-factory-essentials/releases/tag/v0.1.15) |
-| **Valley Spirit 0.1.4** | [Apple Silicon AU, VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.4/Valley-Spirit-0.1.4-macOS-Apple-Silicon.zip) | [x64 VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.4/Valley-Spirit-0.1.4-Windows-x64.zip) | [View release](https://github.com/carlwelchdesign/wave-factory-essentials/releases/tag/v0.1.4) |
+| **Threefold Palm 0.1.16** | [Universal AU, VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.16/Threefold-Palm-0.1.16-macOS-Universal.zip) | [x64 VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.16/Threefold-Palm-0.1.16-Windows-x64.zip) | [View release](https://github.com/carlwelchdesign/wave-factory-essentials/releases/tag/v0.1.16) |
+| **Valley Spirit 0.1.5** | [Apple Silicon AU, VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.16/Valley-Spirit-0.1.5-macOS-Apple-Silicon.zip) | [x64 VST3 and CLAP](https://github.com/carlwelchdesign/wave-factory-essentials/releases/download/v0.1.16/Valley-Spirit-0.1.5-Windows-x64.zip) | [View release](https://github.com/carlwelchdesign/wave-factory-essentials/releases/tag/v0.1.16) |
 
 These are free, pre-release tester builds. Close every DAW before installing or replacing a plug-in.
-
-![Threefold Palm visual direction](docs/images/threefold-palm-hero.png)
-
-> The hero image establishes the approved Threefold Palm visual direction. The current plugin UI is shown below in Logic Pro.
 
 ## Threefold Palm
 
 Threefold Palm is an approachable three-band dynamics, saturation, and tonal-shaping processor for adding controlled energy to a mix, drum bus, or instrument bus.
 
 It divides the signal into low, mid, and high bands, then applies character-specific compression, harmonic drive, and makeup gain. The **Wide** character also adds a restrained stereo-side lift. Parallel mixing and output trim make it practical to audition the processing honestly.
-
-![Threefold Palm running in Logic Pro](docs/images/threefold-palm-logic.png)
 
 The interface includes an in-plugin **?** guide explaining the processor, Character modes, controls, and a quick-start workflow.
 
@@ -62,7 +56,7 @@ Valley Spirit is a pitch-shifting delay and diffusion effect that turns a sound 
 | :---: | :---: |
 | ![Valley Spirit resting interface](docs/images/valley-spirit-resting.png) | ![Valley Spirit Sensei energy-channeling gesture](docs/images/valley-spirit-gesture.png) |
 
-These screenshots come directly from the 0.1.4 renderer. The engraved frame reaches the plug-in edges, while the animated state replaces the Sensei's pose and gathers brighter returning energy around his hand.
+These screenshots come directly from the plug-in renderer. The engraved frame reaches the plug-in edges, while the animated state replaces the Sensei's pose and gathers brighter returning energy around his hand.
 
 ### Controls
 
@@ -95,10 +89,10 @@ Keep Feedback conservative while learning the effect. The DSP bounds feedback in
 
 | Build | Operating system | Architectures | Formats |
 | --- | --- | --- | --- |
-| Threefold Palm 0.1.15 | macOS 11+ | Apple Silicon and Intel | Audio Unit, VST3, CLAP |
-| Threefold Palm 0.1.15 | Windows 10/11 | x64 Intel/AMD | VST3, CLAP |
-| Valley Spirit 0.1.4 | macOS 11+ | Apple Silicon | Audio Unit, VST3, CLAP |
-| Valley Spirit 0.1.4 | Windows 10/11 | x64 Intel/AMD | VST3, CLAP |
+| Threefold Palm 0.1.16 | macOS 11+ | Apple Silicon and Intel | Audio Unit, VST3, CLAP |
+| Threefold Palm 0.1.16 | Windows 10/11 | x64 Intel/AMD | VST3, CLAP |
+| Valley Spirit 0.1.5 | macOS 11+ | Apple Silicon | Audio Unit, VST3, CLAP |
+| Valley Spirit 0.1.5 | Windows 10/11 | x64 Intel/AMD | VST3, CLAP |
 
 Each ZIP includes installation instructions. The macOS bundles are ad-hoc signed but not notarized. The Windows binaries are unsigned and may produce a security warning.
 

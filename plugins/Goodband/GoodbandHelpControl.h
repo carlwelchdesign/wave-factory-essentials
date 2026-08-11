@@ -58,55 +58,55 @@ private:
     graphics.DrawRect(kGold, panel, nullptr, Scale(1.6F));
     graphics.DrawRect(IColor(220, 91, 72, 38), panel.GetPadded(-5.0F), nullptr, Scale(0.8F));
 
-    DrawText(graphics, "THE THREEFOLD MANUAL", 19.0F, kIvory,
-             IRECT(X(55.0F), Y(44.0F), X(500.0F), Y(74.0F)));
-    DrawText(graphics, "MASTERING ENERGY / QUICK GUIDE", 8.5F, kSoftGold,
-             IRECT(X(56.0F), Y(71.0F), X(420.0F), Y(89.0F)));
-    graphics.FillRect(kGold, IRECT(X(56.0F), Y(92.0F), X(664.0F), Y(93.4F)));
+    DrawText(graphics, "THE THREEFOLD MANUAL", 22.0F, kIvory,
+             IRECT(X(55.0F), Y(42.0F), X(500.0F), Y(76.0F)));
+    DrawText(graphics, "MASTERING ENERGY / QUICK GUIDE", 10.5F, kSoftGold,
+             IRECT(X(56.0F), Y(74.0F), X(420.0F), Y(94.0F)));
+    graphics.FillRect(kGold, IRECT(X(56.0F), Y(98.0F), X(664.0F), Y(99.4F)));
 
     graphics.FillCircle(kDeepInk, CloseButtonBounds().MW(), CloseButtonBounds().MH(), Scale(13.0F));
     graphics.DrawCircle(kSoftGold, CloseButtonBounds().MW(), CloseButtonBounds().MH(), Scale(13.0F), nullptr,
                         Scale(1.0F));
     DrawText(graphics, "X", 11.0F, kIvory, CloseButtonBounds(), EAlign::Center);
 
-    DrawText(graphics, "WHAT IT DOES", 10.0F, kJade,
-             IRECT(X(56.0F), Y(106.0F), X(250.0F), Y(126.0F)));
+    DrawText(graphics, "WHAT IT DOES", 11.5F, kJade,
+             IRECT(X(56.0F), Y(108.0F), X(250.0F), Y(130.0F)));
     DrawText(graphics, "Three-band compression, harmonic saturation and tonal shaping for controlled energy.",
-             11.2F, kIvory, IRECT(X(56.0F), Y(126.0F), X(664.0F), Y(145.0F)));
+             12.4F, kIvory, IRECT(X(56.0F), Y(130.0F), X(664.0F), Y(151.0F)));
     DrawText(graphics, "Use it on a mix, drum bus or instrument bus when the sound needs cohesion, color, punch or width.",
-             10.2F, kMuted, IRECT(X(56.0F), Y(145.0F), X(664.0F), Y(164.0F)));
+             11.2F, kMuted, IRECT(X(56.0F), Y(151.0F), X(664.0F), Y(172.0F)));
 
-    DrawText(graphics, "CHARACTER", 10.0F, kJade,
-             IRECT(X(56.0F), Y(180.0F), X(320.0F), Y(200.0F)));
+    DrawText(graphics, "CHARACTER", 11.5F, kJade,
+             IRECT(X(56.0F), Y(184.0F), X(320.0F), Y(206.0F)));
     DrawMode(graphics, 205.0F, "CLEAN", "Balanced, transparent control");
     DrawMode(graphics, 234.0F, "WARM", "Low-mid weight and harmonic color");
     DrawMode(graphics, 263.0F, "PUNCH", "Transient-forward impact and recovery");
     DrawMode(graphics, 292.0F, "WIDE", "High-band sheen plus stereo side lift");
 
-    DrawText(graphics, "CONTROLS", 10.0F, kJade,
-             IRECT(X(374.0F), Y(180.0F), X(650.0F), Y(200.0F)));
+    DrawText(graphics, "CONTROLS", 11.5F, kJade,
+             IRECT(X(374.0F), Y(184.0F), X(650.0F), Y(206.0F)));
     DrawControl(graphics, 205.0F, "AMOUNT", "Compression, saturation and character strength");
     DrawControl(graphics, 244.0F, "MIX", "Parallel blend between dry and processed signal");
     DrawControl(graphics, 283.0F, "OUTPUT", "Final gain trim for honest level matching");
 
     graphics.FillRect(IColor(255, 84, 65, 35), IRECT(X(56.0F), Y(337.0F), X(664.0F), Y(338.0F)));
-    DrawText(graphics, "QUICK START", 9.5F, kGold,
+    DrawText(graphics, "QUICK START", 10.8F, kGold,
              IRECT(X(56.0F), Y(348.0F), X(150.0F), Y(369.0F)));
     DrawText(graphics, "Choose a Character, raise Amount until the mix feels energized, then set Mix and level-match Output.",
-             10.0F, kIvory, IRECT(X(151.0F), Y(348.0F), X(664.0F), Y(369.0F)));
+             11.0F, kIvory, IRECT(X(151.0F), Y(348.0F), X(664.0F), Y(369.0F)));
     DrawText(graphics, "Tip: start subtly on a full mix. Wide is most effective on stereo material.",
-             9.3F, kMuted, IRECT(X(151.0F), Y(369.0F), X(664.0F), Y(389.0F)));
+             10.4F, kMuted, IRECT(X(151.0F), Y(370.0F), X(664.0F), Y(391.0F)));
   }
 
   void DrawMode(IGraphics& graphics, float y, const char* name, const char* description) const {
-    DrawText(graphics, name, 10.6F, kGold, IRECT(X(56.0F), Y(y), X(113.0F), Y(y + 20.0F)));
-    DrawText(graphics, description, 9.5F, kMuted,
+    DrawText(graphics, name, 11.5F, kGold, IRECT(X(56.0F), Y(y), X(113.0F), Y(y + 20.0F)));
+    DrawText(graphics, description, 10.6F, kMuted,
              IRECT(X(116.0F), Y(y), X(350.0F), Y(y + 20.0F)));
   }
 
   void DrawControl(IGraphics& graphics, float y, const char* name, const char* description) const {
-    DrawText(graphics, name, 10.6F, kGold, IRECT(X(374.0F), Y(y), X(664.0F), Y(y + 18.0F)));
-    DrawText(graphics, description, 9.3F, kMuted,
+    DrawText(graphics, name, 11.5F, kGold, IRECT(X(374.0F), Y(y), X(664.0F), Y(y + 19.0F)));
+    DrawText(graphics, description, 10.5F, kMuted,
              IRECT(X(374.0F), Y(y + 17.0F), X(664.0F), Y(y + 35.0F)));
   }
 

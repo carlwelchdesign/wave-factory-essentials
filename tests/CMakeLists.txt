@@ -42,3 +42,10 @@ add_test(
     -DPROJECT_ROOT=${PROJECT_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/verify_valley_spirit_scene_contract.cmake
 )
+
+add_test(
+  NAME public_brand_contract_test
+  COMMAND ${CMAKE_COMMAND}
+    -DPROJECT_ROOT=${PROJECT_SOURCE_DIR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/verify_public_brand_contract.cmake
+)

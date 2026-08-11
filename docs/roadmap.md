@@ -10,7 +10,7 @@
 - [x] Thin plugin adapters and initial vector UIs
 - [x] Focused deterministic DSP tests
 - [ ] DAW-host validation
-- [ ] Listening review with Presstige and Wave Factory members
+- [ ] Listening review with Presstige and additional producer testers
 
 ## WFE-002 — Threefold Palm listening alpha
 

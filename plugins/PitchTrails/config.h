@@ -1,12 +1,12 @@
 #define PLUG_NAME "Valley Spirit"
-#define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010400
-#define PLUG_VERSION_STR "0.1.4"
+#define PLUG_MFR "Carl Welch"
+#define PLUG_VERSION_HEX 0x00010500
+#define PLUG_VERSION_STR "0.1.5"
 #define PLUG_UNIQUE_ID 'WfPt'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
 #define PLUG_EMAIL_STR ""
-#define PLUG_COPYRIGHT_STR "Copyright 2026 Wave Factory Essentials"
+#define PLUG_COPYRIGHT_STR "Copyright 2026 Carl Welch"
 #define PLUG_CLASS_NAME PitchTrails
 
 #define BUNDLE_NAME "PitchTrails"
@@ -36,7 +36,7 @@
 
 #define AAX_TYPE_IDS 'WP01', 'WP02'
 #define AAX_TYPE_IDS_AUDIOSUITE 'WPA1', 'WPA2'
-#define AAX_PLUG_MFR_STR "Wave Factory Essentials"
+#define AAX_PLUG_MFR_STR "Carl Welch"
 #define AAX_PLUG_NAME_STR "Valley Spirit\nPitchTrails"
 #define AAX_PLUG_CATEGORY_STR "Delay"
 #define AAX_DOES_AUDIOSUITE 0

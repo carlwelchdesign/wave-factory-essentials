@@ -1,12 +1,12 @@
 #define PLUG_NAME "Threefold Palm"
-#define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010F00
-#define PLUG_VERSION_STR "0.1.15"
+#define PLUG_MFR "Carl Welch"
+#define PLUG_VERSION_HEX 0x00011000
+#define PLUG_VERSION_STR "0.1.16"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
 #define PLUG_EMAIL_STR ""
-#define PLUG_COPYRIGHT_STR "Copyright 2026 Wave Factory Essentials"
+#define PLUG_COPYRIGHT_STR "Copyright 2026 Carl Welch"
 #define PLUG_CLASS_NAME Goodband
 
 #define BUNDLE_NAME "Goodband"
@@ -36,7 +36,7 @@
 
 #define AAX_TYPE_IDS 'WG01', 'WG02'
 #define AAX_TYPE_IDS_AUDIOSUITE 'WGA1', 'WGA2'
-#define AAX_PLUG_MFR_STR "Wave Factory Essentials"
+#define AAX_PLUG_MFR_STR "Carl Welch"
 #define AAX_PLUG_NAME_STR "Goodband\nGoodband"
 #define AAX_PLUG_CATEGORY_STR "Dynamics"
 #define AAX_DOES_AUDIOSUITE 0

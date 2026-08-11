@@ -1,6 +1,6 @@
 # Licensing notice
 
-No license is granted for the original Wave Factory Essentials source code at this stage.
+No license is granted for the original source code at this stage.
 
 The project uses iPlug2 as a Git submodule. iPlug2 is distributed under its own permissive zlib-style license; see `third_party/iPlug2/LICENSE.txt` after initializing submodules.
 

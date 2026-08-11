@@ -6,7 +6,7 @@ $clapSource = Join-Path $packageRoot "Goodband.clap"
 $commonPlugins = Join-Path $env:LOCALAPPDATA "Programs\Common"
 $vst3Destination = Join-Path $commonPlugins "VST3\Goodband.vst3"
 $clapDestination = Join-Path $commonPlugins "CLAP\Goodband.clap"
-$backupRoot = Join-Path $env:LOCALAPPDATA "Wave Factory Essentials\Backups"
+$backupRoot = Join-Path $env:LOCALAPPDATA "Carl Welch Audio\Backups"
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
 if (-not (Test-Path $vst3Source)) {
@@ -29,5 +29,5 @@ foreach ($plugin in @(
   Copy-Item -Path $plugin.Source -Destination $plugin.Destination -Recurse
 }
 
-Write-Host "Installed Threefold Palm 0.1.15 for the current Windows user."
+Write-Host "Installed Threefold Palm 0.1.16 for the current Windows user."
 Write-Host "Reopen your DAW and rescan plugins if necessary."

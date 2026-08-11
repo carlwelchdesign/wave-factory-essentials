@@ -1,6 +1,6 @@
 # Goodband Temple of Mastery artwork
 
-`temple-of-mastery-bg.png` and `temple-of-mastery-bg@2x.png` are production crops derived from the user-selected Wave Factory Essentials Temple of Motion concept generated on August 10, 2026.
+`temple-of-mastery-bg.png` and `temple-of-mastery-bg@2x.png` are production crops derived from the user-selected Temple of Motion concept generated on August 10, 2026.
 
 `temple-of-mastery-gesture-bg.png` and `temple-of-mastery-gesture-bg@2x.png` are identity-preserving alternate-pose frames generated from that selected artwork on August 10, 2026. They are used only for the brief, once-per-minute energy-gathering gesture.
 
