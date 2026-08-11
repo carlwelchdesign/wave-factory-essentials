@@ -1,7 +1,14 @@
 # Licensing notice
 
-No license is granted for the original source code at this stage.
+The repository's original source code, artwork, product identity, presets,
+documentation, and packaging are covered by the proprietary terms in
+[`LICENSE`](LICENSE). Published pre-release binaries may be used for personal
+evaluation and testing but may not be redistributed or resold.
 
-The project uses iPlug2 as a Git submodule. iPlug2 is distributed under its own permissive zlib-style license; see `third_party/iPlug2/LICENSE.txt` after initializing submodules.
+Third-party materials remain under their own licenses:
 
-Plugin names, visual identity, presets, factory content, and distribution terms require an explicit decision before a public release. Third-party SDKs required for particular plugin formats may impose additional terms.
+- iPlug2 uses its permissive zlib-style license; see
+  `third_party/iPlug2/LICENSE.txt` after initializing submodules.
+- Ma Shan Zheng and Marcellus are distributed under the SIL Open Font License;
+  their license texts are stored beside the font resources.
+- Plug-in SDKs required for particular formats may impose additional terms.

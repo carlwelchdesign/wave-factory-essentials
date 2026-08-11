@@ -17,6 +17,10 @@ Threefold Palm is an approachable three-band dynamics, saturation, and tonal-sha
 
 It divides the signal into low, mid, and high bands, then applies character-specific compression, harmonic drive, and makeup gain. The **Wide** character also adds a restrained stereo-side lift. Parallel mixing and output trim make it practical to audition the processing honestly.
 
+![Threefold Palm 0.1.16 running in Logic Pro](docs/images/threefold-palm-current.png)
+
+*Threefold Palm 0.1.16 Audio Unit running in Logic Pro.*
+
 The interface includes an in-plugin **?** guide explaining the processor, Character modes, controls, and a quick-start workflow.
 
 ### Character modes
@@ -52,11 +56,13 @@ Start subtly on a full mix. **Wide** is most effective on stereo sources.
 
 Valley Spirit is a pitch-shifting delay and diffusion effect that turns a sound into a returning, evolving trail. Its name comes from the Daoist image of the valley: empty but responsive, receiving energy without holding it. The effect receives a sound, lets it travel, and returns it transformed.
 
-| Resting technique | Sensei energy gesture |
-| :---: | :---: |
-| ![Valley Spirit resting interface](docs/images/valley-spirit-resting.png) | ![Valley Spirit Sensei energy-channeling gesture](docs/images/valley-spirit-gesture.png) |
+![Valley Spirit 0.1.5 running in Logic Pro](docs/images/valley-spirit-current.png)
 
-These screenshots come directly from the plug-in renderer. The engraved frame reaches the plug-in edges, while the animated state replaces the Sensei's pose and gathers brighter returning energy around his hand.
+*Valley Spirit 0.1.5 Audio Unit running in Logic Pro.*
+
+The engraved frame reaches the plug-in edges. During use, the animated state
+periodically replaces the Sensei's pose and gathers brighter returning energy
+around his hand.
 
 ### Controls
 
@@ -151,5 +157,14 @@ ctest --test-dir build/dsp --output-on-failure
 - Framework-independent DSP with thin iPlug2 adapters.
 - Honest auditioning through dry/wet controls and bounded parameters.
 - Human-reviewed tester releases before broader distribution.
+
+## License
+
+Copyright 2026 Carl Welch. The original source code, artwork, product identity,
+presets, documentation, and packaging are proprietary and all rights are
+reserved. Published pre-release binaries may be used for personal evaluation
+and testing; redistribution and resale are not permitted. See [LICENSE](LICENSE)
+and [the licensing notice](LICENSE-NOTICE.md) for the complete terms and
+third-party acknowledgements.
 
 See [the product brief](docs/product-brief.md), [architecture notes](docs/architecture.md), and [roadmap](docs/roadmap.md).

@@ -40,5 +40,6 @@
 - macOS universal and Windows builds
 - accessibility and resize review
 - signing, notarization, installers, and uninstallation path
-- license and ownership decision
+- [x] repository source and tester-binary license documented
+- commercial distribution terms and ownership review before a paid release
 - member acceptance and naming review
