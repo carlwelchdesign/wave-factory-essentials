@@ -1,7 +1,7 @@
-#define PLUG_NAME "Goodband"
+#define PLUG_NAME "Threefold Palm"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010000
-#define PLUG_VERSION_STR "0.1.0"
+#define PLUG_VERSION_HEX 0x00010F00
+#define PLUG_VERSION_STR "0.1.15"
 #define PLUG_UNIQUE_ID 'WfGb'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -10,7 +10,7 @@
 #define PLUG_CLASS_NAME Goodband
 
 #define BUNDLE_NAME "Goodband"
-#define BUNDLE_MFR "WaveFactoryEssentials"
+#define BUNDLE_MFR "wavefactoryessentials"
 #define BUNDLE_DOMAIN "com"
 #define SHARED_RESOURCES_SUBPATH "Goodband"
 
@@ -52,3 +52,13 @@
 #define APP_MULT 1
 #define APP_COPY_AUV3 0
 #define APP_SIGNAL_VECTOR_SIZE 64
+
+#define TEMPLE_OF_MASTERY_BG_FN "temple-of-mastery-bg.png"
+#define TEMPLE_OF_MASTERY_GESTURE_BG_FN "temple-of-mastery-gesture-bg.png"
+#define THREEFOLD_PALM_WORDMARK_FN "threefold-palm-wordmark.png"
+#define THREEFOLD_PALM_FRAME_FN "threefold-palm-frame.png"
+#define THREEFOLD_PALM_UNSELECTED_PLATE_FN "character-selector-unselected.png"
+#define THREEFOLD_PALM_SELECTED_PLATE_FN "character-selector-selected.png"
+#define THREEFOLD_PALM_SHURIKEN_FN "throwing-star-knob.png"
+#define THREEFOLD_PALM_KNOB_ARENA_FN "knob-arena.png"
+#define THREEFOLD_PALM_CHI_VFX_ATLAS_FN "chi-vfx-atlas.png"

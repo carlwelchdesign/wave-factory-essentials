@@ -4,9 +4,9 @@
 
 Wave Factory Essentials gives producers focused tools that solve concrete workflow problems without subscriptions, accounts, AI inference, or hidden audio uploads.
 
-## Goodband
+## Threefold Palm
 
-Goodband answers Presstige's request for a multiband “sound-good” processor that is not Maximus. Its differentiation is speed plus transparency: a producer should be able to improve energy and density quickly, level-match the result, and understand which bands are being changed.
+Threefold Palm answers Presstige's request for a multiband “sound-good” processor that is not Maximus. Its differentiation is speed plus transparency: a producer should be able to improve energy and density quickly, level-match the result, and understand which bands are being changed. The development target remains `Goodband` so existing test sessions keep the same Audio Unit identity.
 
 Initial controls:
 

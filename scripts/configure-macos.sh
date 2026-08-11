@@ -12,5 +12,6 @@ cmake \
   -B "${repo_root}/build/plugins" \
   -G Xcode \
   -DIPLUG2_DIR="${dependency_link}" \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
   -DIPLUG_DEPLOY_PLUGINS=OFF \
   -DBUILD_TESTING=ON

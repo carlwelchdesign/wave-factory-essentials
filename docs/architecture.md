@@ -12,7 +12,7 @@ iPlug2 adapter targets
 wave_factory_dsp
   |              |
   v              v
-Goodband       Pitch Trails
+Threefold Palm  Pitch Trails
 ```
 
 The DSP library has no dependency on iPlug2, a UI framework, networking, file I/O, or host state. Plugin adapters translate host parameters and buffers into the DSP API.
@@ -25,7 +25,7 @@ The DSP library has no dependency on iPlug2, a UI framework, networking, file I/
 - Keep stereo dynamics linked where independent gain changes would disturb the image.
 - Reset state explicitly when sample rate or channel configuration changes.
 
-## Goodband signal path
+## Threefold Palm signal path
 
 ```text
 input

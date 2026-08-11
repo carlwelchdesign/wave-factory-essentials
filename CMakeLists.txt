@@ -1,10 +1,18 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(WaveFactoryEssentials VERSION 0.1.0)
+if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum supported macOS version" FORCE)
+endif()
+
+project(WaveFactoryEssentials VERSION 0.1.15)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 option(WFE_BUILD_PLUGINS "Build the iPlug2 plugin targets" ON)
 

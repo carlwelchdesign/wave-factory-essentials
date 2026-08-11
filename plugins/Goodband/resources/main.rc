@@ -1,0 +1,21 @@
+#include "resource.h"
+#include "../config.h"
+
+TEMPLE_OF_MASTERY_BG_FN PNG TEMPLE_OF_MASTERY_BG_FN
+"temple-of-mastery-bg@2x.png" PNG "temple-of-mastery-bg@2x.png"
+TEMPLE_OF_MASTERY_GESTURE_BG_FN PNG TEMPLE_OF_MASTERY_GESTURE_BG_FN
+"temple-of-mastery-gesture-bg@2x.png" PNG "temple-of-mastery-gesture-bg@2x.png"
+THREEFOLD_PALM_UNSELECTED_PLATE_FN PNG THREEFOLD_PALM_UNSELECTED_PLATE_FN
+"character-selector-unselected@2x.png" PNG "character-selector-unselected@2x.png"
+THREEFOLD_PALM_SELECTED_PLATE_FN PNG THREEFOLD_PALM_SELECTED_PLATE_FN
+"character-selector-selected@2x.png" PNG "character-selector-selected@2x.png"
+THREEFOLD_PALM_SHURIKEN_FN PNG THREEFOLD_PALM_SHURIKEN_FN
+"throwing-star-knob@2x.png" PNG "throwing-star-knob@2x.png"
+THREEFOLD_PALM_KNOB_ARENA_FN PNG THREEFOLD_PALM_KNOB_ARENA_FN
+"knob-arena@2x.png" PNG "knob-arena@2x.png"
+THREEFOLD_PALM_WORDMARK_FN PNG THREEFOLD_PALM_WORDMARK_FN
+"threefold-palm-wordmark@2x.png" PNG "threefold-palm-wordmark@2x.png"
+THREEFOLD_PALM_FRAME_FN PNG THREEFOLD_PALM_FRAME_FN
+"threefold-palm-frame@2x.png" PNG "threefold-palm-frame@2x.png"
+THREEFOLD_PALM_CHI_VFX_ATLAS_FN PNG THREEFOLD_PALM_CHI_VFX_ATLAS_FN
+"chi-vfx-atlas@2x.png" PNG "chi-vfx-atlas@2x.png"

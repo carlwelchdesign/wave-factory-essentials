@@ -1,7 +1,7 @@
 #define PLUG_NAME "Pitch Trails"
 #define PLUG_MFR "Wave Factory Essentials"
-#define PLUG_VERSION_HEX 0x00010000
-#define PLUG_VERSION_STR "0.1.0"
+#define PLUG_VERSION_HEX 0x00010200
+#define PLUG_VERSION_STR "0.1.2"
 #define PLUG_UNIQUE_ID 'WfPt'
 #define PLUG_MFR_ID 'WvFy'
 #define PLUG_URL_STR "https://github.com/carlwelchdesign"
@@ -10,7 +10,7 @@
 #define PLUG_CLASS_NAME PitchTrails
 
 #define BUNDLE_NAME "PitchTrails"
-#define BUNDLE_MFR "WaveFactoryEssentials"
+#define BUNDLE_MFR "wavefactoryessentials"
 #define BUNDLE_DOMAIN "com"
 #define SHARED_RESOURCES_SUBPATH "PitchTrails"
 
