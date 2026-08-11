@@ -55,7 +55,8 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground, vfxAtlas));
     graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim, vfxAtlas));
     graphics->AttachControl(
-        new GoodbandReductionMeterControl(bounds, gainReductionDb_, autoGainCompensationDb_));
+        new GoodbandReductionMeterControl(bounds, gainReductionDb_, autoGainCompensationDb_,
+                                          kAutoGainMatch));
 
     graphics->AttachControl(
         new threefold::AspectFitBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark));

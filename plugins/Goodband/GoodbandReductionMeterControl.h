@@ -11,8 +11,9 @@ class GoodbandReductionMeterControl final : public IControl {
 public:
   GoodbandReductionMeterControl(const IRECT& bounds,
                                 const std::array<std::atomic<float>, 3>& reductionDb,
-                                const std::atomic<float>& compensationDb)
-      : IControl(bounds), reductionDb_(reductionDb), compensationDb_(compensationDb) {
+                                const std::atomic<float>& compensationDb,
+                                int autoMatchParam)
+      : IControl(bounds, autoMatchParam), reductionDb_(reductionDb), compensationDb_(compensationDb) {
     SetIgnoreMouse(true);
   }
 
@@ -46,11 +47,7 @@ public:
                               X(centers[index] + 48.0F), Y(201.0F)));
     }
 
-    char matchText[36]{};
-    std::snprintf(matchText, sizeof(matchText), "MATCH  %+.1f dB", displayedCompensationDb_);
-    graphics.DrawText(IText(Scale(8.5F), IColor(235, 224, 191, 128), DEFAULT_FONT,
-                            EAlign::Far, EVAlign::Middle),
-                      matchText, IRECT(X(412.0F), Y(111.0F), X(535.0F), Y(126.0F)));
+    DrawGainCompensationStatus(graphics);
   }
 
   void OnEndAnimation() override {
@@ -60,6 +57,34 @@ public:
 
 private:
   static constexpr int kMeterCycleMs = 1000;
+
+  void DrawGainCompensationStatus(IGraphics& graphics) const {
+    const auto statusBounds = IRECT(X(414.0F), Y(109.0F), X(535.0F), Y(137.0F));
+    const auto matchEnabled = GetValue() >= 0.5;
+    const auto accent = matchEnabled ? IColor(255, 103, 226, 184)
+                                     : IColor(210, 143, 123, 91);
+
+    graphics.FillRect(IColor(218, 12, 14, 14), statusBounds);
+    graphics.DrawRect(IColor(165, 116, 92, 59), statusBounds, nullptr, Scale(1.0F));
+    graphics.FillRect(accent,
+                      IRECT(statusBounds.L, statusBounds.T, statusBounds.L + Scale(2.0F), statusBounds.B));
+
+    graphics.DrawText(IText(Scale(7.5F), IColor(220, 188, 169, 125), DEFAULT_FONT,
+                            EAlign::Near, EVAlign::Middle),
+                      "GAIN COMP",
+                      IRECT(X(422.0F), Y(111.0F), X(477.0F), Y(121.0F)));
+
+    char valueText[24]{};
+    if (matchEnabled) {
+      std::snprintf(valueText, sizeof(valueText), "%+.1f dB", displayedCompensationDb_);
+    } else {
+      std::snprintf(valueText, sizeof(valueText), "OFF");
+    }
+    graphics.DrawText(IText(Scale(10.5F), accent, DEFAULT_FONT,
+                            EAlign::Near, EVAlign::Middle),
+                      valueText,
+                      IRECT(X(422.0F), Y(120.0F), X(529.0F), Y(134.0F)));
+  }
 
   void BeginMeterCycle() {
     SetAnimation(

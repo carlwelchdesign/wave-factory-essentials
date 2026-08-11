@@ -5,6 +5,7 @@ set(help_header "${goodband_root}/GoodbandHelpControl.h")
 set(vfx_renderer_header "${goodband_root}/ChiVfxRenderer.h")
 set(shuriken_header "${goodband_root}/IllustratedShurikenKnobControl.h")
 set(character_header "${goodband_root}/FightingGameCharacterControl.h")
+set(reduction_meter_header "${goodband_root}/GoodbandReductionMeterControl.h")
 set(plugin_source "${goodband_root}/Goodband.cpp")
 set(plugin_cmake "${goodband_root}/CMakeLists.txt")
 set(windows_resources "${goodband_root}/resources/main.rc")
@@ -119,7 +120,7 @@ foreach(required_help_token
     "OUTPUT"
     "FORMS / METERS / MATCH"
     "LOW, MID and HIGH show live gain reduction"
-    "MATCH compensates perceived level"
+    "MATCH compensates perceived level; the GAIN COMP plaque"
     "HelpButtonBounds"
     "CloseButtonBounds"
     "bool IsHit")
@@ -128,6 +129,23 @@ foreach(required_help_token
     message(FATAL_ERROR "Goodband help panel must include ${required_help_token}")
   endif()
 endforeach()
+
+file(READ "${reduction_meter_header}" reduction_meter_contents)
+foreach(required_meter_token
+    "IControl(bounds, autoMatchParam)"
+    "DrawGainCompensationStatus"
+    "GAIN COMP"
+    "matchEnabled"
+    "OFF")
+  string(FIND "${reduction_meter_contents}" "${required_meter_token}" meter_token_position)
+  if(meter_token_position EQUAL -1)
+    message(FATAL_ERROR "Goodband gain-compensation status must include ${required_meter_token}")
+  endif()
+endforeach()
+string(FIND "${reduction_meter_contents}" "MATCH  %+.1f dB" floating_match_text_position)
+if(NOT floating_match_text_position EQUAL -1)
+  message(FATAL_ERROR "Goodband must not draw the old unframed MATCH compensation text")
+endif()
 string(FIND "${backdrop_contents}" "FillCircle" backdrop_circle_position)
 if(NOT backdrop_circle_position EQUAL -1)
   message(FATAL_ERROR "Goodband Sensei gesture must use textured sprites instead of circle particles")

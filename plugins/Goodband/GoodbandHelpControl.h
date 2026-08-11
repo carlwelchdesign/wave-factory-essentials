@@ -94,7 +94,7 @@ private:
              IRECT(X(56.0F), Y(339.0F), X(250.0F), Y(360.0F)));
     DrawText(graphics, "Forms load complete starting stances. LOW, MID and HIGH show live gain reduction.",
              11.0F, kIvory, IRECT(X(56.0F), Y(360.0F), X(664.0F), Y(379.0F)));
-    DrawText(graphics, "MATCH compensates perceived level before OUTPUT, making bypass comparisons more honest.",
+    DrawText(graphics, "MATCH compensates perceived level; the GAIN COMP plaque shows the trim applied before OUTPUT.",
              10.7F, kMuted, IRECT(X(56.0F), Y(379.0F), X(664.0F), Y(398.0F)));
   }
 
