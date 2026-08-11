@@ -48,7 +48,8 @@ endif()
 
 file(READ "${scene_header}" scene_contents)
 foreach(required_scene_token
-    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam})"
+    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam,"
+    "freezeParam, pathParam})"
     "SetIgnoreMouse(true)"
     "SetValueFromDelegate"
     "SetAnimation"
@@ -71,7 +72,8 @@ endif()
 
 file(READ "${backdrop_header}" backdrop_contents)
 foreach(required_backdrop_token
-    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam})"
+    "IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam,"
+    "freezeParam, pathParam})"
     "kGestureCycleDurationMs = 12000"
     "kGestureWindowStart = 0.62F"
     "kGestureParticleCount = 58"
@@ -127,7 +129,9 @@ foreach(required_help_token
     "FEEDBACK"
     "DIFFUSION"
     "MIX"
-    "QUICK START"
+    "RITUAL CONTROLS"
+    "SYNC follows the host division"
+    "Reflection keeps pitch stable"
     "HelpButtonBounds"
     "CloseButtonBounds")
   string(FIND "${help_contents}" "${required_help_token}" token_position)

@@ -1,4 +1,4 @@
-# Wave Factory Essentials Plans
+# Threefold Palm + Valley Spirit Plans
 
 This folder is the durable product and engineering memory for the plugin line. It records what has been decided, what is being built, what remains exploratory, and the validation required before release.
 

@@ -10,23 +10,33 @@
 #include "IControls.h"
 #include "GoodbandBackdropControl.h"
 #include "GoodbandCharacterPresets.h"
+#include "GoodbandForms.h"
 #include "GoodbandHelpControl.h"
+#include "GoodbandReductionMeterControl.h"
 #include "GoodbandSceneControl.h"
 #include "FightingGameCharacterControl.h"
 #include "IllustratedBitmapDrawing.h"
 #include "IllustratedShurikenKnobControl.h"
 #include "../shared/WaveFactoryUI.h"
+#include "../shared/EngravedTabControl.h"
 
 namespace {
 constexpr float kFrameOverscanScale = 1.048F;
 }
 #endif
 
-Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kNumParams, 1)) {
+Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kNumParams, 5)) {
   GetParam(kAmount)->InitDouble("Amount", 35.0, 0.0, 100.0, 0.1, "%");
   GetParam(kCharacter)->InitEnum("Character", 0, {"Clean", "Warm", "Punch", "Wide"});
   GetParam(kMix)->InitDouble("Mix", 100.0, 0.0, 100.0, 0.1, "%");
   GetParam(kOutputTrim)->InitDouble("Output", 0.0, -12.0, 12.0, 0.1, "dB");
+  GetParam(kAutoGainMatch)->InitBool("Auto Match", false);
+
+  MakePreset("First Stance", 22.0, 0, 72.0, 0.0, 1);
+  MakePreset("Iron Center", 48.0, 1, 82.0, -0.8, 1);
+  MakePreset("Striking Drum", 62.0, 2, 88.0, -1.5, 1);
+  MakePreset("Parallel Flame", 78.0, 1, 48.0, -1.0, 1);
+  MakePreset("Open Hand", 44.0, 3, 78.0, -1.0, 1);
 
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [&]() { return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS); };
@@ -44,6 +54,8 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     const auto vfxAtlas = graphics->LoadBitmap(THREEFOLD_PALM_CHI_VFX_ATLAS_FN);
     graphics->AttachControl(new GoodbandBackdropControl(bounds, background, gestureBackground, vfxAtlas));
     graphics->AttachControl(new GoodbandSceneControl(bounds, kAmount, kCharacter, kMix, kOutputTrim, vfxAtlas));
+    graphics->AttachControl(
+        new GoodbandReductionMeterControl(bounds, gainReductionDb_, autoGainCompensationDb_));
 
     graphics->AttachControl(
         new threefold::AspectFitBitmapControl(IRECT(27.0F, 12.0F, 410.0F, 91.0F), wordmark));
@@ -71,8 +83,22 @@ Goodband::Goodband(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kN
     const auto characterStyle = controlStyle.WithShowLabel(false)
                                     .WithShowValue(false)
                                     .WithWidgetFrac(1.0F);
+    auto* formControl = new IllustratedCharacterControl(
+        IRECT(29.0F, 111.0F, 294.0F, 135.0F),
+        [this, graphics](IControl* caller) {
+          const auto formIndex = std::clamp(static_cast<int>(std::lround(caller->GetValue() * 4.0)), 0, 4);
+          ApplyFormPreset(formIndex, graphics);
+        },
+        {"STANCE", "CENTER", "STRIKE", "FLAME", "OPEN"}, characterStyle,
+        unselectedPlate, selectedPlate);
+    graphics->AttachControl(formControl);
+
+    graphics->AttachControl(new wfe::ui::EngravedTabControl(
+        IRECT(300.0F, 112.0F, 407.0F, 134.0F), kAutoGainMatch, {"MANUAL", "MATCH"},
+        DEFAULT_FONT, IColor(255, 103, 226, 184)));
+
     auto* characterControl = new IllustratedCharacterControl(
-        IRECT(29.0F, 125.0F, 407.0F, 174.0F), kCharacter, {"CLEAN", "WARM", "PUNCH", "WIDE"},
+        IRECT(29.0F, 139.0F, 407.0F, 180.0F), kCharacter, {"CLEAN", "WARM", "PUNCH", "WIDE"},
         characterStyle, unselectedPlate, selectedPlate);
     characterControl->SetActionFunction([this, graphics](IControl* caller) {
       const auto characterIndex = std::clamp(static_cast<int>(std::lround(caller->GetValue() * 3.0)), 0, 3);
@@ -110,6 +136,29 @@ void Goodband::ApplyCharacterPreset(int characterIndex, IGraphics* graphics) {
     });
   }
 }
+
+void Goodband::ApplyFormPreset(int formIndex, IGraphics* graphics) {
+  const auto& form = wfe::ui::GetGoodbandForm(formIndex);
+  const std::array<std::pair<int, double>, 5> updates{{
+      {kCharacter, static_cast<double>(form.character)},
+      {kAmount, form.amountPercent},
+      {kMix, form.mixPercent},
+      {kOutputTrim, form.outputTrimDb},
+      {kAutoGainMatch, form.autoGainMatch ? 1.0 : 0.0},
+  }};
+
+  for (const auto& update : updates) {
+    const auto paramIndex = update.first;
+    const auto normalizedValue = GetParam(paramIndex)->ToNormalized(update.second);
+    BeginInformHostOfParamChangeFromUI(paramIndex);
+    SendParameterValueFromUI(paramIndex, normalizedValue);
+    EndInformHostOfParamChangeFromUI(paramIndex);
+    graphics->ForControlWithParam(paramIndex, [paramIndex, normalizedValue](IControl* control) {
+      const auto valueIndex = control->LinkedToParam(paramIndex);
+      control->SetValueFromDelegate(normalizedValue, valueIndex);
+    });
+  }
+}
 #endif
 
 void Goodband::OnReset() { processor_.Prepare(GetSampleRate()); }
@@ -121,6 +170,7 @@ void Goodband::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   parameters.character = static_cast<wfe::dsp::GoodbandCharacter>(GetParam(kCharacter)->Int());
   parameters.mix = static_cast<float>(GetParam(kMix)->Value() / 100.0);
   parameters.outputTrimDb = static_cast<float>(GetParam(kOutputTrim)->Value());
+  parameters.autoGainMatch = GetParam(kAutoGainMatch)->Bool();
   processor_.SetParameters(parameters);
 
   const auto channels = NOutChansConnected();
@@ -133,5 +183,11 @@ void Goodband::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
       outputs[1][frame] = static_cast<sample>(processed[1]);
     }
   }
+
+  const auto& reduction = processor_.GetGainReductionDb();
+  for (std::size_t band = 0; band < reduction.size(); ++band) {
+    gainReductionDb_[band].store(reduction[band], std::memory_order_relaxed);
+  }
+  autoGainCompensationDb_.store(processor_.GetAutoGainCompensationDb(), std::memory_order_relaxed);
 }
 #endif

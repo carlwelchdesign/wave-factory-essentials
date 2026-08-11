@@ -100,6 +100,7 @@ void PitchTrailsProcessor::Prepare(double sampleRate, double maximumDelaySeconds
 
 void PitchTrailsProcessor::Reset() noexcept {
   phase_ = 0.0F;
+  freezeAmount_ = 0.0F;
   for (auto& channel : channels_) {
     channel.delay.Reset();
     channel.diffusionA.Reset();
@@ -109,7 +110,7 @@ void PitchTrailsProcessor::Reset() noexcept {
 }
 
 void PitchTrailsProcessor::SetParameters(PitchTrailsParameters parameters) noexcept {
-  parameters.delayMs = Clamp(parameters.delayMs, 10.0F, 2000.0F);
+  parameters.delayMs = Clamp(parameters.delayMs, 10.0F, 8000.0F);
   parameters.semitones = Clamp(parameters.semitones, -12.0F, 12.0F);
   parameters.feedback = Clamp(parameters.feedback, 0.0F, 0.92F);
   parameters.diffusion = Clamp(parameters.diffusion, 0.0F, 1.0F);
@@ -121,17 +122,43 @@ std::array<float, 2> PitchTrailsProcessor::ProcessFrame(float left, float right)
   const std::array<float, 2> dry{left, right};
   std::array<float, 2> output{};
 
+  const auto freezeTarget = parameters_.freeze ? 1.0F : 0.0F;
+  const auto freezeCoefficient = static_cast<float>(std::exp(-1.0 / (sampleRate_ * 0.015)));
+  freezeAmount_ = freezeCoefficient * freezeAmount_ + (1.0F - freezeCoefficient) * freezeTarget;
+
   for (std::size_t channel = 0; channel < channels_.size(); ++channel) {
     auto& state = channels_[channel];
+    const auto baseDelay = std::min(parameters_.delayMs * static_cast<float>(sampleRate_) / 1000.0F,
+                                    maximumDelaySamples_ - 4096.0F);
+    const auto reflected = state.delay.Read(baseDelay);
     const auto delayed = ReadPitched(state.delay, phase_);
     const auto diffusionFeedback = 0.25F + 0.45F * parameters_.diffusion;
     const auto diffuseA = state.diffusionA.Process(delayed, diffusionFeedback);
     const auto diffuseB = state.diffusionB.Process(diffuseA, diffusionFeedback * 0.86F);
     const auto wet = delayed + parameters_.diffusion * (diffuseB - delayed);
 
-    const auto feedbackInput = dry[channel] + state.feedbackMemory * parameters_.feedback;
-    state.delay.Write(std::clamp(feedbackInput, -2.0F, 2.0F));
-    state.feedbackMemory = std::clamp(wet, -2.0F, 2.0F);
+    float feedbackSource = wet;
+    switch (parameters_.feedbackPath) {
+      case PitchTrailsFeedbackPath::Reflection:
+        feedbackSource = reflected;
+        break;
+      case PitchTrailsFeedbackPath::Spiral:
+        feedbackSource = delayed;
+        break;
+      case PitchTrailsFeedbackPath::Cloud:
+      default:
+        feedbackSource = wet;
+        break;
+    }
+
+    const auto feedbackGain = parameters_.feedback + freezeAmount_ * (0.995F - parameters_.feedback);
+    const auto inputGain = 1.0F - freezeAmount_;
+    const auto feedbackInput = dry[channel] * inputGain + state.feedbackMemory * feedbackGain;
+    const auto normalLimited = std::clamp(feedbackInput, -2.0F, 2.0F);
+    const auto frozenLimited = std::tanh(feedbackInput);
+    state.delay.Write(normalLimited + freezeAmount_ * (frozenLimited - normalLimited));
+    const auto freezeDamping = 1.0F - freezeAmount_ * 0.0025F;
+    state.feedbackMemory = std::clamp(feedbackSource * freezeDamping, -2.0F, 2.0F);
     output[channel] = dry[channel] + parameters_.mix * (wet - dry[channel]);
   }
 

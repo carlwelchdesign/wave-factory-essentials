@@ -89,15 +89,15 @@ private:
     DrawControl(graphics, 212.0F, "DIFFUSION", "Softens each return into a wider cloud", 382.0F);
     DrawControl(graphics, 266.0F, "MIX", "Blends the transformed path with the source", 382.0F);
 
-    graphics.FillRect(IColor(255, 66, 65, 61), IRECT(X(59.0F), Y(328.0F), X(695.0F), Y(329.0F)));
-    DrawText(graphics, "QUICK START", 10.8F, kBronze,
-             IRECT(X(59.0F), Y(342.0F), X(155.0F), Y(363.0F)));
-    DrawText(graphics, "Set Echo Time, choose a Pitch interval, then raise Feedback until the trail breathes.",
-             11.2F, kMoonstone, IRECT(X(159.0F), Y(342.0F), X(695.0F), Y(363.0F)));
-    DrawText(graphics, "Use Diffusion for mist and Mix to place the technique behind or around the source.",
-             10.8F, kMuted, IRECT(X(159.0F), Y(365.0F), X(695.0F), Y(385.0F)));
-    DrawText(graphics, "Tip: +7 or +12 semitones creates rising spirits; negative intervals create descending shadows.",
-             10.5F, kMuted, IRECT(X(159.0F), Y(388.0F), X(695.0F), Y(409.0F)));
+    graphics.FillRect(IColor(255, 66, 65, 61), IRECT(X(59.0F), Y(323.0F), X(695.0F), Y(324.0F)));
+    DrawText(graphics, "RITUAL CONTROLS", 10.8F, kBronze,
+             IRECT(X(59.0F), Y(334.0F), X(220.0F), Y(354.0F)));
+    DrawText(graphics, "SYNC follows the host division. FREEZE holds the current valley without new input.",
+             11.0F, kMoonstone, IRECT(X(59.0F), Y(354.0F), X(695.0F), Y(374.0F)));
+    DrawText(graphics, "PATH: Reflection keeps pitch stable; Spiral compounds pitch; Cloud compounds pitch and diffusion.",
+             10.7F, kMuted, IRECT(X(59.0F), Y(376.0F), X(695.0F), Y(397.0F)));
+    DrawText(graphics, "Start with Cloud, +7 st and moderate Feedback; use Freeze as a playable gesture.",
+             10.5F, kMuted, IRECT(X(59.0F), Y(398.0F), X(695.0F), Y(419.0F)));
   }
 
   void DrawControl(IGraphics& graphics, float y, const char* name, const char* description,

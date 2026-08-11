@@ -117,8 +117,9 @@ foreach(required_help_token
     "AMOUNT"
     "MIX"
     "OUTPUT"
-    "QUICK START"
-    "Wide is most effective on stereo material"
+    "FORMS / METERS / MATCH"
+    "LOW, MID and HIGH show live gain reduction"
+    "MATCH compensates perceived level"
     "HelpButtonBounds"
     "CloseButtonBounds"
     "bool IsHit")

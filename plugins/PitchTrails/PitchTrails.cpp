@@ -8,7 +8,9 @@
 #include "ValleySpiritBitmapControl.h"
 #include "ValleySpiritHelpControl.h"
 #include "ValleySpiritSceneControl.h"
+#include "../shared/EngravedTabControl.h"
 #include "../shared/WaveFactoryUI.h"
+#include "wfe/dsp/tempo_sync.h"
 
 namespace {
 constexpr float kFrameOverscanScale = 1.048F;
@@ -21,6 +23,11 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
   GetParam(kFeedback)->InitDouble("Feedback", 35.0, 0.0, 92.0, 0.1, "%");
   GetParam(kDiffusion)->InitDouble("Diffusion", 35.0, 0.0, 100.0, 0.1, "%");
   GetParam(kMix)->InitDouble("Mix", 35.0, 0.0, 100.0, 0.1, "%");
+  GetParam(kTempoSync)->InitBool("Tempo Sync", false);
+  GetParam(kNoteDivision)->InitEnum(
+      "Note Division", 5, {"1/16", "1/8T", "1/8", "1/8D", "1/4T", "1/4", "1/4D", "1/2", "1 BAR"});
+  GetParam(kFreeze)->InitBool("Freeze", false);
+  GetParam(kFeedbackPath)->InitEnum("Feedback Path", 2, {"Reflection", "Spiral", "Cloud"});
 
 #if IPLUG_EDITOR
   mMakeGraphicsFunc = [&]() { return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS); };
@@ -37,10 +44,12 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
     const auto vfxAtlas = graphics->LoadBitmap(VALLEY_SPIRIT_VFX_ATLAS_FN);
 
     graphics->AttachControl(new ValleySpiritBackdropControl(
-        bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix, background, gestureBackground,
+        bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix, kFreeze, kFeedbackPath,
+        background, gestureBackground,
         vfxAtlas));
     graphics->AttachControl(new ValleySpiritSceneControl(
-        bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix, vfxAtlas));
+        bounds, kDelay, kPitch, kFeedback, kDiffusion, kMix, kFreeze, kFeedbackPath,
+        vfxAtlas));
 
     graphics->AttachControl(new ITextControl(
         IRECT(24.0F, 27.0F, 384.0F, 86.0F), "VALLEY SPIRIT",
@@ -66,6 +75,27 @@ PitchTrails::PitchTrails(const InstanceInfo& info) : iplug::Plugin(info, MakeCon
             .WithValueText(IText(12.5F, IColor(255, 199, 184, 151), VALLEY_SPIRIT_FONT,
                                  EAlign::Center, EVAlign::Bottom))
             .WithWidgetFrac(0.78F);
+
+    const auto menuStyle =
+        wfe::ui::MakeCinematicControlStyle(IColor(255, 151, 196, 231))
+            .WithShowLabel(false)
+            .WithShowValue(true)
+            .WithValueText(IText(9.0F, IColor(255, 222, 214, 196), VALLEY_SPIRIT_FONT,
+                                 EAlign::Center, EVAlign::Middle))
+            .WithWidgetFrac(1.0F);
+
+    graphics->AttachControl(new wfe::ui::EngravedTabControl(
+        IRECT(24.0F, 109.0F, 100.0F, 132.0F), kTempoSync, {"FREE", "SYNC"},
+        VALLEY_SPIRIT_FONT, IColor(255, 151, 196, 231)));
+    graphics->AttachControl(new IVMenuButtonControl(
+        IRECT(104.0F, 109.0F, 205.0F, 132.0F), kNoteDivision, "", menuStyle));
+    graphics->AttachControl(new wfe::ui::EngravedTabControl(
+        IRECT(209.0F, 109.0F, 325.0F, 132.0F), kFeedbackPath,
+        {"REFLECT", "SPIRAL", "CLOUD"}, VALLEY_SPIRIT_FONT,
+        IColor(255, 151, 196, 231)));
+    graphics->AttachControl(new wfe::ui::EngravedTabControl(
+        IRECT(329.0F, 109.0F, 408.0F, 132.0F), kFreeze, {"LIVE", "FREEZE"},
+        VALLEY_SPIRIT_FONT, IColor(255, 190, 151, 92)));
 
     graphics->AttachControl(new IllustratedSpiritDialControl(
         IRECT(24.0F, 132.0F, 148.0F, 326.0F), kDelay, "ECHO TIME", primaryStyle,
@@ -95,11 +125,22 @@ void PitchTrails::OnReset() { processor_.Prepare(GetSampleRate()); }
 #if IPLUG_DSP
 void PitchTrails::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
   wfe::dsp::PitchTrailsParameters parameters;
-  parameters.delayMs = static_cast<float>(GetParam(kDelay)->Value());
+  const auto tempoSync = GetParam(kTempoSync)->Bool();
+  const auto division = static_cast<wfe::dsp::DelayDivision>(GetParam(kNoteDivision)->Int());
+  int timeSigNumerator = 4;
+  int timeSigDenominator = 4;
+  GetTimeSig(timeSigNumerator, timeSigDenominator);
+  parameters.delayMs = tempoSync
+                           ? wfe::dsp::DelayMilliseconds(GetTempo(), division, timeSigNumerator,
+                                                        timeSigDenominator)
+                           : static_cast<float>(GetParam(kDelay)->Value());
   parameters.semitones = static_cast<float>(GetParam(kPitch)->Value());
   parameters.feedback = static_cast<float>(GetParam(kFeedback)->Value() / 100.0);
   parameters.diffusion = static_cast<float>(GetParam(kDiffusion)->Value() / 100.0);
   parameters.mix = static_cast<float>(GetParam(kMix)->Value() / 100.0);
+  parameters.freeze = GetParam(kFreeze)->Bool();
+  parameters.feedbackPath =
+      static_cast<wfe::dsp::PitchTrailsFeedbackPath>(GetParam(kFeedbackPath)->Int());
   processor_.SetParameters(parameters);
 
   const auto channels = NOutChansConnected();
