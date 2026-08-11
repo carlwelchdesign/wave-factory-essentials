@@ -12,7 +12,9 @@
 - Passed: Logic host-control smoke testing for Valley Spirit Sync, `1/8` note division, Freeze, and Spiral feedback path.
 - Passed: Logic factory-preset recall for Threefold Palm. `Iron Center` restored Warm, Amount `48%`, Mix `82%`, Output `-0.8 dB`, and Auto Match on; the illustrated editor mirrored those values after reopening.
 - Passed: both Audio Units loaded as separate instances in the same Logic channel strip.
-- Pending: listening tests with representative program material, Windows CI, packaging, final screenshots, and publication.
+- Passed: Windows x64 CI compiled both VST3 and CLAP formats and passed all seven tests ([run 31538944711](https://github.com/carlwelchdesign/wave-factory-essentials/actions/runs/31538944711)).
+- Passed: Windows packaging produced and artifact inspection confirmed `Threefold-Palm-0.2.0-Windows-x64.zip` and `Valley-Spirit-0.2.0-Windows-x64.zip`, each with VST3, CLAP, installer, and tester README.
+- Pending: listening tests with representative program material, final screenshots, and publication.
 
 The development build has replaced the locally installed tester plugins. The previous installed bundles were retained at `/private/tmp/cinematic-plugins-backup.PpS3sz` for this validation session.
 
