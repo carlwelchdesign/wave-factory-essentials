@@ -24,10 +24,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Download CLAP SDK dependencies
+      - name: Download plug-in SDK dependencies
         shell: bash
         working-directory: third_party/iPlug2/Dependencies/IPlug
-        run: ./download-clap-sdks.sh 1.2.10
+        run: |
+          ./download-vst3-sdk.sh
+          ./download-clap-sdks.sh 1.2.10
 
       - name: Configure Windows x64
         run: >-
