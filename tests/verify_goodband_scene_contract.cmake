@@ -7,6 +7,7 @@ set(shuriken_header "${goodband_root}/IllustratedShurikenKnobControl.h")
 set(character_header "${goodband_root}/FightingGameCharacterControl.h")
 set(plugin_source "${goodband_root}/Goodband.cpp")
 set(plugin_cmake "${goodband_root}/CMakeLists.txt")
+set(windows_resources "${goodband_root}/resources/main.rc")
 
 function(verify_png_dimensions asset_name expected_width expected_height)
   set(asset_path "${goodband_root}/resources/img/${asset_name}")
@@ -235,6 +236,30 @@ string(FIND "${cmake_contents}" "GoodbandHelpControl.h" help_header_position)
 if(help_header_position EQUAL -1)
   message(FATAL_ERROR "Goodband CMake sources must include its help control")
 endif()
+
+foreach(required_windows_cmake_token
+    "if(WIN32)"
+    "resources/main.rc"
+    "target_sources(Goodband-vst3"
+    "target_sources(Goodband-clap")
+  string(FIND "${cmake_contents}" "${required_windows_cmake_token}" windows_cmake_position)
+  if(windows_cmake_position EQUAL -1)
+    message(FATAL_ERROR "Goodband Windows build must include ${required_windows_cmake_token}")
+  endif()
+endforeach()
+
+file(READ "${windows_resources}" windows_resource_contents)
+foreach(required_windows_resource_token
+    "TEMPLE_OF_MASTERY_BG_FN PNG"
+    "THREEFOLD_PALM_WORDMARK_FN PNG"
+    "THREEFOLD_PALM_FRAME_FN PNG"
+    "THREEFOLD_PALM_CHI_VFX_ATLAS_FN PNG"
+    "chi-vfx-atlas@2x.png")
+  string(FIND "${windows_resource_contents}" "${required_windows_resource_token}" windows_resource_position)
+  if(windows_resource_position EQUAL -1)
+    message(FATAL_ERROR "Goodband Windows resources must include ${required_windows_resource_token}")
+  endif()
+endforeach()
 
 foreach(required_preset_token
     "IllustratedCharacterControl"

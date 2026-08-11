@@ -36,3 +36,12 @@ iplug_add_plugin(Goodband
   LINK
     wave_factory_dsp
 )
+
+if(WIN32)
+  set(goodband_windows_resources resources/main.rc)
+  set_source_files_properties(${goodband_windows_resources} PROPERTIES
+    COMPILE_FLAGS "/I\"${CMAKE_CURRENT_SOURCE_DIR}/resources/fonts\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/resources/img\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/resources\""
+  )
+  target_sources(Goodband-vst3 PRIVATE ${goodband_windows_resources})
+  target_sources(Goodband-clap PRIVATE ${goodband_windows_resources})
+endif()
