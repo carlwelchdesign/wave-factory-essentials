@@ -1,0 +1,23 @@
+Copyright (c) 2026 Carl Welch. All rights reserved.
+
+The original source code, artwork, product names, interface designs, audio
+algorithms, presets, documentation, and packaging materials in this repository
+are proprietary. Except for the limited tester permission below, no permission
+is granted to copy, modify, distribute, sublicense, sell, publish, or create
+derivative works from these materials without prior written permission from
+Carl Welch.
+
+Pre-release binary builds published through this repository may be downloaded
+and used for personal evaluation and testing. They may not be redistributed,
+resold, bundled with another product, or represented as an official release by
+another party.
+
+This license does not apply to third-party software, SDKs, fonts, or other
+materials included in or referenced by the project. Those materials remain
+subject to their respective licenses and copyright notices.
+
+THE SOFTWARE AND MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR MATERIALS OR THEIR USE.

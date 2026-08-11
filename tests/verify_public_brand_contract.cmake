@@ -1,4 +1,5 @@
 set(public_files
+  "LICENSE"
   "README.md"
   "LICENSE-NOTICE.md"
   "docs/product-brief.md"
@@ -35,4 +36,18 @@ foreach(relative_path IN LISTS public_files)
       message(FATAL_ERROR "Public-facing file ${relative_path} still contains ${retired_brand}")
     endif()
   endforeach()
+endforeach()
+
+foreach(relative_path
+    "docs/images/threefold-palm-current.png"
+    "docs/images/valley-spirit-current.png")
+  set(file_path "${PROJECT_ROOT}/${relative_path}")
+  if(NOT EXISTS "${file_path}")
+    message(FATAL_ERROR "Current README screenshot is missing: ${relative_path}")
+  endif()
+
+  file(SIZE "${file_path}" screenshot_size)
+  if(screenshot_size LESS 100000)
+    message(FATAL_ERROR "Current README screenshot is unexpectedly small: ${relative_path}")
+  endif()
 endforeach()
