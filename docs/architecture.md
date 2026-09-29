@@ -34,15 +34,20 @@ input
   -> character-dependent soft saturation
   -> recombine
   -> dry/wet mix
+  -> optional smoothed automatic gain compensation
   -> output trim
 ```
 
 The alpha uses subtractive complementary splits so the unprocessed bands reconstruct the input. The crossover implementation is intentionally isolated so it can later be replaced by a higher-order design without changing the plugin adapter.
 
+Per-band gain-reduction values stay inside the DSP processor until the adapter publishes one reading per band through relaxed atomics. The animated editor reads those values without locking the audio thread. Auto Match compares long-term dry and post-mix energy, ignores silence, clamps compensation, and leaves Output as the final intentional trim.
+
 ## Valley Spirit signal path
 
 ```text
-input + bounded feedback
+manual time or host-tempo division
+  -> smoothed input injection / Freeze state
+  -> input + bounded feedback selected from Reflection, Spiral, or Cloud
   -> circular delay
   -> two crossfaded variable-delay read heads
   -> diffusion all-pass stages
@@ -50,4 +55,4 @@ input + bounded feedback
   -> dry/wet mix
 ```
 
-The pitch algorithm is a lightweight time-domain prototype. Formal listening tests will determine whether the production version retains it or moves to a higher-quality granular or phase-vocoder implementation.
+The adapter translates host tempo and time signature into milliseconds, keeping the DSP independent of host APIs. Reflection feeds back the unpitched delay, Spiral feeds back the pitched signal before diffusion, and Cloud feeds back the pitched/diffused signal. Freeze fades new input out while raising a damped, soft-limited feedback path. The pitch algorithm remains a lightweight time-domain prototype; formal listening tests will determine whether the production version retains it or moves to a higher-quality granular or phase-vocoder implementation.

@@ -11,8 +11,10 @@
 class ValleySpiritSceneControl final : public IControl {
 public:
   ValleySpiritSceneControl(const IRECT& bounds, int delayParam, int pitchParam, int feedbackParam,
-                           int diffusionParam, int mixParam, const IBitmap& vfxAtlas)
-      : IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam}),
+                           int diffusionParam, int mixParam, int freezeParam, int pathParam,
+                           const IBitmap& vfxAtlas)
+      : IControl(bounds, {delayParam, pitchParam, feedbackParam, diffusionParam, mixParam,
+                          freezeParam, pathParam}),
         vfxAtlas_(vfxAtlas) {
     SetIgnoreMouse(true);
   }
@@ -25,10 +27,15 @@ public:
     const auto feedback = static_cast<float>(GetValue(kFeedbackValue));
     const auto diffusion = static_cast<float>(GetValue(kDiffusionValue));
     const auto mix = static_cast<float>(GetValue(kMixValue));
-    const auto intensity = std::clamp(0.16F + mix * 0.58F + responsePulse_ * 0.24F, 0.0F, 1.0F);
+    const auto freeze = static_cast<float>(GetValue(kFreezeValue));
+    const auto path = static_cast<float>(GetValue(kPathValue));
+    const auto intensity =
+        std::clamp(0.16F + mix * 0.50F + freeze * 0.22F + responsePulse_ * 0.24F, 0.0F, 1.0F);
 
-    DrawReturningRibbons(graphics, delay, pitch, feedback, diffusion, intensity);
-    DrawEchoFragments(graphics, delay, pitch, feedback, diffusion, intensity);
+    DrawReturningRibbons(graphics, delay, pitch, feedback, diffusion,
+                         std::clamp(intensity + path * 0.08F, 0.0F, 1.0F));
+    DrawEchoFragments(graphics, delay, pitch, feedback,
+                      std::clamp(diffusion + path * 0.12F, 0.0F, 1.0F), intensity);
   }
 
   void SetValueFromDelegate(double value, int valueIndex = 0) override {
@@ -51,6 +58,8 @@ private:
     kFeedbackValue,
     kDiffusionValue,
     kMixValue,
+    kFreezeValue,
+    kPathValue,
   };
 
   static constexpr int kMotionCycleMs = 6400;

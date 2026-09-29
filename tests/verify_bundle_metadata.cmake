@@ -7,7 +7,16 @@ function(read_define config_path define_name output_name)
   set(${output_name} "${CMAKE_MATCH_1}" PARENT_SCOPE)
 endfunction()
 
-function(verify_format_metadata plugin_root plugin_name bundle_domain bundle_manufacturer bundle_name format_name format_identifier)
+function(read_numeric_define config_path define_name output_name)
+  file(READ "${config_path}" config_contents)
+  string(REGEX MATCH "#define[ \t]+${define_name}[ \t]+([^ \t\r\n]+)" define_match "${config_contents}")
+  if(NOT define_match)
+    message(FATAL_ERROR "${define_name} is missing from ${config_path}")
+  endif()
+  set(${output_name} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+endfunction()
+
+function(verify_format_metadata plugin_root plugin_name bundle_domain bundle_manufacturer bundle_name plugin_version version_hex format_name format_identifier)
   set(plist_path "${plugin_root}/resources/${plugin_name}-${format_name}-Info.plist")
   file(READ "${plist_path}" plist_contents)
   set(expected_identifier "${bundle_domain}.${bundle_manufacturer}.${format_identifier}.${bundle_name}")
@@ -15,6 +24,24 @@ function(verify_format_metadata plugin_root plugin_name bundle_domain bundle_man
   if(identifier_position EQUAL -1)
     message(FATAL_ERROR
       "Bundle identifier mismatch for ${plugin_name} ${format_name}: expected ${expected_identifier}")
+  endif()
+
+  foreach(version_key "CFBundleShortVersionString" "CFBundleVersion")
+    string(FIND "${plist_contents}" "<key>${version_key}</key><string>${plugin_version}</string>" version_position)
+    if(version_position EQUAL -1)
+      message(FATAL_ERROR
+        "Bundle version mismatch for ${plugin_name} ${format_name}: expected ${version_key} ${plugin_version}")
+    endif()
+  endforeach()
+
+  if(format_name STREQUAL "AU")
+    math(EXPR version_decimal "${version_hex}")
+    string(FIND "${plist_contents}" "<key>version</key><integer>${version_decimal}</integer>" component_version_position)
+    string(FIND "${plist_contents}" "<key>AudioUnit Version</key><string>${version_hex}</string>" au_version_position)
+    if(component_version_position EQUAL -1 OR au_version_position EQUAL -1)
+      message(FATAL_ERROR
+        "Audio Unit component version mismatch for ${plugin_name}: expected ${version_hex} (${version_decimal})")
+    endif()
   endif()
 endfunction()
 
@@ -24,10 +51,12 @@ function(verify_plugin_metadata plugin_name)
   read_define("${config_path}" "BUNDLE_DOMAIN" bundle_domain)
   read_define("${config_path}" "BUNDLE_MFR" bundle_manufacturer)
   read_define("${config_path}" "BUNDLE_NAME" bundle_name)
+  read_define("${config_path}" "PLUG_VERSION_STR" plugin_version)
+  read_numeric_define("${config_path}" "PLUG_VERSION_HEX" version_hex)
 
-  verify_format_metadata("${plugin_root}" "${plugin_name}" "${bundle_domain}" "${bundle_manufacturer}" "${bundle_name}" "AU" "audiounit")
-  verify_format_metadata("${plugin_root}" "${plugin_name}" "${bundle_domain}" "${bundle_manufacturer}" "${bundle_name}" "VST3" "vst3")
-  verify_format_metadata("${plugin_root}" "${plugin_name}" "${bundle_domain}" "${bundle_manufacturer}" "${bundle_name}" "CLAP" "clap")
+  verify_format_metadata("${plugin_root}" "${plugin_name}" "${bundle_domain}" "${bundle_manufacturer}" "${bundle_name}" "${plugin_version}" "${version_hex}" "AU" "audiounit")
+  verify_format_metadata("${plugin_root}" "${plugin_name}" "${bundle_domain}" "${bundle_manufacturer}" "${bundle_name}" "${plugin_version}" "${version_hex}" "VST3" "vst3")
+  verify_format_metadata("${plugin_root}" "${plugin_name}" "${bundle_domain}" "${bundle_manufacturer}" "${bundle_name}" "${plugin_version}" "${version_hex}" "CLAP" "clap")
 endfunction()
 
 verify_plugin_metadata("Goodband")

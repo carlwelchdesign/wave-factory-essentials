@@ -1,5 +1,6 @@
 #include "wfe/dsp/goodband_processor.h"
 #include "wfe/dsp/pitch_trails_processor.h"
+#include "wfe/dsp/tempo_sync.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -42,6 +43,27 @@ void TestGoodbandProcessesAndStaysFinite() {
     totalDifference += std::abs(output[0] - input);
   }
   Expect(totalDifference > 1.0F, "Goodband amount must produce an audible signal change");
+  const auto& reduction = processor.GetGainReductionDb();
+  Expect(reduction[0] > 0.0F || reduction[1] > 0.0F || reduction[2] > 0.0F,
+         "Goodband must publish active gain reduction");
+}
+
+void TestGoodbandAutoGainMatchIsBounded() {
+  wfe::dsp::GoodbandProcessor processor;
+  processor.Prepare(48000.0);
+  processor.SetParameters({1.0F, wfe::dsp::GoodbandCharacter::Warm, 1.0F, 0.0F, true});
+
+  for (int index = 0; index < 96000; ++index) {
+    const auto input = std::sin(static_cast<float>(index) * 0.021F) * 0.75F;
+    const auto output = processor.ProcessFrame(input, input * 0.9F);
+    Expect(std::isfinite(output[0]) && std::isfinite(output[1]),
+           "Goodband Auto Match output must stay finite");
+  }
+
+  const auto compensation = processor.GetAutoGainCompensationDb();
+  Expect(std::isfinite(compensation), "Goodband Auto Match compensation must stay finite");
+  Expect(std::abs(compensation) <= 12.01F, "Goodband Auto Match compensation must stay bounded");
+  Expect(std::abs(compensation) > 0.05F, "Goodband Auto Match must react to processed level");
 }
 
 void TestPitchTrailsDryIdentity() {
@@ -95,14 +117,72 @@ void TestPitchTrailsShiftedFeedbackStaysBounded() {
   Expect(maximum <= 2.01F, "Pitch Trails feedback path must remain bounded");
 }
 
+void TestPitchTrailsFreezeStaysBounded() {
+  wfe::dsp::PitchTrailsProcessor processor;
+  processor.Prepare(48000.0);
+  processor.SetParameters({40.0F, 7.0F, 0.75F, 0.8F, 1.0F, false,
+                           wfe::dsp::PitchTrailsFeedbackPath::Cloud});
+
+  float maximum = 0.0F;
+  for (int index = 0; index < 144000; ++index) {
+    if (index == 12000) {
+      processor.SetParameters({40.0F, 7.0F, 0.75F, 0.8F, 1.0F, true,
+                               wfe::dsp::PitchTrailsFeedbackPath::Cloud});
+    }
+    const auto input = index == 0 ? 1.0F : 0.0F;
+    const auto output = processor.ProcessFrame(input, input);
+    Expect(std::isfinite(output[0]) && std::isfinite(output[1]),
+           "Valley Spirit Freeze must stay finite");
+    maximum = std::max(maximum, std::max(std::abs(output[0]), std::abs(output[1])));
+  }
+  Expect(maximum <= 2.01F, "Valley Spirit Freeze must remain bounded");
+}
+
+void TestPitchTrailsFeedbackPathsDiffer() {
+  auto renderPath = [](wfe::dsp::PitchTrailsFeedbackPath path) {
+    wfe::dsp::PitchTrailsProcessor processor;
+    processor.Prepare(48000.0);
+    processor.SetParameters({20.0F, 7.0F, 0.82F, 0.75F, 1.0F, false, path});
+    float signature = 0.0F;
+    for (int index = 0; index < 12000; ++index) {
+      const auto input = index == 0 ? 1.0F : 0.0F;
+      const auto output = processor.ProcessFrame(input, input);
+      signature += std::abs(output[0]) * static_cast<float>((index % 31) + 1);
+    }
+    return signature;
+  };
+
+  const auto reflection = renderPath(wfe::dsp::PitchTrailsFeedbackPath::Reflection);
+  const auto spiral = renderPath(wfe::dsp::PitchTrailsFeedbackPath::Spiral);
+  const auto cloud = renderPath(wfe::dsp::PitchTrailsFeedbackPath::Cloud);
+  Expect(std::abs(reflection - spiral) > 0.01F, "Reflection and Spiral must route feedback differently");
+  Expect(std::abs(spiral - cloud) > 0.01F, "Spiral and Cloud must route feedback differently");
+}
+
+void TestTempoDivisionConversion() {
+  using wfe::dsp::DelayDivision;
+  Expect(std::abs(wfe::dsp::DelayMilliseconds(120.0, DelayDivision::Quarter) - 500.0F) < 0.001F,
+         "Quarter-note sync must follow host tempo");
+  Expect(std::abs(wfe::dsp::DelayMilliseconds(120.0, DelayDivision::DottedEighth) - 375.0F) < 0.001F,
+         "Dotted-eighth sync must map to three quarters of a beat");
+  Expect(std::abs(wfe::dsp::DelayMilliseconds(0.0, DelayDivision::Half) - 1000.0F) < 0.001F,
+         "Missing host tempo must use the 120 BPM fallback");
+  Expect(std::abs(wfe::dsp::DelayMilliseconds(120.0, DelayDivision::Bar, 3, 4) - 1500.0F) < 0.001F,
+         "Bar sync must follow the host time signature");
+}
+
 }  // namespace
 
 int main() {
   TestGoodbandIdentityAtZeroAmount();
   TestGoodbandProcessesAndStaysFinite();
+  TestGoodbandAutoGainMatchIsBounded();
   TestPitchTrailsDryIdentity();
   TestPitchTrailsImpulseDelay();
   TestPitchTrailsShiftedFeedbackStaysBounded();
+  TestPitchTrailsFreezeStaysBounded();
+  TestPitchTrailsFeedbackPathsDiffer();
+  TestTempoDivisionConversion();
   std::cout << "All plugin DSP tests passed\n";
   return EXIT_SUCCESS;
 }

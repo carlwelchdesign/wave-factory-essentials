@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <utility>
 #include "IControls.h"
 #include "IllustratedBitmapDrawing.h"
 
@@ -10,6 +11,14 @@ public:
                               const IVStyle& style, const IBitmap& unselectedPlate,
                               const IBitmap& selectedPlate)
       : IVTabSwitchControl(bounds, paramIndex, options, "", style, EVShape::Rectangle,
+                           EDirection::Horizontal),
+        unselectedPlate_(unselectedPlate),
+        selectedPlate_(selectedPlate) {}
+
+  IllustratedCharacterControl(const IRECT& bounds, IActionFunction action,
+                              const std::vector<const char*>& options, const IVStyle& style,
+                              const IBitmap& unselectedPlate, const IBitmap& selectedPlate)
+      : IVTabSwitchControl(bounds, std::move(action), options, "", style, EVShape::Rectangle,
                            EDirection::Horizontal),
         unselectedPlate_(unselectedPlate),
         selectedPlate_(selectedPlate) {}

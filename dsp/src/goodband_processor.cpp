@@ -61,12 +61,13 @@ float GoodbandProcessor::EnvelopeFollower::Process(float input, float attackMs, 
 }
 
 void GoodbandProcessor::Prepare(double sampleRate) {
+  sampleRate_ = std::max(1.0, sampleRate);
   for (auto& channel : channels_) {
-    channel.lowSplit.Prepare(sampleRate, 180.0);
-    channel.midSplit.Prepare(sampleRate, 2800.0);
+    channel.lowSplit.Prepare(sampleRate_, 180.0);
+    channel.midSplit.Prepare(sampleRate_, 2800.0);
   }
   for (auto& envelope : envelopes_) {
-    envelope.Prepare(sampleRate);
+    envelope.Prepare(sampleRate_);
   }
   Reset();
 }
@@ -79,6 +80,10 @@ void GoodbandProcessor::Reset() noexcept {
   for (auto& envelope : envelopes_) {
     envelope.Reset();
   }
+  gainReductionDb_.fill(0.0F);
+  dryEnergy_ = 0.0F;
+  processedEnergy_ = 0.0F;
+  autoGainCompensationDb_ = 0.0F;
 }
 
 void GoodbandProcessor::SetParameters(GoodbandParameters parameters) noexcept {
@@ -109,6 +114,7 @@ std::array<float, 2> GoodbandProcessor::ProcessFrame(float left, float right) no
     const auto ratio = 1.0F + parameters_.amount * 3.0F;
     const auto overDb = std::max(0.0F, levelDb - settings.thresholdDb[band]);
     const auto reductionDb = -overDb * (1.0F - 1.0F / ratio);
+    gainReductionDb_[band] = -reductionDb;
     gains[band] = DbToGain(reductionDb + settings.makeupDb[band] * parameters_.amount);
   }
 
@@ -125,11 +131,39 @@ std::array<float, 2> GoodbandProcessor::ProcessFrame(float left, float right) no
     wet = {mid + side, mid - side};
   }
 
-  const auto outputGain = DbToGain(parameters_.outputTrimDb);
-  return {
-      (dry[0] + parameters_.mix * (wet[0] - dry[0])) * outputGain,
-      (dry[1] + parameters_.mix * (wet[1] - dry[1])) * outputGain,
+  const std::array<float, 2> mixed{
+      dry[0] + parameters_.mix * (wet[0] - dry[0]),
+      dry[1] + parameters_.mix * (wet[1] - dry[1]),
   };
+
+  const auto energyCoefficient = static_cast<float>(std::exp(-1.0 / (sampleRate_ * 0.45)));
+  const auto dryEnergy = 0.5F * (dry[0] * dry[0] + dry[1] * dry[1]);
+  const auto processedEnergy = 0.5F * (mixed[0] * mixed[0] + mixed[1] * mixed[1]);
+  dryEnergy_ = energyCoefficient * dryEnergy_ + (1.0F - energyCoefficient) * dryEnergy;
+  processedEnergy_ =
+      energyCoefficient * processedEnergy_ + (1.0F - energyCoefficient) * processedEnergy;
+
+  float targetCompensationDb = 0.0F;
+  if (parameters_.autoGainMatch && dryEnergy_ > 1.0e-8F && processedEnergy_ > 1.0e-8F) {
+    targetCompensationDb = Clamp(10.0F * std::log10(dryEnergy_ / processedEnergy_), -12.0F, 12.0F);
+  }
+  const auto compensationCoefficient = static_cast<float>(std::exp(-1.0 / (sampleRate_ * 0.30)));
+  autoGainCompensationDb_ = compensationCoefficient * autoGainCompensationDb_ +
+                            (1.0F - compensationCoefficient) * targetCompensationDb;
+
+  const auto outputGain = DbToGain(parameters_.outputTrimDb + autoGainCompensationDb_);
+  return {
+      mixed[0] * outputGain,
+      mixed[1] * outputGain,
+  };
+}
+
+const std::array<float, 3>& GoodbandProcessor::GetGainReductionDb() const noexcept {
+  return gainReductionDb_;
+}
+
+float GoodbandProcessor::GetAutoGainCompensationDb() const noexcept {
+  return autoGainCompensationDb_;
 }
 
 float GoodbandProcessor::Clamp(float value, float minimum, float maximum) noexcept {
