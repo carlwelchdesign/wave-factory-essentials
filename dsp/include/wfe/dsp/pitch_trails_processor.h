@@ -6,17 +6,25 @@
 
 namespace wfe::dsp {
 
+enum class PitchTrailsFeedbackPath {
+  Reflection = 0,
+  Spiral,
+  Cloud,
+};
+
 struct PitchTrailsParameters {
   float delayMs = 320.0F;
   float semitones = 7.0F;
   float feedback = 0.35F;
   float diffusion = 0.35F;
   float mix = 0.35F;
+  bool freeze = false;
+  PitchTrailsFeedbackPath feedbackPath = PitchTrailsFeedbackPath::Cloud;
 };
 
 class PitchTrailsProcessor final {
  public:
-  void Prepare(double sampleRate, double maximumDelaySeconds = 3.0);
+  void Prepare(double sampleRate, double maximumDelaySeconds = 8.0);
   void Reset() noexcept;
   void SetParameters(PitchTrailsParameters parameters) noexcept;
 
@@ -61,6 +69,7 @@ class PitchTrailsProcessor final {
   double sampleRate_ = 48000.0;
   float phase_ = 0.0F;
   float maximumDelaySamples_ = 144000.0F;
+  float freezeAmount_ = 0.0F;
 };
 
 }  // namespace wfe::dsp

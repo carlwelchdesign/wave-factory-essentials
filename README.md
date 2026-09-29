@@ -167,7 +167,7 @@ and testing; redistribution and resale are not permitted. See [LICENSE](LICENSE)
 and [the licensing notice](LICENSE-NOTICE.md) for the complete terms and
 third-party acknowledgements.
 
-See [the product brief](docs/product-brief.md), [architecture notes](docs/architecture.md), and [roadmap](docs/roadmap.md).
+See [the product brief](docs/product-brief.md), [architecture notes](docs/architecture.md), [current implementation plans](plans/README.md), and [roadmap](docs/roadmap.md).
 
 ## Plugin starter kit
 
