@@ -1,0 +1,19 @@
+#pragma once
+#include "IPlug_include_in_plug_hdr.h"
+#include "GainProcessor.h"
+
+// Released parameter indices are stable. Append new parameters; never reorder.
+enum EParams { kGain = 0, kBypass = 1, kNumParams = 2 };
+class @internal_name@ final : public iplug::Plugin {
+ public:
+  explicit @internal_name@(const iplug::InstanceInfo& info);
+#if IPLUG_DSP
+  void OnReset() override;
+  void ProcessBlock(iplug::sample** inputs, iplug::sample** outputs, int nFrames) override;
+#endif
+ private:
+#if IPLUG_EDITOR
+  void RecallPreset(int index);
+#endif
+  @internal_name@_dsp::GainProcessor processor_;
+};

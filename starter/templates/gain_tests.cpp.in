@@ -1,0 +1,41 @@
+#include "GainProcessor.h"
+#include <array>
+#include <cstdlib>
+#include <iostream>
+#include <limits>
+
+void Check(bool condition, const char* message) {
+  if (!condition) { std::cerr << message << '\n'; std::exit(1); }
+}
+int main() {
+  @internal_name@_dsp::GainProcessor dsp;
+  std::array<double, 1024> left{}, right{}, outLeft{}, outRight{};
+  left.fill(0.25); right.fill(-0.5);
+  double* in[]{left.data(), right.data()};
+  double* out[]{outLeft.data(), outRight.data()};
+  for (double rate : {44100., 48000., 96000.}) {
+    dsp.Prepare(rate, -6.);
+    dsp.Process(in, out, 2, 1024);
+    Check(std::abs(outLeft[100] - 0.25 * std::pow(10., -6./20.)) < 1e-12, "gain accuracy");
+    Check(outRight[100] == -2. * outLeft[100], "stereo linked gain");
+    dsp.SetParameters(12., false);
+    dsp.Process(in, out, 1, 1024);
+    Check(outLeft[0] < outLeft[1023] && outLeft[0] < 0.13, "gain smoothing");
+    dsp.Prepare(rate, -60., true);
+    dsp.Process(in, out, 2, 1024);
+    Check(outLeft[0] == left[0], "bypass and reset");
+    dsp.Prepare(rate, 500.);
+    dsp.Process(in, out, 1, 1024);
+    Check(std::abs(outLeft[0] - 0.25 * std::pow(10., 12./20.)) < 1e-12, "bounded gain");
+    dsp.SetParameters(std::numeric_limits<double>::quiet_NaN(), false);
+    dsp.Process(in, out, 2, 1024);
+    Check(std::isfinite(outLeft.back()), "finite parameter fallback");
+  }
+  left.fill(0.); right.fill(0.);
+  dsp.Process(in, out, 2, 1024);
+  Check(outLeft.back() == 0. && outRight.back() == 0., "silence");
+  // In-place buffers must be supported by a host effect.
+  left.fill(0.25); dsp.Prepare(48000.);
+  dsp.Process(in, in, 2, 1);
+  Check(left[0] == 0.25, "in-place processing");
+}

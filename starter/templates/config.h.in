@@ -1,0 +1,42 @@
+#define PLUG_NAME "@display_name@"
+#define PLUG_MFR "Carl Welch"
+#define PLUG_VERSION_HEX @version_hex@
+#define PLUG_VERSION_STR "@version@"
+#define PLUG_UNIQUE_ID '@unique_id@'
+#define PLUG_MFR_ID 'WvFy'
+#define PLUG_URL_STR "https://github.com/carlwelchdesign/wave-factory-essentials"
+#define PLUG_EMAIL_STR ""
+#define PLUG_COPYRIGHT_STR "Copyright 2026 Carl Welch"
+#define PLUG_CLASS_NAME @internal_name@
+#define BUNDLE_NAME "@internal_name@"
+#define BUNDLE_MFR "wavefactoryessentials"
+#define BUNDLE_DOMAIN "com"
+#define SHARED_RESOURCES_SUBPATH "@internal_name@"
+#define PLUG_CHANNEL_IO "1-1 2-2"
+#define PLUG_LATENCY 0
+#define PLUG_TYPE 0
+#define PLUG_DOES_MIDI_IN 0
+#define PLUG_DOES_MIDI_OUT 0
+#define PLUG_DOES_MPE 0
+#define PLUG_DOES_STATE_CHUNKS 0
+#define PLUG_HAS_UI 1
+#define PLUG_WIDTH 440
+#define PLUG_HEIGHT 330
+#define PLUG_FPS 30
+#define PLUG_SHARED_RESOURCES 0
+#define PLUG_HOST_RESIZE 0
+#define AUV2_ENTRY @internal_name@_Entry
+#define AUV2_ENTRY_STR "@internal_name@_Entry"
+#define AUV2_FACTORY @internal_name@_Factory
+#define AUV2_VIEW_CLASS @internal_name@_View
+#define AUV2_VIEW_CLASS_STR "@internal_name@_View"
+#define VST3_SUBCATEGORY "Fx|Tools"
+#define CLAP_MANUAL_URL ""
+#define CLAP_SUPPORT_URL ""
+#define CLAP_DESCRIPTION "Smoothed gain and level matching"
+#define CLAP_FEATURES "audio-effect", "utility"
+#define APP_NUM_CHANNELS 2
+#define APP_N_VECTOR_WAIT 0
+#define APP_MULT 1
+#define APP_COPY_AUV3 0
+#define APP_SIGNAL_VECTOR_SIZE 64

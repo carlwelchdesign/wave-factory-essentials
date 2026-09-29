@@ -168,3 +168,10 @@ and [the licensing notice](LICENSE-NOTICE.md) for the complete terms and
 third-party acknowledgements.
 
 See [the product brief](docs/product-brief.md), [architecture notes](docs/architecture.md), and [roadmap](docs/roadmap.md).
+
+## Plugin starter kit
+
+Create new Essentials effects with the [versioned starter kit](docs/plugin-starter-kit.md).
+It provides deterministic generation, a reference gain effect, platform builds, packaging,
+and verification commands. The [priority delivery plan](plans/plugin-starter-kit.md) tracks
+engineering and host-acceptance gates separately.

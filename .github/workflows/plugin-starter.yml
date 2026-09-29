@@ -1,0 +1,79 @@
+name: Plugin starter kit
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'starter/**'
+      - 'scripts/new-plugin.py'
+      - 'scripts/package-generated.py'
+      - 'cmake/GeneratedPlugins.cmake'
+      - 'plugins/generated/**'
+      - 'plugins/shared/**'
+      - 'tests/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/plugin-starter.yml'
+jobs:
+  generated-effects:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generator and packaging contracts
+        run: python tests/test_plugin_starter.py
+      - name: Generate two reference products
+        shell: bash
+        run: |
+          python scripts/new-plugin.py --manifest starter/manifests/StarterGain.json
+          python scripts/new-plugin.py --manifest starter/manifests/StarterTrim.json
+      - name: Download pinned framework SDKs
+        working-directory: third_party/iPlug2/Dependencies/IPlug
+        shell: bash
+        run: |
+          ./download-vst3-sdk.sh
+          ./download-clap-sdks.sh 1.2.10
+      - name: Configure macOS universal
+        if: runner.os == 'macOS'
+        run: cmake -S . -B build/starter -G Xcode -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DIPLUG_DEPLOY_PLUGINS=OFF -DWFE_BUILD_SPIRIT_MIRROR=OFF -DBUILD_TESTING=ON
+      - name: Configure Windows x64
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build/starter -G 'Visual Studio 17 2022' -A x64 -DIPLUG_DEPLOY_PLUGINS=OFF -DWFE_BUILD_SPIRIT_MIRROR=OFF -DBUILD_TESTING=ON
+      - name: Build generated formats and regression tests
+        run: cmake --build build/starter --config Release --target wfe-generated-plugins wfe-starter-checks --parallel 3
+      - name: Run contracts and DSP regressions
+        run: ctest --test-dir build/starter -C Release --output-on-failure
+      - name: Validate generated VST3 state and editors with pluginval 1.0.4
+        shell: bash
+        run: |
+          mkdir -p build/tools
+          curl --fail --location --retry 2 "https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_${{ runner.os }}.zip" -o build/tools/pluginval.zip
+          python -m zipfile -e build/tools/pluginval.zip build/tools/pluginval
+          python - <<'PYCODE'
+          import os, pathlib, subprocess
+          root = pathlib.Path.cwd()
+          mac = os.environ['RUNNER_OS'] == 'macOS'
+          validator = root / 'build/tools/pluginval' / ('pluginval.app/Contents/MacOS/pluginval' if mac else 'pluginval.exe')
+          if mac:
+              validator.chmod(0o755)
+          for manifest in sorted((root / 'plugins/generated').glob('*/starter-manifest.json')):
+              name = manifest.parent.name
+              bundle = root / 'build/starter/out' / ('Release' if mac else '') / (name + '.vst3')
+              if mac:
+                  subprocess.run(['codesign', '--force', '--sign', '-', '--timestamp=none', str(bundle)], check=True)
+              subprocess.run([str(validator), '--strictness-level', '5', '--random-seed', '12345', '--timeout-ms', '30000', '--validate', str(bundle)], check=True, timeout=180)
+          PYCODE
+      - name: Package generated effects
+        run: python scripts/package-generated.py --build-dir build/starter --platform ${{ runner.os }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: starter-${{ runner.os }}-tester
+          path: dist/generated/*
+          if-no-files-found: error
