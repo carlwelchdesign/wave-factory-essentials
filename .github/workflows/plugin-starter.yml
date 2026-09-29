@@ -63,13 +63,25 @@ jobs:
           validator = root / 'build/tools/pluginval' / ('pluginval.app/Contents/MacOS/pluginval' if mac else 'pluginval.exe')
           if mac:
               validator.chmod(0o755)
+          print(f'Validator startup check: {validator}', flush=True)
+          subprocess.run([str(validator), '--version'], check=True, timeout=30)
           for manifest in sorted((root / 'plugins/generated').glob('*/starter-manifest.json')):
               name = manifest.parent.name
               bundle = root / 'build/starter/out' / ('Release' if mac else '') / (name + '.vst3')
               if mac:
                   subprocess.run(['codesign', '--force', '--sign', '-', '--timestamp=none', str(bundle)], check=True)
-              subprocess.run([str(validator), '--strictness-level', '5', '--random-seed', '12345', '--timeout-ms', '30000', '--validate', str(bundle)], check=True, timeout=180)
+              logs = root / 'build/validation-logs' / name
+              logs.mkdir(parents=True, exist_ok=True)
+              print(f'Validating {bundle}; logs: {logs}', flush=True)
+              subprocess.run([str(validator), '--verbose', '--output-dir', str(logs), '--strictness-level', '5', '--random-seed', '12345', '--timeout-ms', '30000', '--validate', str(bundle)], check=True, timeout=180)
           PYCODE
+      - name: Retain validator diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: starter-${{ runner.os }}-validation-logs
+          path: build/validation-logs/
+          if-no-files-found: warn
       - name: Package generated effects
         run: python scripts/package-generated.py --build-dir build/starter --platform ${{ runner.os }}
       - uses: actions/upload-artifact@v4
