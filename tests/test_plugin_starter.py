@@ -119,13 +119,17 @@ class StarterTests(unittest.TestCase):
             packager.package(self.root, self.root / 'build', self.root / 'dist', 'macOS')
         self.assertFalse((self.root / 'dist').exists())
 
-    def test_package_preserves_metadata_and_executable_permissions(self):
+    def test_package_preserves_metadata_and_source_permissions(self):
         self.fake_bundles()
+        binary = self.root / 'build/out/Release/StarterGain.component/Contents/MacOS/StarterGain'
+        # POSIX records 0755; Windows does not model executable permission bits.
+        # The archive must preserve the permissions actually present on its source.
+        expected_mode = binary.stat().st_mode & 0o777
         names = packager.package(self.root, self.root / 'build', self.root / 'dist', 'macOS')
         with zipfile.ZipFile(self.root / 'dist' / names[0]) as z:
             self.assertIn('starter-manifest.json', z.namelist())
             entry = z.getinfo('StarterGain.component/Contents/MacOS/StarterGain')
-            self.assertEqual((entry.external_attr >> 16) & 0o777, 0o755)
+            self.assertEqual((entry.external_attr >> 16) & 0o777, expected_mode)
         self.assertTrue((self.root / 'dist' / (names[0] + '.sha256')).exists())
 
     def test_notice_only_baseline_packages_without_inventing_license(self):

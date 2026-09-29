@@ -66,3 +66,8 @@ license and screenshot updates. The 14 Python contracts pass again. The implemen
 remains inside this repository; generated products record starter version 1.0.0 and own
 their source after generation. PR checks and Asana track current delivery status; the
 native build and host-validator results above remain explicitly dated September 13.
+
+The first Windows CI run exposed a test assumption that POSIX execute bits exist on
+Windows. The permanent archive test now checks preservation of the recorded source mode:
+0755 on POSIX, Windows' actual mode there. This preserves the executable-bit contract on
+macOS without imposing Unix filesystem semantics on Windows.
