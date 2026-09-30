@@ -12,6 +12,9 @@ jobs:
   macos-instrument:
     runs-on: macos-14
     timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
         with:

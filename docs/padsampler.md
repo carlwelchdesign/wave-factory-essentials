@@ -32,8 +32,9 @@ IDs, kit/state format, setup, dependency choices and build commands.
   temporarily installed AU. Initial immediate discovery failed; the validation copy
   was removed. No existing installed plugin was overwritten or cache cleared.
 - The standalone window was opened and captured in the real renderer. Six-slot
-  geometry, controls, file-dialog opening and readable layout were observed. This
-  does not establish successful mouse-drop import, physical performance or listening.
+  geometry, controls, and readable layout were observed. A synthetic WAV was loaded
+  through the native file picker, with filename, waveform and Ready status verified.
+  This does not establish physical performance or listening quality.
 - System USB inspection did not find the SamplePad, and CoreMIDI listed zero input
   sources at the local checkpoint. Physical independence cannot yet be claimed.
 
