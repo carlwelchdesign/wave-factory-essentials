@@ -9,6 +9,8 @@ reproducible at 1× and 2×; labels and values remain live renderer text.
 
 This is a screenshot of the current standalone build, not a generated concept.
 
+![Actual Help overlay](images/padsampler-precision-help.png)
+
 ## Automated evidence
 
 - Universal arm64/x86_64 standalone, AU and VST3 build succeeds.
@@ -28,16 +30,26 @@ head-specific validation and tester artifacts; consult the PR checks for their s
 
 ## Native interaction evidence and remaining checks
 
-A dedicated standalone instance passed real native add/drag/delete, Undo/Redo,
+A dedicated final-build standalone instance passed native add/drag/delete, Undo/Redo,
 bypass, per-slot isolation, native dialog cancellation, collected-kit save/recall,
-name editing across idle updates, MIDI Learn waiting/cancellation, and Help/Escape.
-The successful run is `precision-ui-run2`; its saved manifests are checked against
-actual interactions. It preceded the final menu-lifetime and drawing refinements.
+name editing across idle updates, MIDI Learn waiting/cancellation and Help/Escape.
+Further native assertions verified all four preset point arrays, malformed-kit
+preservation, arrow movement with Shift fine adjustment and numeric velocity/brightness.
+Pressed and released Stop All screenshots were inspected: the face darkens under
+press, returns on release, and the footer confirms the action.
 
-Manual native testing found an asynchronous NSMenu lifetime crash. The menu now lives
-with its control. The expanded regression exercises all four preset choices and
-malformed-kit preservation. Its final rerun is **pending** because the Mac reached
-`loginwindow`; do not treat a compiled fix or pluginval as a passing menu-click test.
+Evidence is retained across `precision-ui-regression` (gestures/recall/Help),
+`precision-ui-curves-verified` (presets/malformed state/keyboard), and
+`precision-ui-numeric-final` (numeric entry/button images). Some earlier automation
+runs failed because native Save sheets were still closing, menu activation disrupted
+tracking, or synthetic repeated keystrokes arrived too quickly. The harness now waits
+for sheet dismissal, uses menu type-ahead without reactivation, and types numeric
+characters with a brief delay. Exact saved-state assertions remain intact.
+
+Native testing also found and fixed a real asynchronous NSMenu lifetime crash: the
+preset control now owns its menu. An old crash-report dialog blocked subsequent input
+and was initially misdiagnosed as the lock screen; it was dismissed before the verified
+runs. No lock-screen bypass was attempted. The final native preset selections succeed.
 
 The opt-in harness requires an unlocked idle desktop, Accessibility permission and a
 fresh dedicated PadSampler process, since it replaces that process's kit. Never point
@@ -53,8 +65,7 @@ python3 scripts/test-padsampler-ui.py --pid <dedicated-app-pid> \
 Use a new output directory for each run. Build/sign before launching the process;
 replacing its bundle while open can invalidate native file-dialog XPC services.
 
-Still required: final preset-menu/button-state regression, complete empty/loading/
-ready/missing/error/focus visual matrix in standalone and host editors at both scales,
+Still required: complete empty/loading/ready/missing/error/focus visual matrix in standalone and host editors at both scales,
 Logic loaded-sample custom-curve session recall, physical six-trigger independence,
 listening and measured latency. These remain acceptance work, not automated claims.
 

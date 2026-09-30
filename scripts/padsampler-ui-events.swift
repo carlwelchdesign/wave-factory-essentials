@@ -12,13 +12,13 @@ func point(_ i:Int)->CGPoint { CGPoint(x: origin.x + Double(args[i])!, y: origin
 func mouse(_ type: CGEventType, _ p: CGPoint, _ count: Int64 = 1) { CGWarpMouseCursorPosition(p); let e=CGEvent(mouseEventSource:nil,mouseType:type,mouseCursorPosition:p,mouseButton:.left)!;e.setIntegerValueField(.mouseEventClickState,value:count);e.post(tap:.cghidEventTap) }
 switch args[1] {
 case "window": print(w[kCGWindowNumber as String]!); print(b)
-case "click": mouse(.leftMouseDown,point(2));usleep(60000);mouse(.leftMouseUp,point(2))
-case "double": for n:Int64 in 1...2 {mouse(.leftMouseDown,point(2),n);mouse(.leftMouseUp,point(2),n);usleep(65000)}
-case "down": mouse(.leftMouseDown,point(2))
+case "click": mouse(.mouseMoved,point(2));usleep(100000);mouse(.leftMouseDown,point(2));usleep(60000);mouse(.leftMouseUp,point(2))
+case "double": mouse(.mouseMoved,point(2));usleep(100000);for n:Int64 in 1...2 {mouse(.leftMouseDown,point(2),n);mouse(.leftMouseUp,point(2),n);usleep(65000)}
+case "down": mouse(.mouseMoved,point(2));usleep(100000);mouse(.leftMouseDown,point(2))
 case "up": mouse(.leftMouseUp,point(2))
 case "move": mouse(.mouseMoved,point(2))
 case "drag":
- let a=point(2),z=point(4);mouse(.leftMouseDown,a);usleep(60000)
+ let a=point(2),z=point(4);mouse(.mouseMoved,a);usleep(100000);mouse(.leftMouseDown,a);usleep(60000)
  for i in 1...20 {let t=Double(i)/20;mouse(.leftMouseDragged,CGPoint(x:a.x+(z.x-a.x)*t,y:a.y+(z.y-a.y)*t));usleep(16000)}
  mouse(.leftMouseUp,z)
 case "key":

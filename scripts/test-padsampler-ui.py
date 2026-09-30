@@ -27,8 +27,9 @@ def event(*args):
     subprocess.run([str(a.events.resolve()), *map(str, args)], env=env, check=True, capture_output=True)
     time.sleep(.15)
 
-def apple(body):
+def apple(body, activate=True):
     script = f'tell application "System Events"\n tell (first process whose unix id is {a.pid})\n set frontmost to true\n{body}\n end tell\nend tell'
+    if not activate: script=script.replace(" set frontmost to true\n", "")
     return subprocess.check_output(['osascript', '-e', script], text=True)
 
 def choose(path):
@@ -55,7 +56,13 @@ def save(name):
     apple('set value of text field "Save As:" of splitter group 1 of sheet 1 of window 1 to '+json.dumps(path.name)+'\nkeystroke "g" using {command down, shift down}\ndelay 0.5\nkeystroke '+json.dumps(str(a.output))+'\ndelay 0.3\nkey code 36\ndelay 0.8\nclick button "Save" of splitter group 1 of sheet 1 of window 1')
     for _ in range(100):
         manifest = path / 'kit.json'
-        if manifest.exists(): return json.loads(manifest.read_text())
+        if manifest.exists():
+            for _ in range(50):
+                if apple('return exists sheet 1 of window 1').strip()=='false':
+                    time.sleep(.4)
+                    return json.loads(manifest.read_text())
+                time.sleep(.1)
+            raise AssertionError('Save completed but its native sheet did not close')
         time.sleep(.05)
     raise AssertionError('Kit was not saved: '+name)
 
@@ -75,6 +82,7 @@ with wave.open(str(a.output/'qa.wav'),'wb') as f:
 fixture['slots'][0]['path']='qa.wav'
 (a.output/'initial.json').write_text(json.dumps(fixture))
 apple('')
+event('key',53) # Dismiss any leftover native popup before the fresh fixture.
 time.sleep(1)
 openkit(a.output/'initial.json')
 event('click',120,160)
@@ -123,9 +131,11 @@ event('click',915,37);capture('05-help');event('move',10,740);event('key',53);ca
 xs=[0,.125,.25,.5,.75,.875,1]
 for i, name in enumerate(['linear','early','late','s-curve']):
     event('click',670,443)
-    # A native NSMenu starts with no selected item; down selects its first item.
-    for _ in range(i+1): event('key',125)
-    event('key',36)
+    # Native type-ahead selects by label; do not reactivate the app while its menu tracks.
+    menu_name=["Linear","Early Open","Late Open","S-Curve"][i]
+    time.sleep(.6)
+    apple('keystroke '+json.dumps(menu_name)+'\ndelay 0.2\nkey code 36', activate=False)
+    time.sleep(.2)
     chosen=save('preset-'+name)
     points=chosen['curves'][0]['points']
     expected=[[x, x if i==0 else math.sqrt(x) if i==1 else x*x if i==2 else 3*x*x-2*x*x*x] for x in xs]
@@ -138,5 +148,28 @@ malformed=json.loads(json.dumps(fixture));malformed['curves'][0]['points']=[[0,0
 openkit(a.output/'invalid.json')
 capture('08-invalid-kit')
 assert save('after-invalid')['curves']==chosen['curves']
-(a.output/'result.txt').write_text('PASS: native add/drag/delete, undo/redo, bypass, slot isolation, dialog cancel, kit recall, text editing, Help, four asynchronous preset choices and malformed-kit preservation.\n')
+# Keyboard and numeric entry operate on the selected interior point.
+event('click',780,519)
+event('key',124)
+apple('key code 126 using shift down', activate=False)
+time.sleep(.2)
+keyboard=save('keyboard')
+assert abs(keyboard['curves'][0]['points'][3][0]-.51)<1e-12
+assert abs(keyboard['curves'][0]['points'][3][1]-.501)<1e-12
+for x,value in [(645,'70'),(775,'55')]:
+    event('click',x,599)
+    apple('keystroke "a" using command down', activate=False)
+    for char in value:
+        apple('keystroke '+json.dumps(char), activate=False)
+        time.sleep(.15)
+    apple('key code 36', activate=False)
+    time.sleep(.2)
+numeric=save('numeric')
+assert numeric['curves'][0]['points'][3]==[70/127,.55]
+capture('09-numeric')
+# Momentary Stop All pressed and released states are captured for renderer review.
+event('down',290,678);capture('10-pressed')
+event('up',290,678);capture('11-released')
+event('down',290,678);event('move',360,635);event('up',360,635);capture('12-pointer-exit')
+(a.output/'result.txt').write_text('PASS: native add/drag/delete, undo/redo, bypass, slot isolation, dialog cancel, kit recall, text editing, Help, four asynchronous preset choices, malformed-kit preservation, keyboard and numeric point edits. Press/release/exit screenshots captured for visual review.\n')
 print(a.output)
