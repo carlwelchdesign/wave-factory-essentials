@@ -28,6 +28,16 @@ class PadSampler final : public iplug::Plugin {
   void CommitShape(const padsampler::ToneShape& before);
   void UndoCurve(bool redo);
   void CurvePreset(int preset);
+  void ToggleClipMode();
+  bool ClipMode() const { return clipMode_; }
+  padsampler::ClipTrim Clip() const { return clipPreview_ ? *clipPreview_ : view_.slots[selected_].clip; }
+  void PreviewClip(padsampler::ClipTrim clip) { clipPreview_ = clip; if (GetUI()) GetUI()->SetAllControlsDirty(); }
+  void CancelClipPreview() { clipPreview_.reset(); if (GetUI()) GetUI()->SetAllControlsDirty(); }
+  bool CommitClip(padsampler::ClipTrim before);
+  void UndoClip(bool redo);
+  void ResetClip();
+  unsigned ClipEpoch() const { return clipEpoch_; }
+  padsampler::ClipHistory& ClipEdits() { return clipHistories_[selected_]; }
   void MarkStateChanged();
   void Focus(iplug::igraphics::IControl* c) { focus_ = c; }
   iplug::igraphics::IControl* Focused() const { return focus_; }
@@ -52,6 +62,12 @@ class PadSampler final : public iplug::Plugin {
   padsampler::CurveExchange curves_;
   padsampler::CurveExchange::Bank audioCurves_{};
   std::array<padsampler::CurveHistory, 6> histories_{};
+  std::array<padsampler::ClipHistory, 6> clipHistories_{};
+  std::optional<padsampler::ClipTrim> clipPreview_;
+  bool clipMode_ = false;
+  unsigned clipEpoch_ = 0;
+  std::vector<iplug::igraphics::IControl*> toneControls_, clipControls_;
+  void SyncClipMode();
   std::atomic<bool> resetHistories_{false};
   std::atomic<unsigned> curveEpoch_{0};
   std::array<int,6> lastHits_{};

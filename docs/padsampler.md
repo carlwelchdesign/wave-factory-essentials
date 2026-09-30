@@ -103,3 +103,30 @@ serialize off the rendering callback; no mutex, allocation or retry loop enters 
 
 See [Precision verification](padsampler-precision-verification.md) for actual-renderer
 evidence, interaction regression instructions and remaining acceptance.
+
+## Clip trimming revision
+
+Version-3 kit/state documents add a `clip` object to each slot with `start` seconds
+and an optional `end` seconds (`null` means the full source end). Version-1 and
+version-2 documents play full-length. Validation checks all six ranges before any
+document is applied. The original 56 parameter IDs and plugin identifiers remain
+unchanged. Trim is session state and commits notify the host.
+
+The editor's Tone / Clip switch uses the graph area for a larger waveform and
+start/end handles. Excluded audio is shaded in this view and on the small pad
+waveform. Both time fields accept seconds. Arrow keys move a focused handle by
+10 ms; Shift moves one source frame. Start and end cannot cross, and the playable
+range must contain at least two frames. Clip Reset Length and 32-entry Undo/Redo
+are independent of the tone curve's history.
+
+Decoded buffers are never shortened. A single atomic word publishes complete
+frame bounds to new voices; each voice captures its own exclusive end. Ringing
+voices continue with their captured bounds and source reference. Portable kits
+collect the full audio so a moved kit can still reset or change its trim. Failed
+replacement preserves the old audio and trim. Missing samples retain their saved
+times for relink; a too-short relink resets to full playback with a visible warning.
+
+For host acceptance, drag both handles, use keyboard and numeric editing, Reset,
+Undo/Redo, switch pads, save/reopen a kit and a Logic session, and verify that
+hits already ringing keep their original length. This remains separate from
+physical SamplePad and listening acceptance.

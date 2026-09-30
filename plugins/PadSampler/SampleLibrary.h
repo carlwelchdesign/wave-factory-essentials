@@ -1,5 +1,6 @@
 #pragma once
 #include "SampleLoader.h"
+#include "ClipTrim.h"
 #include "json.hpp"
 #include <condition_variable>
 #include <deque>
@@ -37,12 +38,30 @@ inline Json CurveDocument(const CurveExchange::Bank& bank) {
 struct SlotView {
   std::string name, path, status = "Drop WAV / AIFF or choose Load";
   std::array<float, 128> waveform{};
+  ClipTrim clip;
+  double rate = 0.;
+  size_t frames = 0;
+  bool ready = false;
+  uint64_t generation = 0;
 };
 struct LibraryView { std::array<SlotView, kSlots> slots; std::string message; };
+inline ClipTrim DocumentTrim(const Json& doc, int slot) {
+  if (doc.value("version", 0) < 3) return {};
+  const auto& value = doc["slots"][slot]["clip"];
+  ClipTrim trim;
+  trim.start = value["start"].get<double>();
+  if (!value["end"].is_null()) trim.end = value["end"].get<double>();
+  return trim;
+}
 inline void ValidateDocument(const Json& doc) {
-  if (!doc.is_object() || (doc.value("version", 0) != 1 && doc.value("version", 0) != 2) || !doc.contains("slots") || !doc["slots"].is_array() || doc["slots"].size() != kSlots || !doc.contains("parameters") || !doc["parameters"].is_array() || doc["parameters"].size() != kParameterCount) throw std::runtime_error("Unsupported or malformed PadSampler kit/state");
+  if (!doc.is_object() || (doc.value("version", 0) != 1 && doc.value("version", 0) != 2 && doc.value("version", 0) != 3) || !doc.contains("slots") || !doc["slots"].is_array() || doc["slots"].size() != kSlots || !doc.contains("parameters") || !doc["parameters"].is_array() || doc["parameters"].size() != kParameterCount) throw std::runtime_error("Unsupported or malformed PadSampler kit/state");
   for (const auto& s : doc["slots"]) {
     if (!s.is_object() || !s.contains("name") || !s["name"].is_string() || s["name"].get<std::string>().size() > 64 || !s.contains("path") || !s["path"].is_string() || s["path"].get<std::string>().size() > 4096) throw std::runtime_error("Invalid slot name or sample path");
+    if (doc["version"] == 3) {
+      if (!s.contains("clip") || !s["clip"].is_object() || !s["clip"].contains("start") || !s["clip"]["start"].is_number() || !s["clip"].contains("end") || (!s["clip"]["end"].is_null() && !s["clip"]["end"].is_number())) throw std::runtime_error("Invalid clip trim document");
+      ClipTrim trim{s["clip"]["start"].get<double>(), s["clip"]["end"].is_null() ? std::optional<double>{} : std::optional<double>{s["clip"]["end"].get<double>()}};
+      if (!trim.Valid()) throw std::runtime_error("Clip trim requires ordered times within 60 seconds");
+    }
   }
   DocumentCurves(doc);
   for (const auto& v : doc["parameters"]) if (!v.is_number() || !std::isfinite(v.get<double>())) throw std::runtime_error("Invalid parameter value");
@@ -69,19 +88,48 @@ class SampleLibrary {
     });
   }
   void Load(int slot, std::string path) {
-    Enqueue([this, slot, path] { LoadNow(slot, path, false); });
+    { std::lock_guard<std::mutex> lock(mutex_);
+      if (stopping_ || jobs_.size() >= 32) { view_.message = "Sample loader is busy; retry shortly"; return; }
+      ++view_.slots[slot].generation;
+      view_.slots[slot].ready = false;
+      jobs_.push_back([this, slot, path] { LoadNow(slot, path, false); });
+    }
+    wake_.notify_one();
+  }
+  bool SetTrim(int slot, ClipTrim trim) {
+    if (slot < 0 || slot >= kSlots || !trim.Valid()) return false;
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      auto& view = view_.slots[slot];
+      if (stopping_ || jobs_.size() >= 32 || !view.ready || view.frames < 2) return false;
+      const auto range = ResolveTrim(trim, view.rate, view.frames);
+      if (range.reset) return false;
+      trim = FramesToTrim(range.start, range.end, view.rate, view.frames);
+      view.clip = trim;
+      const auto generation = view.generation;
+      jobs_.push_back([this, slot, range, generation] {
+        { std::lock_guard<std::mutex> lock(mutex_); if (view_.slots[slot].generation != generation) return; }
+        if (current_[slot]) current_[slot]->SetTrim(range.start, range.end);
+      });
+    }
+    wake_.notify_one(); return true;
   }
   Json Document(const std::vector<double>& parameters, const CurveExchange::Bank& curves = {}) const {
-    auto view = View(); Json slots = Json::array();
-    for (auto& s : view.slots) slots.push_back({{"name", s.name}, {"path", s.path}});
-    return {{"version", 2}, {"parameters", parameters}, {"slots", slots}, {"curves", CurveDocument(curves)}};
+    return ComposeDocument(View(), parameters, curves);
+  }
+  static Json ComposeDocument(const LibraryView& view, const std::vector<double>& parameters, const CurveExchange::Bank& curves) {
+    Json slots = Json::array();
+    for (auto& s : view.slots) slots.push_back({{"name", s.name}, {"path", s.path}, {"clip", {{"start", s.clip.start}, {"end", s.clip.end ? Json(*s.clip.end) : Json(nullptr)}}}});
+    return {{"version", 3}, {"parameters", parameters}, {"slots", slots}, {"curves", CurveDocument(curves)}};
   }
   void Restore(Json doc) {
     ValidateDocument(doc);
     { std::lock_guard<std::mutex> lock(mutex_);
-      for (int i = 0; i < kSlots; ++i) { view_.slots[i].name = doc["slots"][i]["name"].get<std::string>(); view_.slots[i].path = doc["slots"][i]["path"].get<std::string>(); }
+      if (stopping_ || jobs_.size() >= 32) { view_.message = "Sample loader is busy; retry session restore"; return; }
+      for (int i = 0; i < kSlots; ++i) { view_.slots[i].name = doc["slots"][i]["name"].get<std::string>(); view_.slots[i].path = doc["slots"][i]["path"].get<std::string>(); view_.slots[i].clip = DocumentTrim(doc, i); view_.slots[i].ready = false; ++view_.slots[i].generation; }
+      jobs_.push_back([this, doc] { RestoreNow(doc); });
     }
-    Enqueue([this, doc] { RestoreNow(doc); });
+    wake_.notify_one();
   }
   void OpenKit(std::string path) {
     Enqueue([this, path] {
@@ -105,7 +153,8 @@ class SampleLibrary {
   }
   bool TakeReady(Json& doc) { std::lock_guard<std::mutex> lock(mutex_); if (ready_.is_null()) return false; doc = std::move(ready_); ready_ = nullptr; return true; }
   void SaveKit(std::string path, std::vector<double> parameters, CurveExchange::Bank curves = {}) {
-    Enqueue([this, path, parameters, curves] {
+    auto view = View(); auto snapshot = ComposeDocument(view, parameters, curves);
+    Enqueue([this, path, snapshot, view] {
       namespace fs = std::filesystem;
       fs::path target(path), temporary; bool ownTemporary = false;
       try {
@@ -115,7 +164,11 @@ class SampleLibrary {
         if (!fs::create_directory(temporary)) throw std::runtime_error("Kit staging folder already exists; choose another name");
         ownTemporary = true;
         fs::create_directory(temporary / "Samples");
-        auto doc = Document(parameters, curves);
+        auto doc = snapshot;
+        { std::lock_guard<std::mutex> lock(mutex_);
+          for (int i = 0; i < kSlots; ++i) if (view_.slots[i].generation != view.slots[i].generation || view_.slots[i].ready != view.slots[i].ready)
+            throw std::runtime_error("Samples changed while saving; retry Save Kit");
+        }
         for (int i = 0; i < kSlots; ++i) {
           if (current_[i]) {
             std::string relative = "Samples/slot-" + std::to_string(i + 1) + ".wav";
@@ -155,6 +208,16 @@ class SampleLibrary {
       auto sample = loader_->Load(path, kMemoryLimit - std::min(kMemoryLimit, Memory()));
       SlotView update;
       update.path = path; update.status = "Ready • " + std::to_string(sample->channels) + " ch";
+      update.rate = sample->rate; update.frames = sample->Frames(); update.ready = true;
+      const bool relinking = restoring || !current_[slot];
+      if (relinking) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        update.clip = view_.slots[slot].clip;
+      }
+      const auto range = ResolveTrim(update.clip, sample->rate, sample->Frames());
+      if (range.reset) { update.clip = {}; update.status += " • Saved trim exceeded this sample; reset to full length"; }
+      else update.clip = FramesToTrim(range.start, range.end, sample->rate, sample->Frames());
+      sample->SetTrim(range.start, range.end);
       for (size_t i = 0; i < sample->Frames(); ++i) {
         size_t bin = std::min<size_t>(127, i * 128 / sample->Frames());
         for (int c = 0; c < sample->channels; ++c) update.waveform[bin] = std::max(update.waveform[bin], std::abs(sample->data[i * sample->channels + c]));
@@ -164,10 +227,11 @@ class SampleLibrary {
       if (!publisher_(slot, raw)) { raw->Release(); throw std::runtime_error("Audio update queue full; start playback and retry"); }
       if (current_[slot]) current_[slot]->Release();
       current_[slot] = raw;
-      { std::lock_guard<std::mutex> lock(mutex_); update.name = view_.slots[slot].name; view_.slots[slot] = update; }
+      { std::lock_guard<std::mutex> lock(mutex_); update.name = view_.slots[slot].name; update.generation = view_.slots[slot].generation; view_.slots[slot] = update; }
     } catch (const std::exception& e) {
       std::lock_guard<std::mutex> lock(mutex_);
       view_.slots[slot].status = e.what();
+      view_.slots[slot].ready = current_[slot] != nullptr;
       if (restoring) view_.slots[slot].path = path;
     }
   }
@@ -175,7 +239,7 @@ class SampleLibrary {
     for (int i = 0; i < kSlots; ++i) {
       if (!publisher_(i, nullptr)) { Message("Audio update queue full; start playback and reopen kit"); return; }
       if (current_[i]) { current_[i]->Release(); current_[i] = nullptr; }
-      { std::lock_guard<std::mutex> lock(mutex_); view_.slots[i] = SlotView{}; view_.slots[i].name = doc["slots"][i]["name"].get<std::string>(); view_.slots[i].path = doc["slots"][i]["path"].get<std::string>(); }
+      { std::lock_guard<std::mutex> lock(mutex_); auto generation = view_.slots[i].generation + 1; view_.slots[i] = SlotView{}; view_.slots[i].generation = generation; view_.slots[i].name = doc["slots"][i]["name"].get<std::string>(); view_.slots[i].path = doc["slots"][i]["path"].get<std::string>(); view_.slots[i].clip = DocumentTrim(doc, i); }
       auto path = doc["slots"][i]["path"].get<std::string>();
       if (!path.empty()) LoadNow(i, path, true);
     }

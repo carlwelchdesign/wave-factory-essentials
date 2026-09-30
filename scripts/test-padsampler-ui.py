@@ -94,14 +94,14 @@ assert len(added['curves'][0]['points'])==3, added['curves'][0]
 event('drag',780,520,808,498)
 edited=save('edited')
 assert edited['curves'][0]!=added['curves'][0]
-event('click',810,443)
+event('click',740,443)
 assert save('undo')['curves'][0]==added['curves'][0]
-event('click',902,443)
+event('click',800,443)
 assert save('redo')['curves'][0]==edited['curves'][0]
 # Delete the selected interior point, then undo the deletion.
 event('click',808,498);event('key',51)
 assert len(save('deleted')['curves'][0]['points'])==2
-event('click',810,443)
+event('click',740,443)
 assert save('undeleted')['curves'][0]==edited['curves'][0]
 # Bypass is a retained parameter value; editing and shape remain intact.
 event('click',898,360)
@@ -167,6 +167,36 @@ for x,value in [(645,'70'),(775,'55')]:
 numeric=save('numeric')
 assert numeric['curves'][0]['points'][3]==[70/127,.55]
 capture('09-numeric')
+# Clip editing uses the same inspector region but an independent history.
+event('click',900,443)
+capture('09a-clip-full')
+event('drag',600,515,668,515)
+start_drag=save('clip-start')
+assert .09 < start_drag['slots'][0]['clip']['start'] < .11
+event('drag',942,515,874,515)
+end_drag=save('clip-end')
+assert .38 < end_drag['slots'][0]['clip']['end'] < .42
+event('click',740,443)
+assert save('clip-undo')['slots'][0]['clip']==start_drag['slots'][0]['clip']
+event('click',800,443)
+assert save('clip-redo')['slots'][0]['clip']==end_drag['slots'][0]['clip']
+event('click',668,515);event('key',124)
+keyboard_clip=save('clip-keyboard')
+assert keyboard_clip['slots'][0]['clip']['start']>end_drag['slots'][0]['clip']['start']
+event('click',640,599)
+apple('keystroke "a" using command down\nkeystroke "0.150"\nkey code 36',activate=False)
+time.sleep(.2)
+numeric_clip=save('clip-numeric')
+assert abs(numeric_clip['slots'][0]['clip']['start']-.15)<1/48000
+capture('09b-clip-trimmed')
+event('click',640,443)
+assert save('clip-reset')['slots'][0]['clip']=={'start':0.0,'end':None}
+event('click',740,443)
+assert save('clip-reset-undo')['slots'][0]['clip']==numeric_clip['slots'][0]['clip']
+event('click',400,155)
+assert save('clip-other-pad')['slots'][1]['clip']=={'start':0.0,'end':None}
+event('click',120,155)
+event('click',900,443)
 # Momentary Stop All pressed and released states are captured for renderer review.
 event('down',290,678);capture('10-pressed')
 event('up',290,678);capture('11-released')
@@ -182,5 +212,5 @@ event('click',640,135);wait_sheet();choose(a.output/'invalid.wav')
 time.sleep(.5);capture('15-import-error')
 recovered=save('failed-replacement')
 assert (a.output/'failed-replacement.padkit'/recovered['slots'][0]['path']).is_file()
-(a.output/'result.txt').write_text('PASS: native add/drag/delete, undo/redo, bypass, slot isolation, dialog cancel, kit recall, text editing, Help, four asynchronous preset choices, malformed-kit preservation, keyboard and numeric point edits. Press/release/exit screenshots captured for visual review.\n')
+(a.output/'result.txt').write_text('PASS: native tone and clip drag, keyboard, numeric, Reset, separate undo/redo, slot isolation, kit recall, text editing, Help, presets, malformed kit, and button states. Screenshots captured for visual review.\n')
 print(a.output)

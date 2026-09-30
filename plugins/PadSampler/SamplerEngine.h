@@ -5,17 +5,28 @@
 #include <cmath>
 #include <cstdint>
 #include <vector>
+#include <utility>
 #include "ToneCurve.h"
 
 namespace padsampler {
 constexpr int kSlots = 6, kVoices = 64;
 constexpr size_t kMemoryLimit = 256u * 1024u * 1024u;
+static_assert(std::atomic<uint64_t>::is_always_lock_free, "Clip publication must be lock-free on the audio thread");
 struct Sample {
   std::vector<float> data;
   double rate = 44100.;
   int channels = 1;
   std::atomic<int> references{0}; // Only the library reclaims zero-reference assets.
+  // One atomic word is a complete playback window. An end of zero means all frames.
+  std::atomic<uint64_t> trim{0};
   size_t Frames() const { return data.size() / channels; }
+  void SetTrim(uint32_t start, uint32_t end) { trim.store((uint64_t(start) << 32) | end, std::memory_order_release); }
+  std::pair<size_t,size_t> Trim() const {
+    const auto value = trim.load(std::memory_order_acquire);
+    const size_t start = size_t(value >> 32), storedEnd = size_t(uint32_t(value));
+    const size_t end = storedEnd ? storedEnd : Frames();
+    return start < end && end <= Frames() && end - start >= 2 ? std::pair<size_t,size_t>{start,end} : std::pair<size_t,size_t>{0,Frames()};
+  }
   void Retain() { references.fetch_add(1, std::memory_order_relaxed); }
   void Release() { references.fetch_sub(1, std::memory_order_release); }
 };
@@ -60,6 +71,7 @@ template<class Filter> class Engine {
     double lastL = 0., lastR = 0., tailL = 0., tailR = 0.;
     int age = 0, release = 0, tail = 0;
     uint64_t order = 0;
+    size_t endFrame = 0;
     bool bypass = false;
     Filter filter;
   };
@@ -104,6 +116,7 @@ template<class Filter> class Engine {
   void Trigger(int slot, int velocity) {
     auto* sample = samples_[slot];
     if (!sample || sample->Frames() < 2) return;
+    const auto [start, end] = sample->Trim();
     auto it = std::find_if(voices_.begin(), voices_.end(), [](const auto& v) { return !v.sample && !v.tail; });
     if (it == voices_.end()) it = std::min_element(voices_.begin(), voices_.end(), [](const auto& a, const auto& b) { return a.order < b.order; });
     auto& v = *it;
@@ -112,6 +125,7 @@ template<class Filter> class Engine {
     v = Voice{};
     v.tailL = tailL; v.tailR = tailR; v.tail = fadeFrames_;
     v.sample = sample; sample->Retain();
+    v.position = double(start); v.endFrame = end;
     v.step = sample->rate / rate_; v.order = ++order_;
     const auto& s = settings[slot];
     double gain = std::pow(10., s.level / 20.) * ((1. - s.velocityAmount) + s.velocityAmount * velocity / 127.);
@@ -146,18 +160,18 @@ template<class Filter> class Engine {
         double vl = 0., vr = 0.;
         if (v.sample) {
           const auto& s = *v.sample;
-          size_t a = size_t(v.position), b = std::min(a + 1, s.Frames() - 1);
+          size_t a = size_t(v.position), b = std::min(a + 1, v.endFrame - 1);
           double frac = v.position - a;
           auto read = [&](int c) { return s.data[a * s.channels + c] * (1. - frac) + s.data[b * s.channels + c] * frac; };
           vl = read(0); vr = read(s.channels - 1);
           if (!v.bypass) v.filter.Process(vl, vr);
           double envelope = std::min(1., double(++v.age) / fadeFrames_);
-          envelope *= std::min(1., (s.Frames() - v.position) / (v.step * fadeFrames_));
+          envelope *= std::min(1., (v.endFrame - v.position) / (v.step * fadeFrames_));
           bool releasing = v.release > 0;
           if (v.release) envelope *= double(v.release--) / fadeFrames_;
           vl *= envelope * v.gainL; vr *= envelope * v.gainR;
           v.position += v.step;
-          if (v.position >= s.Frames() || (releasing && v.release == 0)) { v.sample->Release(); v.sample = nullptr; }
+          if (v.position >= v.endFrame || (releasing && v.release == 0)) { v.sample->Release(); v.sample = nullptr; }
         }
         if (v.tail) { vl += v.tailL * v.tail / fadeFrames_; vr += v.tailR * v.tail / fadeFrames_; --v.tail; }
         v.lastL = vl; v.lastR = vr; l += vl; rr += vr;
