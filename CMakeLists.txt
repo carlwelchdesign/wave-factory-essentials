@@ -37,3 +37,8 @@ if(WFE_BUILD_PLUGINS)
 endif()
 
 include(cmake/GeneratedPlugins.cmake)
+
+# PadSampler is a macOS instrument graduated from the effect starter.
+if(APPLE AND WFE_BUILD_PLUGINS)
+  add_subdirectory(plugins/PadSampler)
+endif()
