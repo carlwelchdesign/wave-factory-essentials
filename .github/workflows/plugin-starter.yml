@@ -1,0 +1,116 @@
+name: Plugin starter kit
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'starter/**'
+      - 'scripts/new-plugin.py'
+      - 'scripts/package-generated.py'
+      - 'cmake/GeneratedPlugins.cmake'
+      - 'plugins/generated/**'
+      - 'plugins/shared/**'
+      - 'tests/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/plugin-starter.yml'
+jobs:
+  generated-effects:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generator and packaging contracts
+        run: python tests/test_plugin_starter.py
+      - name: Generate two reference products
+        shell: bash
+        run: |
+          python scripts/new-plugin.py --manifest starter/manifests/StarterGain.json
+          python scripts/new-plugin.py --manifest starter/manifests/StarterTrim.json
+      - name: Download pinned framework SDKs
+        working-directory: third_party/iPlug2/Dependencies/IPlug
+        shell: bash
+        run: |
+          ./download-vst3-sdk.sh
+          ./download-clap-sdks.sh 1.2.10
+      - name: Configure macOS universal
+        if: runner.os == 'macOS'
+        run: cmake -S . -B build/starter -G Xcode -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DIPLUG_DEPLOY_PLUGINS=OFF -DWFE_BUILD_SPIRIT_MIRROR=OFF -DBUILD_TESTING=ON
+      - name: Configure Windows x64
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build/starter -G 'Visual Studio 17 2022' -A x64 -DIPLUG_DEPLOY_PLUGINS=OFF -DWFE_BUILD_SPIRIT_MIRROR=OFF -DBUILD_TESTING=ON
+      - name: Build generated formats and regression tests
+        run: cmake --build build/starter --config Release --target wfe-generated-plugins wfe-starter-checks --parallel 3
+      - name: Run contracts and DSP regressions
+        run: ctest --test-dir build/starter -C Release --output-on-failure
+      - name: Prepare software OpenGL for Windows editor validation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # NanoVG needs OpenGL 2; hosted Windows runners lack a suitable GPU driver.
+          # Keep Mesa beside the test host, outside all distributable plugin bundles.
+          New-Item -ItemType Directory -Force build/tools/pluginval | Out-Null
+          $archive = 'build/tools/mesa.7z'
+          Invoke-WebRequest 'https://github.com/pal1000/mesa-dist-win/releases/download/26.2.3/mesa3d-26.2.3-release-msvc.7z' -OutFile $archive
+          $expected = '3f3613adb43cfd0f2e665ce2400b130c275f0b3317cb3a05566320a3a67589ed'
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) {
+            throw 'Mesa archive SHA-256 mismatch'
+          }
+          & 'C:/Program Files/7-Zip/7z.exe' e $archive '-obuild/tools/pluginval' 'x64/opengl32.dll' 'x64/libgallium_wgl.dll' -y
+          if ($LASTEXITCODE -ne 0) { throw 'Mesa extraction failed' }
+          foreach ($dll in @('opengl32.dll', 'libgallium_wgl.dll')) {
+            if (!(Test-Path "build/tools/pluginval/$dll")) { throw "Missing Mesa runtime: $dll" }
+          }
+          'GALLIUM_DRIVER=llvmpipe' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Validate generated VST3 state and editors with pluginval 1.0.4
+        shell: bash
+        run: |
+          mkdir -p build/tools
+          curl --fail --location --retry 2 "https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_${{ runner.os }}.zip" -o build/tools/pluginval.zip
+          python -m zipfile -e build/tools/pluginval.zip build/tools/pluginval
+          python - <<'PYCODE'
+          import os, pathlib, subprocess
+          root = pathlib.Path.cwd()
+          mac = os.environ['RUNNER_OS'] == 'macOS'
+          validator = root / 'build/tools/pluginval' / ('pluginval.app/Contents/MacOS/pluginval' if mac else 'pluginval.exe')
+          if mac:
+              validator.chmod(0o755)
+          print(f'Validator startup check: {validator}', flush=True)
+          subprocess.run([str(validator), '--version'], check=True, timeout=30)
+          def run_validator(arguments, log_path):
+              # Explicit pipes preserve Windows GUI-subsystem executable output.
+              result = subprocess.run(arguments, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace', timeout=180)
+              log_path.write_text(result.stdout, encoding='utf-8')
+              print(result.stdout, flush=True)
+              result.check_returncode()
+          for manifest in sorted((root / 'plugins/generated').glob('*/starter-manifest.json')):
+              name = manifest.parent.name
+              bundle = root / 'build/starter/out' / ('Release' if mac else '') / (name + '.vst3')
+              if mac:
+                  subprocess.run(['codesign', '--force', '--sign', '-', '--timestamp=none', str(bundle)], check=True)
+              logs = root / 'build/validation-logs' / name
+              logs.mkdir(parents=True, exist_ok=True)
+              print(f'Validating {bundle}; logs: {logs}', flush=True)
+              run_validator([str(validator), '--verbose', '--output-dir', str(logs), '--strictness-level', '5', '--random-seed', '12345', '--timeout-ms', '30000', '--validate', str(bundle)], logs / 'console.txt')
+          PYCODE
+      - name: Retain validator diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: starter-${{ runner.os }}-validation-logs
+          path: build/validation-logs/
+          if-no-files-found: warn
+      - name: Package generated effects
+        run: python scripts/package-generated.py --build-dir build/starter --platform ${{ runner.os }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: starter-${{ runner.os }}-tester
+          path: dist/generated/*
+          if-no-files-found: error

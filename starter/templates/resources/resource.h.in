@@ -1,0 +1,2 @@
+#pragma once
+// PNG and TTF resources are registered by CMake from resources/img and resources/fonts.

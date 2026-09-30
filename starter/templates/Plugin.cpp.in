@@ -1,0 +1,74 @@
+#include "@internal_name@.h"
+#include "IPlug_include_in_plug_src.h"
+#if IPLUG_EDITOR
+#include "IControls.h"
+#include "../../shared/WaveFactoryUI.h"
+#endif
+using namespace iplug;
+#if IPLUG_EDITOR
+using namespace igraphics;
+namespace {
+class HelpPanel final : public IControl {
+ public:
+  explicit HelpPanel(const IRECT& bounds) : IControl(bounds) {}
+  void Draw(IGraphics& g) override {
+    g.FillRect(IColor(255, 24, 30, 29), mRECT);
+    g.DrawText(IText(18, COLOR_WHITE), "GAIN AND LEVEL MATCHING", mRECT.GetFromTop(55));
+    g.DrawText(IText(14, COLOR_WHITE), "Gain: -60 to +12 dB. Bypass: original signal.", mRECT.GetFromTop(105).GetFromBottom(45));
+    g.DrawText(IText(14, COLOR_WHITE), "Start at 0 dB, then adjust while comparing bypass.", mRECT.GetFromTop(150).GetFromBottom(45));
+    g.DrawText(IText(14, COLOR_WHITE), "Positive gain can clip. Leave output headroom.", mRECT.GetFromTop(190).GetFromBottom(40));
+    g.DrawText(IText(16, COLOR_WHITE), "Close", mRECT.GetFromBottom(50));
+  }
+  void OnMouseDown(float x, float y, const IMouseMod&) override {
+    if (mRECT.GetFromBottom(50).Contains(x, y)) { Hide(true); GetUI()->SetAllControlsDirty(); }
+  }
+  bool OnKeyDown(float, float, const IKeyPress& key) override {
+    if (key.VK == 27) { Hide(true); GetUI()->SetAllControlsDirty(); return true; }
+    return false;
+  }
+};
+}
+#endif
+
+@internal_name@::@internal_name@(const InstanceInfo& info) : iplug::Plugin(info, MakeConfig(kNumParams, 2)) {
+  GetParam(kGain)->InitDouble("Gain", 0., -60., 12., 0.1, "dB");
+  GetParam(kBypass)->InitBool("Bypass", false);
+  MakePreset("Unity", 0., 0);
+  MakePreset("Headroom", -6., 0);
+#if IPLUG_EDITOR
+  mMakeGraphicsFunc = [&]() { return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS, GetScaleForScreen(PLUG_WIDTH, PLUG_HEIGHT)); };
+  mLayoutFunc = [&](IGraphics* g) {
+    g->LoadFont(DEFAULT_FONT, "Arial", ETextStyle::Normal);
+    g->AttachPanelBackground(IColor(255, 20, 27, 26));
+    g->AttachControl(new ITextControl(IRECT(20, 10, 400, 55), PLUG_NAME, IText(25, COLOR_WHITE)));
+    const auto style = wfe::ui::MakeDarkControlStyle(IColor(255, 114, 219, 178));
+    g->AttachControl(new IVKnobControl(IRECT(30, 75, 220, 255), kGain, "Gain", style, true));
+    g->AttachControl(new IVSwitchControl(IRECT(240, 95, 390, 160), kBypass, "Bypass", style));
+    g->AttachControl(new IVButtonControl(IRECT(240, 180, 310, 225), [this](IControl*) { RecallPreset(0); }, "Unity", style));
+    g->AttachControl(new IVButtonControl(IRECT(315, 180, 415, 225), [this](IControl*) { RecallPreset(1); }, "Headroom", style));
+    auto* help = new HelpPanel(IRECT(15, 60, 425, 310));
+    help->Hide(true);
+    g->AttachControl(new IVButtonControl(IRECT(350, 265, 420, 305), [help](IControl* c) { help->Hide(!help->IsHidden()); c->GetUI()->SetAllControlsDirty(); }, "? Help", style));
+    g->AttachControl(help);
+  };
+#endif
+}
+#if IPLUG_EDITOR
+void @internal_name@::RecallPreset(int index) {
+  if (!RestorePreset(index)) return;
+  for (int param = 0; param < kNumParams; ++param) {
+    BeginInformHostOfParamChangeFromUI(param);
+    SendParameterValueFromUI(param, GetParam(param)->GetNormalized());
+    EndInformHostOfParamChangeFromUI(param);
+  }
+}
+#endif
+#if IPLUG_DSP
+void @internal_name@::OnReset() {
+  processor_.Prepare(GetSampleRate(), GetParam(kGain)->Value(), GetParam(kBypass)->Bool());
+}
+void @internal_name@::ProcessBlock(sample** inputs, sample** outputs, int nFrames) {
+  processor_.SetParameters(GetParam(kGain)->Value(), GetParam(kBypass)->Bool());
+  processor_.Process(inputs, outputs, NOutChansConnected(), nFrames);
+}
+#endif

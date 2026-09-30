@@ -35,3 +35,5 @@ if(WFE_BUILD_PLUGINS)
   add_subdirectory(plugins/Goodband)
   add_subdirectory(plugins/PitchTrails)
 endif()
+
+include(cmake/GeneratedPlugins.cmake)

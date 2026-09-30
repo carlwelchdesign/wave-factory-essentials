@@ -49,3 +49,7 @@ add_test(
     -DPROJECT_ROOT=${PROJECT_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/verify_public_brand_contract.cmake
 )
+
+find_package(Python3 3.9 COMPONENTS Interpreter REQUIRED)
+add_test(NAME plugin_starter_contracts
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_plugin_starter.py")
