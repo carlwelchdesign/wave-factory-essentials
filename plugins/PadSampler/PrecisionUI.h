@@ -6,6 +6,20 @@ namespace precision {
 using namespace iplug; using namespace igraphics;
 const IColor ink(255,25,32,42), muted(255,75,85,97), blue(255,20,110,224), silver(255,209,215,221), white(255,244,247,250), dark(255,31,38,47);
 inline std::string Number(double n, const char* format="%.1f") { char s[64]; std::snprintf(s,sizeof(s),format,n); return s; }
+// Keep live UTF-8 pad labels inside their allotted area; full errors stay in the footer.
+inline void FittedText(IGraphics& g,const IText& style,std::string text,const IRECT& bounds) {
+  IRECT measured;g.MeasureText(style,text.c_str(),measured);
+  if(measured.W()>bounds.W()) {
+    do {
+      if(text.empty())break;
+      while(!text.empty() && (static_cast<unsigned char>(text.back())&0xc0)==0x80)text.pop_back();
+      if(!text.empty())text.pop_back();
+      const auto candidate=text+"…";g.MeasureText(style,candidate.c_str(),measured);
+    } while(measured.W()>bounds.W());
+    text+="…";
+  }
+  g.DrawText(style,text.c_str(),bounds);
+}
 inline void Metal(IGraphics& g, IRECT r, bool down=false) {
   const int v=down?185:235;
   g.PathClear();g.PathRoundRect(r,4);g.PathFill(IPattern::CreateLinearGradient(r,EDirection::Vertical,{{IColor(255,v,v+3,v+6),0.f},{IColor(255,v-35,v-32,v-29),1.f}}));
@@ -46,14 +60,14 @@ class Pad : public IControl {
     g.PathClear();g.PathRoundRect(inner,7);g.PathFill(IPattern::CreateLinearGradient(inner,EDirection::Vertical,{{IColor(255,44,49,56),0.f},{IColor(255,32,37,44),1.f}}));
     g.DrawRoundRect(selected?blue:IColor(255,120,128,137),mRECT.GetPadded(-3),10,nullptr,selected?3:1);
     if(mMouseIsOver) g.DrawRoundRect(IColor(255,172,195,222),mRECT.GetPadded(-6),8,nullptr,1);
-    g.DrawText(IText(16,white,nullptr,EAlign::Near),s.name.c_str(),IRECT(inner.L+9,inner.T+6,inner.R-35,inner.T+31));
+    FittedText(g,IText(16,white,nullptr,EAlign::Near),s.name,IRECT(inner.L+9,inner.T+6,inner.R-35,inner.T+31));
     const float hit=p_.Hit(slot_); g.FillCircle(IColor(255,40+int(hit*100),90+int(hit*100),140+int(hit*100)),inner.R-16,inner.T+17,5);
     std::string filename=s.path.empty()?"Drop WAV / AIFF":std::filesystem::path(s.path).filename().string();
-    g.DrawText(IText(12,white,nullptr,EAlign::Near),filename.c_str(),IRECT(inner.L+9,inner.T+34,inner.R-6,inner.T+54));
+    FittedText(g,IText(12,white,nullptr,EAlign::Near),filename,IRECT(inner.L+9,inner.T+34,inner.R-6,inner.T+54));
     auto wave=IRECT(inner.L+10,inner.T+59,inner.R-10,inner.B-29);
     for(int i=0;i<128;++i) { float x=wave.L+wave.W()*i/127.f,h=std::min(1.f,s.waveform[i])*wave.H()*.45f; g.DrawLine(selected?IColor(255,110,184,255):IColor(255,187,203,220),x,wave.MH()-h,x,wave.MH()+h,nullptr,1); }
     std::string status=s.status=="Drop WAV / AIFF or choose Load"?"Empty":s.status;
-    g.DrawText(IText(10,IColor(255,193,205,219),nullptr,EAlign::Near),status.c_str(),IRECT(inner.L+9,inner.B-26,inner.R-62,inner.B-5));
+    FittedText(g,IText(10,IColor(255,193,205,219),nullptr,EAlign::Near),status,IRECT(inner.L+9,inner.B-26,inner.R-62,inner.B-5));
     if(selected) g.DrawText(IText(10,IColor(255,106,184,255)),"Selected",IRECT(inner.R-66,inner.B-26,inner.R-4,inner.B-5));
   }
   void OnMouseDown(float,float,const IMouseMod&) override { p_.Focus(this); p_.Select(slot_); p_.Audition(slot_); }

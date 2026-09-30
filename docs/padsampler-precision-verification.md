@@ -74,7 +74,14 @@ python3 scripts/test-padsampler-ui.py --pid <dedicated-app-pid> \
 Use a new output directory for each run. Build/sign before launching the process;
 replacing its bundle while open can invalidate native file-dialog XPC services.
 
-Still required: complete empty/loading/ready/missing/error/focus visual matrix in standalone and host editors at both scales,
+Native missing-file, relink and failed-import states were subsequently exercised in
+`precision-ui-states-fitted`. Long pad labels now use measured UTF-8 ellipsis to avoid
+overlapping selection; full errors remain in the footer. Failed sample replacement
+retains the collected playable WAV.
+
+![Missing-file state with readable selection](images/padsampler-precision-missing.png)
+
+Still required: complete visual-state coverage in standalone and host editors at both scales,
 Logic loaded-sample custom-curve session recall, physical six-trigger independence,
 listening and measured latency. These remain acceptance work, not automated claims.
 
