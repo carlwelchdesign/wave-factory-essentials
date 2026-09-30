@@ -175,3 +175,10 @@ Create new Essentials effects with the [versioned starter kit](docs/plugin-start
 It provides deterministic generation, a reference gain effect, platform builds, packaging,
 and verification commands. The [priority delivery plan](plans/plugin-starter-kit.md) tracks
 engineering and host-acceptance gates separately.
+
+## PadSampler companion instrument
+
+The macOS standalone/AU/VST3 sampler adds six MIDI-learn slots, WAV/AIFF import,
+velocity-dependent brightness, and portable kits. See the [setup guide](plugins/PadSampler/README.md)
+and [validation/host checklist](docs/padsampler.md). Physical SamplePad/Logic acceptance
+and production signing remain separate release gates.

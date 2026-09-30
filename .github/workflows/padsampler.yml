@@ -1,0 +1,58 @@
+name: PadSampler macOS
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'plugins/PadSampler/**'
+      - 'plugins/shared/**'
+      - 'CMakeLists.txt'
+      - 'scripts/package-padsampler.py'
+      - '.github/workflows/padsampler.yml'
+jobs:
+  macos-instrument:
+    runs-on: macos-14
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Framework SDKs
+        working-directory: third_party/iPlug2/Dependencies/IPlug
+        run: |
+          ./download-vst3-sdk.sh
+          ./download-clap-sdks.sh 1.2.10
+      - name: Configure universal instrument
+        run: cmake -S . -B build/padsampler -G Xcode -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DIPLUG_DEPLOY_PLUGINS=OFF -DBUILD_TESTING=ON
+      - name: Build instrument and tests
+        run: cmake --build build/padsampler --config Release --target padsampler-formats padsampler-tests --parallel 3
+      - name: DSP and sample lifecycle regressions
+        run: ctest --test-dir build/padsampler -C Release -R padsampler --output-on-failure
+      - name: Sign tester bundles and validate hosts
+        run: |
+          mkdir -p build/validation-logs build/tools "$HOME/Library/Audio/Plug-Ins/Components"
+          for ext in app component vst3; do
+            codesign --force --deep --sign - --timestamp=none "build/padsampler/out/Release/PadSampler.$ext"
+          done
+          ditto build/padsampler/out/Release/PadSampler.component "$HOME/Library/Audio/Plug-Ins/Components/PadSampler.component"
+          trap 'rm -rf "$HOME/Library/Audio/Plug-Ins/Components/PadSampler.component"' EXIT
+          sleep 5 # Allow AudioComponentRegistrar to discover the newly installed AU.
+          auval -v aumu WfP6 WvFy 2>&1 | tee build/validation-logs/auval.txt
+          curl --fail --location --retry 2 https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_macOS.zip -o build/tools/pluginval.zip
+          ditto -x -k build/tools/pluginval.zip build/tools
+          chmod +x build/tools/pluginval.app/Contents/MacOS/pluginval
+          build/tools/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --random-seed 12345 --timeout-ms 30000 --verbose --output-dir "$PWD/build/validation-logs" --validate "$PWD/build/padsampler/out/Release/PadSampler.vst3" 2>&1 | tee build/validation-logs/pluginval-console.txt
+      - name: Package universal tester
+        run: python scripts/package-padsampler.py --build-dir build/padsampler
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: padsampler-validation
+          path: build/validation-logs/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: padsampler-macOS-tester
+          path: dist/padsampler/*
+          if-no-files-found: error
