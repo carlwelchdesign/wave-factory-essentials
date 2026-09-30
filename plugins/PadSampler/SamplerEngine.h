@@ -4,9 +4,11 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <vector>
 #include <utility>
 #include "ToneCurve.h"
+#include "FxDSP.h"
 
 namespace padsampler {
 constexpr int kSlots = 6, kVoices = 64;
@@ -71,16 +73,20 @@ template<class Filter> class Engine {
     double lastL = 0., lastR = 0., tailL = 0., tailR = 0.;
     int age = 0, release = 0, tail = 0;
     uint64_t order = 0;
+    int slot = 0, tailSlot = 0;
     size_t endFrame = 0;
     bool bypass = false;
     Filter filter;
   };
   std::array<Settings, kSlots> settings{}; // Written by adapter only on audio thread.
+  FxChainExchange::Bank fxChains{};
+  std::array<FxSettings,kSlots> fxSettings{};
   std::array<std::atomic<int>, kSlots> hits{}, auditions{};
   std::atomic<bool> stop{false};
   std::atomic<int> learn{-1}, learned{-1}, lastMidi{-1};
   std::atomic<unsigned> droppedEvents{0};
   double master = .5;
+  Engine():fx_(new FxDSP[kSlots]){}
   ~Engine() { Shutdown(); }
   void Shutdown() {
     for (auto& v : voices_) if (v.sample) { v.sample->Release(); v.sample = nullptr; }
@@ -95,6 +101,7 @@ template<class Filter> class Engine {
   }
   void Reset(double rate) {
     rate_ = std::isfinite(rate) && rate >= 8000. ? rate : 44100.;
+    for(int i=0;i<kSlots;++i)fx_[i].SetRate(rate_);
     for (auto& v : voices_) {
       if (v.sample) v.sample->Release();
       v = Voice{};
@@ -120,10 +127,11 @@ template<class Filter> class Engine {
     auto it = std::find_if(voices_.begin(), voices_.end(), [](const auto& v) { return !v.sample && !v.tail; });
     if (it == voices_.end()) it = std::min_element(voices_.begin(), voices_.end(), [](const auto& a, const auto& b) { return a.order < b.order; });
     auto& v = *it;
-    double tailL = v.lastL, tailR = v.lastR;
+    double tailL = v.lastL, tailR = v.lastR;int tailSlot=v.slot;
     if (v.sample) v.sample->Release();
     v = Voice{};
     v.tailL = tailL; v.tailR = tailR; v.tail = fadeFrames_;
+    v.slot=slot;v.tailSlot=tailSlot;
     v.sample = sample; sample->Retain();
     v.position = double(start); v.endFrame = end;
     v.step = sample->rate / rate_; v.order = ++order_;
@@ -143,10 +151,12 @@ template<class Filter> class Engine {
       samples_[r.slot] = r.sample; // Queue reference becomes slot reference.
     }
     fadeFrames_ = std::max(8, int(rate_ * .001));
+    for(int i=0;i<kSlots;++i)fx_[i].SetChain(fxChains[i]);
     if (stop.exchange(false)) {
       eventCount_ = 0;
       for (auto& audition : auditions) audition.store(0);
       for (auto& v : voices_) if (v.sample) v.release = fadeFrames_;
+      for(int i=0;i<kSlots;++i)fx_[i].Stop();
     }
     for (int i = 0; i < kSlots; ++i) if (int velocity = auditions[i].exchange(0)) Trigger(i, velocity);
     size_t event = 0;
@@ -156,6 +166,7 @@ template<class Filter> class Engine {
         for (int i = 0; i < kSlots; ++i) if (settings[i].note == e.note && (!settings[i].channel || settings[i].channel == e.channel)) Trigger(i, e.velocity);
       }
       double l = 0., rr = 0.;
+      std::array<double,kSlots> busL{},busR{};
       for (auto& v : voices_) {
         double vl = 0., vr = 0.;
         if (v.sample) {
@@ -173,8 +184,15 @@ template<class Filter> class Engine {
           v.position += v.step;
           if (v.position >= v.endFrame || (releasing && v.release == 0)) { v.sample->Release(); v.sample = nullptr; }
         }
-        if (v.tail) { vl += v.tailL * v.tail / fadeFrames_; vr += v.tailR * v.tail / fadeFrames_; --v.tail; }
+        busL[v.slot]+=vl;busR[v.slot]+=vr;
+        if (v.tail) { double tl=v.tailL*v.tail/fadeFrames_,tr=v.tailR*v.tail/fadeFrames_;busL[v.tailSlot]+=tl;busR[v.tailSlot]+=tr;vl+=tl;vr+=tr;--v.tail; }
         v.lastL = vl; v.lastR = vr; l += vl; rr += vr;
+      }
+      bool anyFX=false;
+      for(int i=0;i<kSlots;++i)if(fx_[i].Active()){
+        anyFX=true;
+        double beforeL=busL[i],beforeR=busR[i];fx_[i].Process(busL[i],busR[i],fxSettings[i]);
+        l+=busL[i]-beforeL;rr+=busR[i]-beforeR;
       }
       left[f] = T(l * master); right[f] = T(rr * master);
     }
@@ -188,6 +206,7 @@ template<class Filter> class Engine {
   Queue<Replacement, 64> replacements_;
   std::array<Sample*, kSlots> samples_{};
   std::array<Voice, kVoices> voices_{};
+  std::unique_ptr<FxDSP[]> fx_;
   std::array<Event, 512> events_{};
   size_t eventCount_ = 0;
   uint64_t order_ = 0;

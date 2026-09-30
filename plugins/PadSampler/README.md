@@ -21,11 +21,17 @@ to a product-owned instrument; `starter-manifest.json` records its origin.
    Tone Curve shapes the transition. Velocity Volume independently controls loudness.
    Tone Bypass is an A/B comparison. These controls shape new hits; existing voices
    retain the settings captured at their start. Pan is stereo balance.
-   Use the Tone / Clip switch to trim each pad without altering the source audio.
+   Use the Tone / Clip / FX tabs to switch the selected-pad inspector. Clip trims
+   each pad without altering the source audio.
    Drag the waveform's blue start/end handles, use the time fields in seconds, or
    focus a handle and press an arrow key (10 ms; Shift for one source frame).
    A clip must contain at least two frames. Reset Length plays the whole source.
    Clip Undo/Redo is independent of tone-curve Undo/Redo and remembers 32 edits.
+   In FX, add up to three different effects to that pad. Select a rack row to edit
+   its controls, move it with the arrows, toggle Active/Bypassed, or remove it.
+   Re-adding a removed effect restores its prior settings. The five built-ins are
+   reverb, delay, compressor, EQ and flanger. Delay time is in milliseconds.
+   Reverb and delay tails continue after the clip ends; Stop All fades those tails.
 6. Save Kit creates a **new** `.padkit` folder containing `kit.json` and collected
    float WAV samples at their original levels/sample rates. Open Kit selects that
    `kit.json`. Move/copy the whole folder. Existing kit folders are never overwritten.
@@ -33,7 +39,7 @@ to a product-owned instrument; `starter-manifest.json` records its origin.
    files or a collected kit available. Missing files silence the affected slots and
    show an error; select Load / Relink to replace them. Failed normal replacement
    leaves the old sample playable. Clear removes a slot for future hits; Stop All
-   fades ringing notes. MIDI CC120/123 also stops playback.
+   fades ringing notes and FX tails. MIDI CC120/123 also stops playback.
 
 Sample limits: 60 seconds, 1–2 channels, 8–384 kHz, PCM/float WAV/AIFF; 256 MiB decoded
 memory including queued/retired samples still playing. To release memory, Clear a
@@ -65,7 +71,11 @@ crossfade tail. MIDI note-offs do not gate one-shots.
 
 Parameter IDs: six contiguous blocks of nine (Level, Pan, Velocity Volume,
 Soft Brightness, Hard Brightness, Tone Curve, Tone Bypass, MIDI Note, MIDI Channel),
-then Audition Velocity=54 and Master=55. Kit/state schema version=3. Instruments:
+then Audition Velocity=54 and Master=55. IDs 56–229 append 29 fixed FX controls
+per pad, grouped by effect type: Reverb 5, Delay 5, Compressor 7, EQ 7,
+Flanger 5. The last control in each group is Bypass. All FX controls and bypass
+are host-automatable; rack membership and order are saved session state.
+Kit/state schema version=4. Instruments:
 AU `aumu/WfP6/WvFy`; bundle IDs `com.wavefactoryessentials.{app,audiounit,vst3}.PadSampler`.
 
 Reused dependencies: pinned iPlug2/WDL controls, MIDI/APP host, SVF filter and bundled
@@ -106,9 +116,11 @@ Curves are kit/session state, not individual host automation parameters. Version
 kits and sessions load in Legacy mode, preserving the original exponent calculation and
 its automation. Editing a point or choosing a preset converts the selected pad to point
 mode. Undo can restore Legacy mode. The original exponent parameter retains its ID but
-has no effect in point mode. New saves use version 3 with per-pad start/end seconds;
-version-1 and version-2 documents play their full samples. Older PadSampler binaries
-cannot read version-3 kits. Existing 56 parameter IDs and plugin identity remain unchanged.
+has no effect in point mode. New saves use version 4 with per-pad start/end seconds
+and ordered FX racks. Version-1 and version-2 documents play their full samples;
+version-1 through version-3 documents load with empty racks and default FX settings.
+Older PadSampler binaries cannot read version-4 kits. Existing IDs 0–55 and plugin
+identity remain unchanged.
 
 Clip changes affect new strikes only: each voice captures an exclusive end frame and
 retains its sample. A successful new sample drop resets its clip to full length; a failed
@@ -116,3 +128,19 @@ replacement leaves the previous sample and trim playable. Relinking a missing sa
 reapplies saved times, or resets to full length with a visible warning if the new file
 is too short. Portable kits collect full source audio, so trimming remains reversible
 after moving the kit. Clip edits are session state, not host automation parameters.
+
+## Per-pad FX
+
+Each pad's overlapping voices feed its own stereo bus and ordered rack before Master.
+Pads without FX follow the original dry path. Continuous effect edits smooth over
+10 ms and alter sound already ringing. Adding, removing or reordering an effect
+fades the pad bus briefly through the topology change. Stop All fades FX tails and
+resets their delay state. FX processing is built in; no third-party plug-ins are
+hosted inside PadSampler. Removed effects keep their parameter values in the fixed
+bank so they are available when re-added. The maximum is three distinct types per
+pad; duplicate types in one rack are rejected.
+
+The version-4 `effects` array in each slot records the ordered effect names. Its
+values are the stable parameters, not separate per-rack-slot automation controls.
+Malformed racks or out-of-range FX values are rejected before the current kit is
+changed. Portable kits still collect the full source audio alongside trims and FX.
