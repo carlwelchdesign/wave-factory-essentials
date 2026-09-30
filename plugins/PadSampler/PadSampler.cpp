@@ -26,6 +26,18 @@ PadSampler::PadSampler(const InstanceInfo& info) : iplug::Plugin(info, MakeConfi
   }
   GetParam(kAuditionVelocity)->InitInt("Audition Velocity", 100, 1, 127);
   GetParam(kMaster)->InitDouble("Master", -6., -60., 0., .1, "dB");
+  for(int pad=0;pad<kSlots;++pad){
+    auto init=[&](FxType type,int control,const char* label,double initial,double minimum,double maximum,double step,const char* unit=""){
+      std::string name="Slot "+std::to_string(pad+1)+" "+kFxNames[int(type)]+" "+label;
+      GetParam(FxParam(pad,type,control))->InitDouble(name.c_str(),initial,minimum,maximum,step,unit);
+    };
+    auto bypass=[&](FxType type){std::string name="Slot "+std::to_string(pad+1)+" "+kFxNames[int(type)]+" Bypass";GetParam(FxParam(pad,type,kFxCounts[int(type)]-1))->InitBool(name.c_str(),false);};
+    init(FxType::Reverb,0,"Mix",.2,0,1,.01);init(FxType::Reverb,1,"Size",.55,0,1,.01);init(FxType::Reverb,2,"Damping",.5,0,1,.01);init(FxType::Reverb,3,"Width",1,0,1,.01);bypass(FxType::Reverb);
+    init(FxType::Delay,0,"Mix",.2,0,1,.01);init(FxType::Delay,1,"Time",250,1,1000,1,"ms");init(FxType::Delay,2,"Feedback",.35,0,.9,.01);init(FxType::Delay,3,"Tone",8000,200,18000,1,"Hz");bypass(FxType::Delay);
+    init(FxType::Compressor,0,"Mix",1,0,1,.01);init(FxType::Compressor,1,"Threshold",-18,-60,0,.1,"dB");init(FxType::Compressor,2,"Ratio",4,1,20,.1);init(FxType::Compressor,3,"Attack",10,.1,100,.1,"ms");init(FxType::Compressor,4,"Release",100,5,1000,1,"ms");init(FxType::Compressor,5,"Makeup",0,-12,24,.1,"dB");bypass(FxType::Compressor);
+    init(FxType::EQ,0,"Mix",1,0,1,.01);init(FxType::EQ,1,"Low Gain",0,-18,18,.1,"dB");init(FxType::EQ,2,"Mid Gain",0,-18,18,.1,"dB");init(FxType::EQ,3,"High Gain",0,-18,18,.1,"dB");init(FxType::EQ,4,"Mid Frequency",1000,100,10000,1,"Hz");init(FxType::EQ,5,"Mid Q",1,.2,8,.01);bypass(FxType::EQ);
+    init(FxType::Flanger,0,"Mix",.25,0,1,.01);init(FxType::Flanger,1,"Rate",.25,.01,10,.01,"Hz");init(FxType::Flanger,2,"Depth",3,0,10,.1,"ms");init(FxType::Flanger,3,"Feedback",.25,-.8,.8,.01);bypass(FxType::Flanger);
+  }
   view_ = library_.View();
   mMakeGraphicsFunc = [&] { return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS, GetScaleForScreen(PLUG_WIDTH, PLUG_HEIGHT)); };
   mLayoutFunc = [this](IGraphics* g) { BuildUI(g); };
@@ -38,6 +50,7 @@ void PadSampler::ProcessMidiMsg(const IMidiMsg& msg) {
 }
 void PadSampler::ProcessBlock(sample**, sample** outputs, int frames) {
   curves_.Read(audioCurves_);
+  fxChains_.Read(audioFX_);
   for (int i = 0; i < kSlots; ++i) {
     int p = i * kSlotParams; auto& s = engine_.settings[i];
     s.level = GetParam(p + Level)->Value(); s.pan = GetParam(p + Pan)->Value();
@@ -45,6 +58,8 @@ void PadSampler::ProcessBlock(sample**, sample** outputs, int frames) {
     s.shape = audioCurves_[i];
     s.hardHz = GetParam(p + HardHz)->Value(); s.curve = GetParam(p + ToneCurve)->Value();
     s.bypass = GetParam(p + ToneBypass)->Bool(); s.note = GetParam(p + Note)->Int(); s.channel = GetParam(p + Channel)->Int();
+    engine_.fxChains[i]=audioFX_[i];
+    for(int j=0;j<kFxPerPad;++j)engine_.fxSettings[i].values[j]=GetParam(kFxFirstParam+i*kFxPerPad+j)->Value();
   }
   engine_.master = std::pow(10., GetParam(kMaster)->Value() / 20.);
   if (NOutChansConnected() >= 2) engine_.Process(outputs[0], outputs[1], frames);
@@ -65,19 +80,20 @@ void PadSampler::ChooseKit(bool save) {
   WDL_String file, folder;
   GetUI()->PromptForFile(file, folder, save ? EFileAction::Save : EFileAction::Open, save ? "padkit" : "json", [this, save](const WDL_String& path, const WDL_String&) {
     if (!path.GetLength()) return;
-    if (save) library_.SaveKit(path.Get(), Parameters(), curves_.Snapshot()); else library_.OpenKit(path.Get());
+    if (save) library_.SaveKit(path.Get(), Parameters(), curves_.Snapshot(),fxChains_.Snapshot()); else library_.OpenKit(path.Get());
   });
 }
 std::vector<double> PadSampler::Parameters() const { std::vector<double> values; for (int i = 0; i < kParameterCount; ++i) values.push_back(GetParam(i)->Value()); return values; }
 void PadSampler::ApplyParameters(const Json& doc, bool notifyHost) {
-  curves_.Store(DocumentCurves(doc)); curveEpoch_.fetch_add(1); resetHistories_.store(true); ++clipEpoch_; clipPreview_.reset();
+  curves_.Store(DocumentCurves(doc)); fxChains_.Store(DocumentFX(doc));curveEpoch_.fetch_add(1); resetHistories_.store(true); ++clipEpoch_; clipPreview_.reset();
   for (int i = 0; i < kParameterCount; ++i) {
-    GetParam(i)->Set(doc["parameters"][i].get<double>());
+    if(i<doc["parameters"].size())GetParam(i)->Set(doc["parameters"][i].get<double>());
+    else GetParam(i)->SetToDefault();
     if (notifyHost) { BeginInformHostOfParamChangeFromUI(i); SendParameterValueFromUI(i, GetParam(i)->GetNormalized()); EndInformHostOfParamChangeFromUI(i); }
   }
 }
 bool PadSampler::SerializeState(IByteChunk& chunk) const {
-  auto doc = library_.Document(Parameters(), curves_.Snapshot()).dump(); int length = int(doc.size());
+  auto doc = library_.Document(Parameters(), curves_.Snapshot(),fxChains_.Snapshot()).dump(); int length = int(doc.size());
   chunk.Put(&length); chunk.PutBytes(doc.data(), length); return true;
 }
 int PadSampler::UnserializeState(const IByteChunk& chunk, int position) {
@@ -136,11 +152,25 @@ void PadSampler::CommitShape(const ToneShape& before) { auto after=Shape(); hist
 void PadSampler::UndoCurve(bool redo) {auto c=Shape();if(redo?History().Redo(c):History().Undo(c)){SetShape(c);MarkStateChanged();pointSelection=std::min(pointSelection,c.count-2);}}
 void PadSampler::CurvePreset(int preset) {auto before=Shape();SetShape(ToneShape::Preset(preset));CommitShape(before);pointSelection=1;}
 void PadSampler::SyncClipMode() {
-  for(auto* c:toneControls_) c->Hide(clipMode_);
-  for(auto* c:clipControls_) c->Hide(!clipMode_);
+  for(auto* c:toneControls_) c->Hide(inspectorMode_!=0);
+  for(auto* c:clipControls_) c->Hide(inspectorMode_!=1);
+  for(auto* c:fxControls_) c->Hide(inspectorMode_!=2);
+  auto chain=FXChain(selected_);int selected=fxSelected_[selected_];
+  int type=selected>=0 && selected<chain.count?int(chain.order[selected]):-1;
+  for(int t=0;t<kFxTypes;++t)for(int i=0;i<fxFields_[t].size();++i){
+    auto* c=fxFields_[t][i];c->Hide(inspectorMode_!=2 || type!=t);
+    int param=FxParam(selected_,FxType(t),i);
+    c->SetParamIdx(param);c->SetValueFromDelegate(GetParam(param)->GetNormalized());
+  }
   if(GetUI()) GetUI()->SetAllControlsDirty();
 }
-void PadSampler::ToggleClipMode() { clipMode_=!clipMode_; clipPreview_.reset(); ++clipEpoch_; SyncClipMode(); }
+void PadSampler::SetInspectorMode(int mode){inspectorMode_=std::clamp(mode,0,2);clipPreview_.reset();++clipEpoch_;SyncClipMode();}
+void PadSampler::ToggleClipMode() {SetInspectorMode(inspectorMode_==1?0:1);}
+void PadSampler::AddFX(FxType type){auto bank=fxChains_.Snapshot();if(!bank[selected_].Add(type)){Message("FX rack is full or this effect is already assigned");return;}fxSelected_[selected_]=bank[selected_].count-1;fxChains_.Store(bank);focus_=nullptr;MarkStateChanged();SyncClipMode();}
+void PadSampler::RemoveFX(){auto bank=fxChains_.Snapshot();if(!bank[selected_].Remove(fxSelected_[selected_]))return;fxSelected_[selected_]=bank[selected_].count?std::min(fxSelected_[selected_],int(bank[selected_].count)-1):0;fxChains_.Store(bank);focus_=nullptr;MarkStateChanged();SyncClipMode();}
+void PadSampler::MoveFX(int direction){auto bank=fxChains_.Snapshot();int& selected=fxSelected_[selected_];if(!bank[selected_].Move(selected,direction))return;selected+=direction;fxChains_.Store(bank);focus_=nullptr;MarkStateChanged();SyncClipMode();}
+void PadSampler::SelectFX(int position){auto chain=FXChain(selected_);if(position<0 || position>=chain.count)return;fxSelected_[selected_]=position;SyncClipMode();}
+void PadSampler::ToggleFXBypass(int position){auto chain=FXChain(selected_);if(position<0 || position>=chain.count)return;int param=FxParam(selected_,chain.order[position],kFxCounts[int(chain.order[position])]-1);double value=GetParam(param)->Bool()?0.:1.;GetParam(param)->Set(value);BeginInformHostOfParamChangeFromUI(param);SendParameterValueFromUI(param,GetParam(param)->GetNormalized());EndInformHostOfParamChangeFromUI(param);SyncClipMode();}
 bool PadSampler::CommitClip(ClipTrim before) {
   auto after=Clip(); clipPreview_.reset();
   if(before==after)return true;
@@ -172,7 +202,7 @@ void PadSampler::MarkStateChanged() {
 #endif
 }
 void PadSampler::ToggleLearn() {if(engine_.learn.load()==selected_) {engine_.learn.store(-1);Message("MIDI Learn cancelled");}else{engine_.learn.store(selected_);Message("MIDI Learn: strike the selected hardware pad");}}
-void PadSampler::StopAll() {engine_.stop.store(true);Message("Stop All: ringing voices faded");}
+void PadSampler::StopAll() {engine_.stop.store(true);Message("Stop All: voices and FX tails faded");}
 #if defined(APP_API)
 extern HWND gHWND;
 #endif
@@ -185,7 +215,7 @@ void PadSampler::Settings() {
 }
 void PadSampler::BuildUI(IGraphics* g) {
   using namespace precision;
-  controls_.fill(nullptr); focusOrder_.clear();toneControls_.clear();clipControls_.clear();focus_=nullptr;
+  controls_.fill(nullptr); focusOrder_.clear();toneControls_.clear();clipControls_.clear();fxControls_.clear();for(auto& group:fxFields_)group.clear();focus_=nullptr;
   g->LoadFont(DEFAULT_FONT,"Arial",ETextStyle::Normal);
   g->EnableMouseOver(true);g->AttachTextEntryControl();g->AttachControl(new Backplate(g->GetBounds(),g->LoadBitmap("precision-satin.png")));
   IVStyle style(true,true,{silver,IColor(255,224,231,240),blue,muted,IColor(255,107,170,238),IColor(90,30,40,55),white,blue,ink},IText(12,ink),IText(12,ink),false,true,true,true,.15f,1,2,.8f);
@@ -207,17 +237,19 @@ void PadSampler::BuildUI(IGraphics* g) {
   controls_[Channel]=attach(new IVNumberBoxControl(IRECT(776,158,954,210),Channel,nullptr,"Channel · 0 = All",style,true));
   const char* labels[]={"Level","Pan","Velocity Volume"};
   for(int i=0;i<3;++i)controls_[i]=attach(new Knob(IRECT(587+i*125,219,704+i*125,318),i,labels[i],style,*this));
-  controls_[SoftHz]=attach(new Knob(IRECT(588,328,705,420),SoftHz,"Soft brightness",style,*this));
-  controls_[HardHz]=attach(new Knob(IRECT(711,328,828,420),HardHz,"Hard brightness",style,*this));
-  controls_[ToneBypass]=attach(new IVSwitchControl(IRECT(836,328,954,378),ToneBypass,"Tone bypass",style));
-  controls_[ToneCurve]=attach(new IVNumberBoxControl(IRECT(836,381,954,420),ToneCurve,nullptr,"Legacy exponent",style,true));
+  for(int mode=0;mode<3;++mode)attach(new Action(IRECT(588+mode*124,328,708+mode*124,355),*this,[this,mode]{return std::string(inspectorMode_==mode?"● ":"  ")+(mode==0?"TONE":mode==1?"CLIP":"FX");},[this,mode]{SetInspectorMode(mode);}));
+  controls_[SoftHz]=attach(new IVNumberBoxControl(IRECT(588,359,705,420),SoftHz,nullptr,"Soft · Hz",style,true));toneControls_.push_back(controls_[SoftHz]);
+  controls_[HardHz]=attach(new IVNumberBoxControl(IRECT(711,359,828,420),HardHz,nullptr,"Hard · Hz",style,true));toneControls_.push_back(controls_[HardHz]);
+  controls_[ToneBypass]=attach(new IVSwitchControl(IRECT(836,359,954,386),ToneBypass,"Tone bypass",style));toneControls_.push_back(controls_[ToneBypass]);
+  controls_[ToneCurve]=attach(new IVNumberBoxControl(IRECT(836,387,954,420),ToneCurve,nullptr,"Legacy exponent",style,true));toneControls_.push_back(controls_[ToneCurve]);
   toneControls_.push_back(attach(new Presets(IRECT(588,429,704,456),*this)));
   toneControls_.push_back(attach(new Action(IRECT(711,429,767,456),*this,[]{return std::string("Undo");},[this]{UndoCurve(false);},[this]{return History().nUndo>0;})));
   toneControls_.push_back(attach(new Action(IRECT(774,429,830,456),*this,[]{return std::string("Redo");},[this]{UndoCurve(true);},[this]{return History().nRedo>0;})));
   clipControls_.push_back(attach(new Action(IRECT(588,429,704,456),*this,[]{return std::string("Reset Length");},[this]{ResetClip();},[this]{return view_.slots[selected_].ready && !(Clip()==padsampler::ClipTrim{});} )));
   clipControls_.push_back(attach(new Action(IRECT(711,429,767,456),*this,[]{return std::string("Undo");},[this]{UndoClip(false);},[this]{return ClipEdits().nUndo>0 && view_.slots[selected_].ready;})));
   clipControls_.push_back(attach(new Action(IRECT(774,429,830,456),*this,[]{return std::string("Redo");},[this]{UndoClip(true);},[this]{return ClipEdits().nRedo>0 && view_.slots[selected_].ready;})));
-  attach(new Action(IRECT(837,429,954,456),*this,[this]{return clipMode_?std::string("CLIP → TONE"):std::string("TONE → CLIP");},[this]{ToggleClipMode();}));
+  toneControls_.push_back(attach(new Action(IRECT(837,429,954,456),*this,[]{return std::string("FX →");},[this]{SetInspectorMode(2);} )));
+  clipControls_.push_back(attach(new Action(IRECT(837,429,954,456),*this,[]{return std::string("FX →");},[this]{SetInspectorMode(2);} )));
   toneControls_.push_back(attach(new Graph(IRECT(588,464,954,578),*this)));
   clipControls_.push_back(attach(new ClipGraph(IRECT(588,464,954,578),*this)));
   toneControls_.push_back(attach(new PointField(IRECT(588,585,704,613),*this,true)));
@@ -229,6 +261,21 @@ void PadSampler::BuildUI(IGraphics* g) {
   auto* clipLength=new ClipLength(IRECT(836,585,954,613),*this);g->AttachControl(clipLength);clipControls_.push_back(clipLength);
   auto* toneHint=new ITextControl(IRECT(585,617,960,637),"Double-click adds · drag edits · Delete removes",IText(10,muted));g->AttachControl(toneHint);toneControls_.push_back(toneHint);
   auto* clipHint=new ITextControl(IRECT(585,617,960,637),"Space swaps handles · arrows 10 ms · Shift+arrows 1 frame",IText(10,muted));g->AttachControl(clipHint);clipControls_.push_back(clipHint);
+  for(int row=0;row<3;++row){
+    const int y=367+row*31;
+    auto label=[this,row]{auto chain=FXChain(selected_);return row<chain.count?std::string(fxSelected_[selected_]==row?"● ":"  ")+kFxNames[int(chain.order[row])]:std::string("— Empty —");};
+    fxControls_.push_back(attach(new Action(IRECT(588,y,745,y+27),*this,label,[this,row]{SelectFX(row);},[this,row]{return row<FXChain(selected_).count;})));
+    fxControls_.push_back(attach(new Action(IRECT(750,y,785,y+27),*this,[]{return std::string("↑");},[this,row]{SelectFX(row);MoveFX(-1);},[this,row]{return row>0 && row<FXChain(selected_).count;})));
+    fxControls_.push_back(attach(new Action(IRECT(790,y,825,y+27),*this,[]{return std::string("↓");},[this,row]{SelectFX(row);MoveFX(1);},[this,row]{return row+1<FXChain(selected_).count;})));
+    fxControls_.push_back(attach(new Action(IRECT(830,y,900,y+27),*this,[this,row]{auto chain=FXChain(selected_);if(row>=chain.count)return std::string("Bypass");return GetParam(FxParam(selected_,chain.order[row],kFxCounts[int(chain.order[row])]-1))->Bool()?std::string("BYPASSED"):std::string("ACTIVE");},[this,row]{ToggleFXBypass(row);},[this,row]{return row<FXChain(selected_).count;})));
+    fxControls_.push_back(attach(new Action(IRECT(905,y,954,y+27),*this,[]{return std::string("×");},[this,row]{SelectFX(row);RemoveFX();},[this,row]{return row<FXChain(selected_).count;})));
+  }
+  for(int type=0;type<kFxTypes;++type){
+    auto effect=FxType(type);const char* labels[5][6]={{"Mix","Size","Damping","Width"},{"Mix","Time · ms","Feedback","Tone · Hz"},{"Mix","Threshold · dB","Ratio","Attack · ms","Release · ms","Makeup · dB"},{"Mix","Low · dB","Mid · dB","High · dB","Mid · Hz","Q"},{"Mix","Rate · Hz","Depth · ms","Feedback"}};
+    for(int j=0;j<kFxCounts[type]-1;++j){int column=j%2,row=j/2;const char* format=(type==1 && (j==1 || j==3)) || (type==3 && j==4)?"%0.0f":"%0.2f";auto* field=attach(new NumberField(IRECT(588+column*185,500+row*43,767+column*185,539+row*43),FxParam(0,effect,j),labels[type][j],style,*this,format));fxFields_[type].push_back(field);fxControls_.push_back(field);}
+  }
+  for(int type=0;type<kFxTypes;++type){auto effect=FxType(type);const char* shortNames[]={"Reverb","Delay","Comp","EQ","Flanger"};fxControls_.push_back(attach(new Action(IRECT(588+type*74,465,658+type*74,493),*this,[type,shortNames]{return std::string("+ ")+shortNames[type];},[this,effect]{AddFX(effect);},[this,effect]{auto chain=FXChain(selected_);return chain.count<3 && !chain.Contains(effect);})));}
+  auto* fxHint=new ITextControl(IRECT(588,620,954,637),"Select effect · Enter edits value · Tab moves focus",IText(10,muted));g->AttachControl(fxHint);fxControls_.push_back(fxHint);
   attach(new IVNumberBoxControl(IRECT(22,652,222,701),kAuditionVelocity,nullptr,"Audition velocity",style,true));
   button(IRECT(240,661,342,696),"Stop All",[this]{StopAll();});
   attach(new IVNumberBoxControl(IRECT(738,652,860,701),kMaster,nullptr,"Master · dB",style,true));

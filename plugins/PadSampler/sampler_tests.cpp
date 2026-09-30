@@ -31,10 +31,12 @@ double Energy(int velocity, bool bypass) {
 }
 #include "curve_tests.h"
 #include "clip_tests.h"
+#include "fx_tests.h"
 int main() {
   try {
     TestToneCurves();
     TestClipTrim();
+    TestFX();
     Settings settings;
     double previous = 0;
     for (int v = 1; v <= 127; ++v) { double f = Cutoff(settings, v, 22050); Require(f >= previous && f <= 22050 * .45 + .001, "cutoff must increase and remain below Nyquist"); previous = f; }
@@ -49,6 +51,7 @@ int main() {
       Require(e.ActiveVoices()==1, "voice must start");
       e.Publish(0,&second); e.Process(l,r,512);
       Require(first.references.load()==1, "old sample must remain alive for its ringing voice");
+      e.fxSettings[0]=DefaultFX();e.fxChains[0].Add(FxType::Reverb);
       inAudio = true;
       for(int i=0;i<100;++i) e.Midi(0,36,1,127);
       e.Process(l,r,512);
@@ -123,7 +126,7 @@ int main() {
       wait([&] { return library.View().slots[0].status.find("Ready") == 0; });
       Require(library.View().slots[0].clip==ClipTrim{},"successful new drop resets trim to full source");
       Require(library.SetTrim(0,{.02,.08}),"trim can be set after replacement");
-      std::vector<double> params(kParameterCount,0.);
+      auto params=DefaultFXDocumentParameters();
       CurveExchange::Bank kitCurves; kitCurves[4]=ToneShape::Preset(3);
       library.SaveKit((directory/"portable.padkit").string(),params,kitCurves);
       wait([&] { return std::filesystem::exists(directory/"portable.padkit/kit.json"); });

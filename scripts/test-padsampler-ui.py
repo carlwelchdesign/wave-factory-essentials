@@ -37,21 +37,23 @@ def choose(path):
     apple('keystroke "g" using {command down, shift down}\ndelay 0.5\nkeystroke '+json.dumps(str(path))+'\ndelay 0.3\nkey code 36\ndelay 0.8\nclick button "Open" of splitter group 1 of sheet 1 of window 1')
     time.sleep(.7)
 
-def wait_sheet():
-    for _ in range(30):
-        if apple('return exists sheet 1 of window 1').strip()=='true': return
-        time.sleep(.1)
+def wait_sheet(retry_click=None):
+    for attempt in range(2 if retry_click else 1):
+        for _ in range(30):
+            if apple('return exists sheet 1 of window 1').strip()=='true': return
+            time.sleep(.1)
+        if retry_click and attempt==0: retry_click()
     raise AssertionError('Native file dialog did not appear')
 
 def openkit(path):
     event('click',580,37)
-    wait_sheet()
+    wait_sheet(lambda: event('click',580,37))
     choose(path)
 
 def save(name):
     path = a.output / (name+'.padkit')
     event('click',693,37)
-    wait_sheet()
+    wait_sheet(lambda: event('click',693,37))
     time.sleep(.3)
     apple('set value of text field "Save As:" of splitter group 1 of sheet 1 of window 1 to '+json.dumps(path.name)+'\nkeystroke "g" using {command down, shift down}\ndelay 0.5\nkeystroke '+json.dumps(str(a.output))+'\ndelay 0.3\nkey code 36\ndelay 0.8\nclick button "Save" of splitter group 1 of sheet 1 of window 1')
     for _ in range(100):
@@ -104,10 +106,10 @@ assert len(save('deleted')['curves'][0]['points'])==2
 event('click',740,443)
 assert save('undeleted')['curves'][0]==edited['curves'][0]
 # Bypass is a retained parameter value; editing and shape remain intact.
-event('click',898,360)
+event('click',898,380)
 bypassed=save('bypassed');assert bypassed['parameters'][6]==1 and bypassed['curves']==edited['curves']
 capture('02-bypassed')
-event('click',898,360)
+event('click',898,380)
 # Selection updates the inspector without affecting another slot's curve.
 event('click',400,155)
 assert save('other-slot')['curves'][1]==fixture['curves'][1]
@@ -168,7 +170,7 @@ numeric=save('numeric')
 assert numeric['curves'][0]['points'][3]==[70/127,.55]
 capture('09-numeric')
 # Clip editing uses the same inspector region but an independent history.
-event('click',900,443)
+event('click',775,341)
 capture('09a-clip-full')
 event('drag',600,515,668,515)
 start_drag=save('clip-start')
@@ -196,7 +198,39 @@ assert save('clip-reset-undo')['slots'][0]['clip']==numeric_clip['slots'][0]['cl
 event('click',400,155)
 assert save('clip-other-pad')['slots'][1]['clip']=={'start':0.0,'end':None}
 event('click',120,155)
-event('click',900,443)
+event('click',650,341)
+# FX racks keep order as session state and controls as host parameters.
+event('click',895,341)
+event('click',690,478)  # Delay
+event('click',615,478)  # Reverb
+event('click',780,478)  # Compressor
+added_fx=save('fx-added')
+assert added_fx['slots'][0]['effects']==['Delay','Reverb','Compressor']
+capture('09c-fx-rack')
+event('click',765,412)  # Move second effect upward.
+reordered_fx=save('fx-reordered')
+assert reordered_fx['slots'][0]['effects']==['Reverb','Delay','Compressor']
+event('click',865,380)
+bypassed_fx=save('fx-bypassed')
+assert bypassed_fx['parameters'][60]==1
+event('click',930,442)
+removed_fx=save('fx-removed')
+assert removed_fx['slots'][0]['effects']==['Reverb','Delay']
+event('click',845,478)
+assert save('fx-added-eq')['slots'][0]['effects']==['Reverb','Delay','EQ']
+event('click',650,380)
+event('double',650,520)
+apple('keystroke "a" using command down\nkeystroke "0.43"\nkey code 36',activate=False)
+time.sleep(.2)
+assert abs(save('fx-numeric')['parameters'][56]-.43)<.011
+capture('09d-fx-control')
+event('click',650,520);event('key',126)
+assert abs(save('fx-keyboard')['parameters'][56]-.44)<.011
+event('click',400,155)
+assert save('fx-other-pad')['slots'][1]['effects']==[]
+event('click',120,155)
+assert save('fx-return')['slots'][0]['effects']==['Reverb','Delay','EQ']
+event('click',650,341)
 # Momentary Stop All pressed and released states are captured for renderer review.
 event('down',290,678);capture('10-pressed')
 event('up',290,678);capture('11-released')
@@ -212,5 +246,5 @@ event('click',640,135);wait_sheet();choose(a.output/'invalid.wav')
 time.sleep(.5);capture('15-import-error')
 recovered=save('failed-replacement')
 assert (a.output/'failed-replacement.padkit'/recovered['slots'][0]['path']).is_file()
-(a.output/'result.txt').write_text('PASS: native tone and clip drag, keyboard, numeric, Reset, separate undo/redo, slot isolation, kit recall, text editing, Help, presets, malformed kit, and button states. Screenshots captured for visual review.\n')
+(a.output/'result.txt').write_text('PASS: native tone, clip, FX rack order/bypass/numeric/keyboard/pad isolation, kit recall, text editing, Help, presets, malformed kit, and button states. Screenshots captured for visual review.\n')
 print(a.output)

@@ -130,3 +130,28 @@ For host acceptance, drag both handles, use keyboard and numeric editing, Reset,
 Undo/Redo, switch pads, save/reopen a kit and a Logic session, and verify that
 hits already ringing keep their original length. This remains separate from
 physical SamplePad and listening acceptance.
+
+## Per-pad FX revision
+
+Version-4 kit/state documents add one ordered `effects` array per slot. It accepts
+zero to three distinct types among Reverb, Delay, Compressor, EQ and Flanger.
+The prior 56 parameter IDs and all plug-in identifiers remain stable. IDs 56–229
+append a fixed 29-parameter bank per pad for every supported FX type, including
+bypass. Rack membership and order are session state; parameter values are host
+automation targets and survive effect removal. Version-1 through version-3 files
+load with empty racks and default controls. Portable kits still collect full audio.
+
+The engine sums each pad's overlapping voices to a stereo bus, processes that
+pad's ordered FX, then sums the buses before Master. Ringing reverb/delay tails
+continue after the source clip ends. Parameter smoothing affects tails and voices
+already playing; topology changes fade briefly through the new order. Stop All
+fades voices and wet tails. All delay and reverb storage is fixed capacity and
+prepared before rendering, with generation tags for constant-time tail reset.
+No audio callback allocation, lock, decoding or filesystem access is introduced.
+
+The Precision FX tab shows the three rack positions, Add choices, selection,
+move, bypass and remove actions. Selecting an effect exposes its bounded numeric
+controls. Per-pad FX counts appear on the pads without replacing sample status,
+waveforms or trim markers. See [FX verification](padsampler-fx-verification.md) for current automated
+and actual-renderer evidence; physical trigger, Logic listening/session recall
+and measured latency remain separate release checks.

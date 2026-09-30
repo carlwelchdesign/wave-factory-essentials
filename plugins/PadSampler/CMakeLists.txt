@@ -12,7 +12,7 @@ if(BUILD_TESTING)
 endif()
 if(WFE_BUILD_PLUGINS)
   iplug_add_plugin(PadSampler
-    SOURCES PadSampler.cpp PadSampler.h SamplerEngine.h IPlugFilter.h SampleLibrary.h SampleLoader.h AppleSampleLoader.cpp resources/resource.h
+    SOURCES PadSampler.cpp PadSampler.h SamplerEngine.h PadFX.h FxDSP.h IPlugFilter.h SampleLibrary.h SampleLoader.h AppleSampleLoader.cpp resources/resource.h
     RESOURCES resources/img/precision-satin.png resources/img/precision-satin@2x.png
     FORMATS APP AU VST3)
   foreach(format app au vst3)

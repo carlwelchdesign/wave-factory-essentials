@@ -29,7 +29,16 @@ class PadSampler final : public iplug::Plugin {
   void UndoCurve(bool redo);
   void CurvePreset(int preset);
   void ToggleClipMode();
-  bool ClipMode() const { return clipMode_; }
+  bool ClipMode() const { return inspectorMode_==1; }
+  int InspectorMode() const { return inspectorMode_; }
+  void SetInspectorMode(int mode);
+  padsampler::FxChain FXChain(int slot) const {return fxChains_.Snapshot()[slot];}
+  int SelectedFX() const {return fxSelected_[selected_];}
+  void AddFX(padsampler::FxType type);
+  void RemoveFX();
+  void MoveFX(int direction);
+  void SelectFX(int position);
+  void ToggleFXBypass(int position);
   padsampler::ClipTrim Clip() const { return clipPreview_ ? *clipPreview_ : view_.slots[selected_].clip; }
   void PreviewClip(padsampler::ClipTrim clip) { clipPreview_ = clip; if (GetUI()) GetUI()->SetAllControlsDirty(); }
   void CancelClipPreview() { clipPreview_.reset(); if (GetUI()) GetUI()->SetAllControlsDirty(); }
@@ -61,12 +70,16 @@ class PadSampler final : public iplug::Plugin {
   void ChooseKit(bool save);
   padsampler::CurveExchange curves_;
   padsampler::CurveExchange::Bank audioCurves_{};
+  padsampler::FxChainExchange fxChains_;
+  padsampler::FxChainExchange::Bank audioFX_{};
   std::array<padsampler::CurveHistory, 6> histories_{};
   std::array<padsampler::ClipHistory, 6> clipHistories_{};
   std::optional<padsampler::ClipTrim> clipPreview_;
-  bool clipMode_ = false;
+  int inspectorMode_ = 0;
+  std::array<int,6> fxSelected_{};
   unsigned clipEpoch_ = 0;
-  std::vector<iplug::igraphics::IControl*> toneControls_, clipControls_;
+  std::vector<iplug::igraphics::IControl*> toneControls_, clipControls_, fxControls_;
+  std::array<std::vector<iplug::igraphics::IControl*>,padsampler::kFxTypes> fxFields_{};
   void SyncClipMode();
   std::atomic<bool> resetHistories_{false};
   std::atomic<unsigned> curveEpoch_{0};

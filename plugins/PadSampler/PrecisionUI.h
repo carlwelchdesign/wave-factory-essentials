@@ -41,6 +41,13 @@ class Action : public IControl {
   bool OnKeyDown(float,float,const IKeyPress& k) override {if(p_.Focused()!=this)return false; if((k.VK==13 || k.VK==32) && enabled_()) { action_(); SetDirty(false); return true; } return false; }
  private: PadSampler& p_; std::function<std::string()> label_; std::function<void()> action_; std::function<bool()> enabled_; bool down_=false;
 };
+class NumberField : public IVNumberBoxControl {
+ public:
+  NumberField(IRECT r,int param,const char* label,const IVStyle& style,PadSampler& pad,const char* format)
+    :IVNumberBoxControl(r,param,nullptr,label,style,true,50.,1.,100.,format),pad_(pad){}
+  void OnMouseDown(float x,float y,const IMouseMod& mod) override {pad_.Focus(this);IVNumberBoxControl::OnMouseDown(x,y,mod);}
+ private:PadSampler& pad_;
+};
 class Name : public IEditableTextControl {
  public:
   Name(IRECT r,PadSampler& p,std::function<void(const std::string&)> edit): IEditableTextControl(r,"",IText(19,ink)),p_(p),edit_(edit) {}
@@ -76,6 +83,7 @@ class Pad : public IControl {
     }
     std::string status=s.status=="Drop WAV / AIFF or choose Load"?"Empty":s.status;
     FittedText(g,IText(10,IColor(255,193,205,219),nullptr,EAlign::Near),status,IRECT(inner.L+9,inner.B-26,inner.R-62,inner.B-5));
+    auto chain=p_.FXChain(slot_);if(chain.count)g.DrawText(IText(10,IColor(255,106,184,255)),("FX "+std::to_string(chain.count)).c_str(),IRECT(inner.R-105,inner.B-26,inner.R-65,inner.B-5));
     if(selected) g.DrawText(IText(10,IColor(255,106,184,255)),"Selected",IRECT(inner.R-66,inner.B-26,inner.R-4,inner.B-5));
   }
   void OnMouseDown(float,float,const IMouseMod&) override { p_.Focus(this); p_.Select(slot_); p_.Audition(slot_); }
@@ -253,7 +261,7 @@ class Help : public IControl {
     g.FillRect(IColor(125,22,30,42),mRECT);
     g.FillRoundRect(white,r,9);g.DrawRoundRect(blue,r,9,nullptr,2);
     g.DrawText(IText(24,ink),"PADSAMPLER / PRECISION",r.GetFromTop(60));
-    const char* lines[]={"Drop WAV / AIFF onto a pad. Click or press Space to audition.","Use MIDI Learn, then strike the hardware pad. Click again to cancel.","Standalone Settings selects audio / MIDI. In a plugin, use host routing.","Soft and Hard brightness set the low-pass cutoff range.","TONE: double-click the graph to add a point; drag to shape it.","Select a point: arrows move, Shift makes fine edits, Delete removes.","Endpoints stay fixed; brightness never decreases with velocity.","Tone presets replace one curve; its Undo / Redo remembers 32 edits.","Legacy exponent automation applies only while the curve says Legacy.","The first point edit converts Legacy; Undo can restore it.","CLIP: drag start/end handles or enter times in seconds below.","Space swaps handles; arrows move 10 ms, Shift+arrows one frame.","Reset Length restores the full source; clip Undo / Redo is separate.","Clip edits affect next hits; ringing voices keep their original range.","Missing samples show saved trim; relink before editing the clip.","Tab moves focus. Enter edits fields. Motion toggles hit flashes.","Save Kit collects full audio, including excluded regions, for later edits."};
+    const char* lines[]={"Drop WAV / AIFF onto a pad. Click or press Space to audition.","Use MIDI Learn, then strike the hardware pad. Click again to cancel.","Standalone Settings selects audio / MIDI. In a plugin, use host routing.","TONE: Soft and Hard brightness set the low-pass cutoff range.","Double-click the graph to add a point; drag to shape it.","Arrows move selected points; Delete removes interior points.","Endpoints stay fixed; brightness never decreases with velocity.","Tone presets replace one curve; Undo / Redo remembers 32 edits.","Legacy exponent automation applies only in Legacy curve mode.","CLIP: drag start/end handles or enter times in seconds below.","Space swaps handles; arrows move 10 ms, Shift+arrows one frame.","Reset Length restores the full source; clip history is separate.","FX: add up to three distinct effects per pad; order is top to bottom.","Select, move, bypass, or remove rack entries with their row buttons.","Removed FX retain their settings; controls are host-automatable.","Tab moves focus. Enter edits fields. Motion toggles hit flashes.","Save Kit collects full audio, including excluded regions, for later edits."};
     for(int i=0;i<17;++i)g.DrawText(IText(13,ink,nullptr,EAlign::Near),lines[i],IRECT(r.L+24,r.T+62+i*25,r.R-24,r.T+84+i*25));
     g.DrawText(IText(17,blue),"Close · Escape",r.GetFromBottom(52));
   }
