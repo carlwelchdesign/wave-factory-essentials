@@ -65,6 +65,12 @@ jobs:
               validator.chmod(0o755)
           print(f'Validator startup check: {validator}', flush=True)
           subprocess.run([str(validator), '--version'], check=True, timeout=30)
+          def run_validator(arguments, log_path):
+              # Explicit pipes preserve Windows GUI-subsystem executable output.
+              result = subprocess.run(arguments, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace', timeout=180)
+              log_path.write_text(result.stdout, encoding='utf-8')
+              print(result.stdout, flush=True)
+              result.check_returncode()
           for manifest in sorted((root / 'plugins/generated').glob('*/starter-manifest.json')):
               name = manifest.parent.name
               bundle = root / 'build/starter/out' / ('Release' if mac else '') / (name + '.vst3')
@@ -73,7 +79,7 @@ jobs:
               logs = root / 'build/validation-logs' / name
               logs.mkdir(parents=True, exist_ok=True)
               print(f'Validating {bundle}; logs: {logs}', flush=True)
-              subprocess.run([str(validator), '--verbose', '--output-dir', str(logs), '--strictness-level', '5', '--random-seed', '12345', '--timeout-ms', '30000', '--validate', str(bundle)], check=True, timeout=180)
+              run_validator([str(validator), '--verbose', '--output-dir', str(logs), '--strictness-level', '5', '--random-seed', '12345', '--timeout-ms', '30000', '--validate', str(bundle)], logs / 'console.txt')
           PYCODE
       - name: Retain validator diagnostics
         if: always()
