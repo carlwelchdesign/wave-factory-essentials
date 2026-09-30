@@ -34,7 +34,9 @@ IDs, kit/state format, setup, dependency choices and build commands.
 - The standalone window was opened and captured in the real renderer. Six-slot
   geometry, controls, and readable layout were observed. A synthetic WAV was loaded
   through the native file picker, with filename, waveform and Ready status verified.
-  This does not establish physical performance or listening quality.
+  An actual macOS file drag also loaded a second slot; Help opened and Escape
+  dismissed it with the pointer outside the panel. This does not establish
+  physical performance or listening quality.
 - System USB inspection did not find the SamplePad, and CoreMIDI listed zero input
   sources at the local checkpoint. Physical independence cannot yet be claimed.
 
@@ -73,3 +75,10 @@ and Logic/listening acceptance remain release gates. No Windows product, CLAP pr
 velocity layers, round-robin, hardware firmware changes or SD-card export are included.
 Production integration follows working branch → reviewed release branch → verified
 release → main. A review PR or green CI is not a production release.
+
+## Integration correction
+
+Windows starter run 36671995680 exposed a pre-existing parallel-link race: VST3
+and CLAP emitted the same product `.lib`/`.exp` paths and MSVC reported LNK1104.
+The starter now gives each format its own archive-output directory. Parallel builds
+remain enabled in CI as the regression reproducer; deployed bundle names are unchanged.

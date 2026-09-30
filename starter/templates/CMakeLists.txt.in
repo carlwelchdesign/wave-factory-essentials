@@ -34,6 +34,9 @@ if(WFE_BUILD_PLUGINS)
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/main.rc" "${rc_text}")
     foreach(format vst3 clap)
       target_sources(@internal_name@-${format} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/main.rc")
+      # MSVC emits same-named .lib/.exp files for both formats; isolate concurrent links.
+      set_target_properties(@internal_name@-${format} PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${format}-import")
     endforeach()
   endif()
   foreach(format au vst3 clap)
