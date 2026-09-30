@@ -71,3 +71,23 @@ The first Windows CI run exposed a test assumption that POSIX execute bits exist
 Windows. The permanent archive test now checks preservation of the recorded source mode:
 0755 on POSIX, Windows' actual mode there. This preserves the executable-bit contract on
 macOS without imposing Unix filesystem semantics on Windows.
+
+## Windows editor CI investigation
+
+Run 36649510818 at `f2409ef` reproduces a Windows access violation specifically in
+pluginval's Editor test, after discovery and cold/warm loading pass. Explicit stdout
+pipes retain the last test message even when pluginval's buffered file log is lost.
+The same workflow passes on macOS.
+
+Windows CI now provisions pinned Mesa 26.2.3 llvmpipe beside pluginval to provide
+OpenGL for the NanoVG editor on the hosted runner. The archive is SHA-256 verified;
+only the two OpenGL runtime DLLs are extracted into the test-host directory, never
+into a plugin bundle or tester ZIP. Strictness 5 and GUI/state tests remain enabled.
+The unchanged editor test is the regression reproducer; the next CI run must pass
+before this change is considered verified. Physical Windows DAW/GPU coverage remains
+a separate acceptance gate.
+
+Reuse decision: use the existing Mesa Windows runtime and its documented per-application
+deployment instead of replacing the product renderer or writing a custom test host.
+References: [Mesa Windows distribution](https://github.com/pal1000/mesa-dist-win),
+[per-application CI setup](https://github.com/f3d-app/install-mesa-windows-action/blob/main/action.yml).
