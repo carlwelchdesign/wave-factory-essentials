@@ -66,6 +66,14 @@ class Pad : public IControl {
     FittedText(g,IText(12,white,nullptr,EAlign::Near),filename,IRECT(inner.L+9,inner.T+34,inner.R-6,inner.T+54));
     auto wave=IRECT(inner.L+10,inner.T+59,inner.R-10,inner.B-29);
     for(int i=0;i<128;++i) { float x=wave.L+wave.W()*i/127.f,h=std::min(1.f,s.waveform[i])*wave.H()*.45f; g.DrawLine(selected?IColor(255,110,184,255):IColor(255,187,203,220),x,wave.MH()-h,x,wave.MH()+h,nullptr,1); }
+    if(s.frames>=2 && s.rate>0) {
+      const auto clip=selected?p_.Clip():s.clip;
+      const auto range=padsampler::ResolveTrim(clip,s.rate,s.frames);
+      const float left=wave.L+wave.W()*range.start/float(s.frames),right=wave.L+wave.W()*range.end/float(s.frames);
+      if(left>wave.L)g.FillRect(IColor(170,12,18,27),IRECT(wave.L,wave.T,left,wave.B));
+      if(right<wave.R)g.FillRect(IColor(170,12,18,27),IRECT(right,wave.T,wave.R,wave.B));
+      g.DrawLine(blue,left,wave.T,left,wave.B);g.DrawLine(blue,right,wave.T,right,wave.B);
+    }
     std::string status=s.status=="Drop WAV / AIFF or choose Load"?"Empty":s.status;
     FittedText(g,IText(10,IColor(255,193,205,219),nullptr,EAlign::Near),status,IRECT(inner.L+9,inner.B-26,inner.R-62,inner.B-5));
     if(selected) g.DrawText(IText(10,IColor(255,106,184,255)),"Selected",IRECT(inner.R-66,inner.B-26,inner.R-4,inner.B-5));
@@ -75,6 +83,90 @@ class Pad : public IControl {
   void OnDrop(const char* path) override {p_.Select(slot_);p_.Load(slot_,path);}
   void OnDropMultiple(const std::vector<const char*>& paths) override { if(paths.size()==1) OnDrop(paths[0]); else p_.Message("Drop one WAV or AIFF per pad"); }
  private: PadSampler& p_;int slot_;
+};
+class ClipGraph : public IControl {
+ public:
+  ClipGraph(IRECT r,PadSampler& p):IControl(r),p_(p) {}
+  IRECT Plot() const {return IRECT(mRECT.L+12,mRECT.T+23,mRECT.R-12,mRECT.B-23);}
+  void Draw(IGraphics& g) override {
+    auto s=p_.View().slots[p_.Selected()]; auto plot=Plot();g.FillRoundRect(dark,mRECT,5);
+    g.DrawText(IText(10,white,nullptr,EAlign::Near),s.ready?"CLIP LENGTH · DRAG BLUE HANDLES":"CLIP LENGTH · RELINK TO EDIT",mRECT.GetPadded(-9).GetFromTop(18));
+    if(s.frames<2 || s.rate<=0) {
+      std::string saved="Saved start "+Number(p_.Clip().start,"%.3f")+" s · end "+(p_.Clip().end?Number(*p_.Clip().end,"%.3f")+" s":"full sample");
+      g.DrawText(IText(12,white),saved.c_str(),plot);return;
+    }
+    auto range=padsampler::ResolveTrim(p_.Clip(),s.rate,s.frames);
+    float a=plot.L+plot.W()*range.start/float(s.frames),b=plot.L+plot.W()*range.end/float(s.frames);
+    g.FillRect(IColor(255,27,39,52),plot);
+    for(int i=0;i<128;++i){float x=plot.L+plot.W()*i/127.f,h=std::min(1.f,s.waveform[i])*plot.H()*.43f;g.DrawLine(IColor(255,135,188,236),x,plot.MH()-h,x,plot.MH()+h);}
+    if(a>plot.L)g.FillRect(IColor(190,11,16,23),IRECT(plot.L,plot.T,a,plot.B));
+    if(b<plot.R)g.FillRect(IColor(190,11,16,23),IRECT(b,plot.T,plot.R,plot.B));
+    g.DrawLine(blue,a,plot.T-3,a,plot.B+3,nullptr,2);g.DrawLine(blue,b,plot.T-3,b,plot.B+3,nullptr,2);
+    g.FillCircle(handle_==0?white:blue,a,plot.MH(),4);g.FillCircle(handle_==1?white:blue,b,plot.MH(),4);
+    g.DrawText(IText(10,white,nullptr,EAlign::Near),"START",IRECT(plot.L,plot.B+4,plot.L+75,mRECT.B));
+    g.DrawText(IText(10,white,nullptr,EAlign::Far),"END",IRECT(plot.R-75,plot.B+4,plot.R,mRECT.B));
+    if(p_.Focused()==this)g.DrawRoundRect(blue,mRECT.GetPadded(-2),4,nullptr,1);
+  }
+  void OnMouseDown(float x,float,const IMouseMod&) override {
+    p_.Focus(this);auto s=p_.View().slots[p_.Selected()];if(!s.ready || s.frames<2)return;
+    before_=p_.Clip();epoch_=p_.ClipEpoch();auto r=padsampler::ResolveTrim(before_,s.rate,s.frames);auto plot=Plot();
+    float a=plot.L+plot.W()*r.start/float(s.frames),b=plot.L+plot.W()*r.end/float(s.frames);
+    handle_=std::abs(x-a)<=std::abs(x-b)?0:1;dragging_=true;SetDirty(false);
+  }
+  void OnMouseDrag(float x,float,float,float,const IMouseMod&) override {
+    if(!dragging_ || epoch_!=p_.ClipEpoch()){dragging_=false;return;}auto s=p_.View().slots[p_.Selected()];if(!s.ready)return;
+    auto r=padsampler::ResolveTrim(p_.Clip(),s.rate,s.frames);auto plot=Plot();
+    auto frame=std::clamp<int64_t>(std::llround((x-plot.L)*s.frames/plot.W()),0,int64_t(s.frames));
+    if(handle_==0)r.start=uint32_t(std::min<int64_t>(frame,int64_t(r.end)-2));
+    else r.end=uint32_t(std::max<int64_t>(frame,int64_t(r.start)+2));
+    p_.PreviewClip(padsampler::FramesToTrim(r.start,r.end,s.rate,s.frames));
+  }
+  void OnMouseUp(float,float,const IMouseMod&) override {if(dragging_ && epoch_==p_.ClipEpoch())p_.CommitClip(before_);dragging_=false;}
+  bool OnKeyDown(float,float,const IKeyPress& k) override {
+    if(p_.Focused()!=this)return false;
+    if(k.VK==32){handle_=1-handle_;SetDirty(false);return true;}
+    if(k.VK==27 && dragging_){p_.CancelClipPreview();dragging_=false;return true;}
+    if(k.VK!=37 && k.VK!=39 && k.VK!=38 && k.VK!=40)return false;
+    auto s=p_.View().slots[p_.Selected()];if(!s.ready || s.frames<2)return true;
+    auto before=p_.Clip();auto r=padsampler::ResolveTrim(before,s.rate,s.frames);
+    int64_t delta=k.S?1:std::max<int64_t>(1,std::llround(.01*s.rate));
+    if(k.VK==37 || k.VK==40)delta=-delta;
+    if(handle_==0)r.start=uint32_t(std::clamp<int64_t>(int64_t(r.start)+delta,0,int64_t(r.end)-2));
+    else r.end=uint32_t(std::clamp<int64_t>(int64_t(r.end)+delta,int64_t(r.start)+2,int64_t(s.frames)));
+    p_.PreviewClip(padsampler::FramesToTrim(r.start,r.end,s.rate,s.frames));p_.CommitClip(before);return true;
+  }
+ private:PadSampler& p_;padsampler::ClipTrim before_;bool dragging_=false;int handle_=0;unsigned epoch_=0;
+};
+class ClipField : public IControl {
+ public:
+  ClipField(IRECT r,PadSampler& p,bool end):IControl(r),p_(p),end_(end) {}
+  void Draw(IGraphics& g) override {
+    auto s=p_.View().slots[p_.Selected()];auto clip=p_.Clip();double value=end_?(clip.end?*clip.end:(s.rate>0?s.frames/s.rate:0.)):clip.start;
+    std::string label=end_ && !s.ready && !clip.end?"End Full":std::string(end_?"End ":"Start ")+Number(value,"%.3f")+" s";
+    Metal(g,mRECT);g.DrawText(IText(11,s.ready?ink:muted),label.c_str(),mRECT);
+  }
+  void Edit(){auto s=p_.View().slots[p_.Selected()];if(!s.ready){p_.Message("Relink this sample before editing its clip");return;}editingSlot_=p_.Selected();editingGeneration_=s.generation;auto clip=p_.Clip();double value=end_?(clip.end?*clip.end:s.frames/s.rate):clip.start;GetUI()->CreateTextEntry(*this,IText(13,ink),mRECT,Number(value,"%.3f").c_str());}
+  void OnMouseDown(float,float,const IMouseMod&)override{p_.Focus(this);Edit();}
+  bool OnKeyDown(float,float,const IKeyPress& k)override{if(p_.Focused()!=this)return false;if(k.VK==13){Edit();return true;}if(k.VK!=37 && k.VK!=39 && k.VK!=38 && k.VK!=40)return false;
+    auto s=p_.View().slots[p_.Selected()];if(!s.ready)return true;auto before=p_.Clip();auto r=padsampler::ResolveTrim(before,s.rate,s.frames);int64_t delta=k.S?1:std::max<int64_t>(1,std::llround(.01*s.rate));if(k.VK==37 || k.VK==40)delta=-delta;
+    if(end_)r.end=uint32_t(std::clamp<int64_t>(int64_t(r.end)+delta,int64_t(r.start)+2,int64_t(s.frames)));
+    else r.start=uint32_t(std::clamp<int64_t>(int64_t(r.start)+delta,0,int64_t(r.end)-2));
+    p_.PreviewClip(padsampler::FramesToTrim(r.start,r.end,s.rate,s.frames));p_.CommitClip(before);return true;
+  }
+  void OnTextEntryCompletion(const char* str,int)override{
+    if(editingSlot_!=p_.Selected() || editingGeneration_!=p_.View().slots[p_.Selected()].generation)return;
+    char* tail=nullptr;double value=std::strtod(str,&tail);if(tail==str || *tail || !std::isfinite(value)){p_.Message("Enter a finite clip time in seconds");return;}
+    auto s=p_.View().slots[p_.Selected()];if(!s.ready)return;auto before=p_.Clip();auto r=padsampler::ResolveTrim(before,s.rate,s.frames);
+    if(value<0 || value>s.frames/s.rate){p_.Message("Clip time is outside this sample");return;}int64_t frame=std::llround(value*s.rate);
+    if(end_){if(frame<int64_t(r.start)+2){p_.Message("Clip must contain at least two frames");return;}r.end=uint32_t(frame);}
+    else{if(frame>int64_t(r.end)-2){p_.Message("Clip must contain at least two frames");return;}r.start=uint32_t(frame);}
+    p_.PreviewClip(padsampler::FramesToTrim(r.start,r.end,s.rate,s.frames));p_.CommitClip(before);
+  }
+ private:PadSampler& p_;bool end_;int editingSlot_=-1;uint64_t editingGeneration_=0;
+};
+class ClipLength : public IControl {
+ public:ClipLength(IRECT r,PadSampler& p):IControl(r),p_(p){SetIgnoreMouse(true);}void Draw(IGraphics& g)override{auto s=p_.View().slots[p_.Selected()];std::string label="Length —";if(s.ready && s.rate>0){auto r=padsampler::ResolveTrim(p_.Clip(),s.rate,s.frames);label="Length "+Number((r.end-r.start)/s.rate,"%.3f")+" s";}g.DrawText(IText(11,blue),label.c_str(),mRECT);}
+ private:PadSampler& p_;
 };
 class Graph : public IControl {
  public:
@@ -161,8 +253,8 @@ class Help : public IControl {
     g.FillRect(IColor(125,22,30,42),mRECT);
     g.FillRoundRect(white,r,9);g.DrawRoundRect(blue,r,9,nullptr,2);
     g.DrawText(IText(24,ink),"PADSAMPLER / PRECISION",r.GetFromTop(60));
-    const char* lines[]={"Drop WAV / AIFF onto a pad. Click or press Space to audition.","Use MIDI Learn, then strike the hardware pad. Click again to cancel.","Standalone Settings selects audio / MIDI. In a plugin, use host routing.","Soft and Hard brightness set the low-pass cutoff range.","Double-click the graph to add a point. Drag to shape the response.","Select a point: arrows move, Shift makes fine edits, Delete removes.","Endpoints are fixed. Curves rise monotonically; flat sections are allowed.","Presets replace this pad's curve. Undo / Redo remembers 32 edits.","Curve edits affect NEXT hits; already ringing samples stay unchanged.","Curves save in kits / sessions, but points are not DAW automation.","Legacy exponent automation applies only while the curve says Legacy.","The first point edit converts legacy mode. Undo restores it.","Bypass compares tone; Velocity Volume controls loudness separately.","Tab moves focus. Enter edits numeric fields. Motion toggles hit flashes.","Open Kit selects kit.json. Save Kit collects samples; relink missing files."};
-    for(int i=0;i<15;++i)g.DrawText(IText(14,ink,nullptr,EAlign::Near),lines[i],IRECT(r.L+24,r.T+65+i*26,r.R-24,r.T+89+i*26));
+    const char* lines[]={"Drop WAV / AIFF onto a pad. Click or press Space to audition.","Use MIDI Learn, then strike the hardware pad. Click again to cancel.","Standalone Settings selects audio / MIDI. In a plugin, use host routing.","Soft and Hard brightness set the low-pass cutoff range.","TONE: double-click the graph to add a point; drag to shape it.","Select a point: arrows move, Shift makes fine edits, Delete removes.","Endpoints stay fixed; brightness never decreases with velocity.","Tone presets replace one curve; its Undo / Redo remembers 32 edits.","Legacy exponent automation applies only while the curve says Legacy.","The first point edit converts Legacy; Undo can restore it.","CLIP: drag start/end handles or enter times in seconds below.","Space swaps handles; arrows move 10 ms, Shift+arrows one frame.","Reset Length restores the full source; clip Undo / Redo is separate.","Clip edits affect next hits; ringing voices keep their original range.","Missing samples show saved trim; relink before editing the clip.","Tab moves focus. Enter edits fields. Motion toggles hit flashes.","Save Kit collects full audio, including excluded regions, for later edits."};
+    for(int i=0;i<17;++i)g.DrawText(IText(13,ink,nullptr,EAlign::Near),lines[i],IRECT(r.L+24,r.T+62+i*25,r.R-24,r.T+84+i*25));
     g.DrawText(IText(17,blue),"Close · Escape",r.GetFromBottom(52));
   }
   void OnMouseDown(float x,float y,const IMouseMod&) override {if(IRECT(90,600,890,660).Contains(x,y)){Hide(true);GetUI()->SetAllControlsDirty();}}

@@ -30,9 +30,11 @@ double Energy(int velocity, bool bypass) {
   double energy = 0; for (int i = 256; i < 4096; ++i) energy += l[i] * l[i]; return energy;
 }
 #include "curve_tests.h"
+#include "clip_tests.h"
 int main() {
   try {
     TestToneCurves();
+    TestClipTrim();
     Settings settings;
     double previous = 0;
     for (int v = 1; v <= 127; ++v) { double f = Cutoff(settings, v, 22050); Require(f >= previous && f <= 22050 * .45 + .001, "cutoff must increase and remain below Nyquist"); previous = f; }
@@ -111,9 +113,16 @@ int main() {
       auto wait = [&](auto predicate) { for(int i=0;i<500;++i) { double l[64]{},r[64]{}; e.Process(l,r,64); if(predicate()) return; std::this_thread::sleep_for(std::chrono::milliseconds(5)); } throw std::runtime_error("library operation timed out"); };
       library.Load(0,(directory/"source.wav").string());
       wait([&] { return library.View().slots[0].status.find("Ready") == 0; });
+      Require(library.SetTrim(0,{.02,.08}),"loaded sample accepts frame-bounded trim");
+      Require(DocumentTrim(library.Document(std::vector<double>(kParameterCount,0.)),0)==ClipTrim{.02,.08},"immediate session save captures committed clip");
       library.Load(0,(directory/"missing.wav").string());
       wait([&] { return library.View().slots[0].status.find("Cannot open") == 0; });
       Require(library.View().slots[0].path == (directory/"source.wav").string(),"failed replacement preserves previous sample");
+      Require(library.View().slots[0].clip==ClipTrim{.02,.08},"failed replacement preserves trim");
+      library.Load(0,(directory/"source.wav").string());
+      wait([&] { return library.View().slots[0].status.find("Ready") == 0; });
+      Require(library.View().slots[0].clip==ClipTrim{},"successful new drop resets trim to full source");
+      Require(library.SetTrim(0,{.02,.08}),"trim can be set after replacement");
       std::vector<double> params(kParameterCount,0.);
       CurveExchange::Bank kitCurves; kitCurves[4]=ToneShape::Preset(3);
       library.SaveKit((directory/"portable.padkit").string(),params,kitCurves);
@@ -125,6 +134,16 @@ int main() {
       Require(library.View().slots[0].path == (directory/"moved.padkit/Samples/slot-1.wav").string(),"moved kit resolves relative sample paths");
       Require(restored["parameters"].size()==kParameterCount,"kit restores all parameters");
       Require(DocumentCurves(restored)[4]==kitCurves[4],"moved kit preserves custom tone configuration");
+      Require(DocumentTrim(restored,0)==ClipTrim{.02,.08},"moved kit preserves clip times");
+      Require(library.View().slots[0].clip==ClipTrim{.02,.08},"moved kit reapplies clip to full collected sample");
+      std::filesystem::remove(directory/"moved.padkit/Samples/slot-1.wav");
+      library.OpenKit((directory/"moved.padkit/kit.json").string());
+      wait([&] {return library.View().slots[0].status.find("Cannot open")==0;});
+      Require(library.View().slots[0].clip==ClipTrim{.02,.08} && !library.View().slots[0].ready,"missing file retains trim and disables editing");
+      Sample shorter;Fill(shorter,200.,1200);loader->WriteWave((directory/"short.wav").string(),shorter);
+      library.Load(0,(directory/"short.wav").string());
+      wait([&]{return library.View().slots[0].status.find("Ready")==0;});
+      Require(library.View().slots[0].clip==ClipTrim{} && library.View().slots[0].status.find("reset")!=std::string::npos,"too-short relink resets trim with warning");
       library.Stop(); e.Shutdown();
     }
     std::filesystem::remove_all(directory);

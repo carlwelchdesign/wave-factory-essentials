@@ -50,10 +50,10 @@ void PadSampler::ProcessBlock(sample**, sample** outputs, int frames) {
   if (NOutChansConnected() >= 2) engine_.Process(outputs[0], outputs[1], frames);
 }
 void PadSampler::Select(int slot) {
-  selected_ = slot; pointSelection = 1;
+  selected_ = slot; pointSelection = 1; clipPreview_.reset(); ++clipEpoch_;
   if (!GetUI()) return;
   for (int i = 0; i < kSlotParams; ++i) if (controls_[i]) { controls_[i]->SetParamIdx(slot * kSlotParams + i); controls_[i]->SetValueFromDelegate(GetParam(slot * kSlotParams + i)->GetNormalized()); }
-  name_->SetStr(view_.slots[slot].name.c_str()); GetUI()->SetAllControlsDirty();
+  name_->SetStr(view_.slots[slot].name.c_str()); SyncClipMode(); GetUI()->SetAllControlsDirty();
 }
 void PadSampler::Audition(int slot) { engine_.auditions[slot].store(GetParam(kAuditionVelocity)->Int()); }
 void PadSampler::Load(int slot, const std::string& path) { library_.Load(slot, path); }
@@ -70,7 +70,7 @@ void PadSampler::ChooseKit(bool save) {
 }
 std::vector<double> PadSampler::Parameters() const { std::vector<double> values; for (int i = 0; i < kParameterCount; ++i) values.push_back(GetParam(i)->Value()); return values; }
 void PadSampler::ApplyParameters(const Json& doc, bool notifyHost) {
-  curves_.Store(DocumentCurves(doc)); curveEpoch_.fetch_add(1); resetHistories_.store(true);
+  curves_.Store(DocumentCurves(doc)); curveEpoch_.fetch_add(1); resetHistories_.store(true); ++clipEpoch_; clipPreview_.reset();
   for (int i = 0; i < kParameterCount; ++i) {
     GetParam(i)->Set(doc["parameters"][i].get<double>());
     if (notifyHost) { BeginInformHostOfParamChangeFromUI(i); SendParameterValueFromUI(i, GetParam(i)->GetNormalized()); EndInformHostOfParamChangeFromUI(i); }
@@ -89,7 +89,7 @@ int PadSampler::UnserializeState(const IByteChunk& chunk, int position) {
   } catch (...) { library_.Message("Cannot restore malformed kit/state; current kit preserved"); return -1; }
 }
 void PadSampler::OnIdle() {
-  if(resetHistories_.exchange(false)) { histories_ = {}; pointSelection = 1; }
+  if(resetHistories_.exchange(false)) { histories_ = {}; clipHistories_ = {}; pointSelection = 1; }
   Json doc; if (library_.TakeReady(doc)) { ApplyParameters(doc, true); if (GetUI()) Select(selected_); }
   int learned = engine_.learned.exchange(-1);
   if (learned >= 0) {
@@ -100,7 +100,11 @@ void PadSampler::OnIdle() {
     Message("MIDI captured: note " + std::to_string(learned & 127));
     if (GetUI()) Select(selected_);
   }
-  view_ = library_.View();
+  auto nextView = library_.View();
+  for(int i=0;i<kSlots;++i) if(nextView.slots[i].status.rfind("Ready",0)==0 && (nextView.slots[i].generation != view_.slots[i].generation || !view_.slots[i].ready)) {
+    clipHistories_[i] = {}; if(i==selected_) {clipPreview_.reset(); ++clipEpoch_;}
+  }
+  view_ = std::move(nextView);
   for (int i = 0; i < kSlots; ++i) { int hit=engine_.hits[i].exchange(0); if(hit) lastHits_[i]=hit; flashes_[i] = reducedMotion_ ? 0.f : std::max(flashes_[i] * .8f, hit / 127.f); }
   if (!GetUI()) return;
   if(controls_[ToneCurve]) controls_[ToneCurve]->SetDisabled(!Shape().legacy);
@@ -131,6 +135,25 @@ void PadSampler::SetShape(const ToneShape& shape) {
 void PadSampler::CommitShape(const ToneShape& before) { auto after=Shape(); histories_[selected_].Commit(before,after); if(!(before==after)) MarkStateChanged(); }
 void PadSampler::UndoCurve(bool redo) {auto c=Shape();if(redo?History().Redo(c):History().Undo(c)){SetShape(c);MarkStateChanged();pointSelection=std::min(pointSelection,c.count-2);}}
 void PadSampler::CurvePreset(int preset) {auto before=Shape();SetShape(ToneShape::Preset(preset));CommitShape(before);pointSelection=1;}
+void PadSampler::SyncClipMode() {
+  for(auto* c:toneControls_) c->Hide(clipMode_);
+  for(auto* c:clipControls_) c->Hide(!clipMode_);
+  if(GetUI()) GetUI()->SetAllControlsDirty();
+}
+void PadSampler::ToggleClipMode() { clipMode_=!clipMode_; clipPreview_.reset(); ++clipEpoch_; SyncClipMode(); }
+bool PadSampler::CommitClip(ClipTrim before) {
+  auto after=Clip(); clipPreview_.reset();
+  if(before==after)return true;
+  if(!library_.SetTrim(selected_,after)) {Message("Clip needs a loaded sample and at least two playable frames");return false;}
+  view_.slots[selected_].clip=library_.View().slots[selected_].clip;
+  clipHistories_[selected_].Commit(before,view_.slots[selected_].clip);
+  MarkStateChanged(); if(GetUI())GetUI()->SetAllControlsDirty();return true;
+}
+void PadSampler::UndoClip(bool redo) {
+  auto clip=Clip(); auto history=ClipEdits(); if(!(redo?history.Redo(clip):history.Undo(clip)))return;
+  if(library_.SetTrim(selected_,clip)){ClipEdits()=history;view_.slots[selected_].clip=library_.View().slots[selected_].clip;clipPreview_.reset();MarkStateChanged();if(GetUI())GetUI()->SetAllControlsDirty();}
+}
+void PadSampler::ResetClip() {auto before=Clip();PreviewClip({});CommitClip(before);}
 double PadSampler::ToneHz(double velocity) const {
   padsampler::Settings s;int p=selected_*kSlotParams;
   s.softHz=GetParam(p+SoftHz)->Value();s.hardHz=GetParam(p+HardHz)->Value();s.curve=Exponent();s.shape=Shape();
@@ -162,7 +185,7 @@ void PadSampler::Settings() {
 }
 void PadSampler::BuildUI(IGraphics* g) {
   using namespace precision;
-  controls_.fill(nullptr); focusOrder_.clear();focus_=nullptr;
+  controls_.fill(nullptr); focusOrder_.clear();toneControls_.clear();clipControls_.clear();focus_=nullptr;
   g->LoadFont(DEFAULT_FONT,"Arial",ETextStyle::Normal);
   g->EnableMouseOver(true);g->AttachTextEntryControl();g->AttachControl(new Backplate(g->GetBounds(),g->LoadBitmap("precision-satin.png")));
   IVStyle style(true,true,{silver,IColor(255,224,231,240),blue,muted,IColor(255,107,170,238),IColor(90,30,40,55),white,blue,ink},IText(12,ink),IText(12,ink),false,true,true,true,.15f,1,2,.8f);
@@ -188,15 +211,24 @@ void PadSampler::BuildUI(IGraphics* g) {
   controls_[HardHz]=attach(new Knob(IRECT(711,328,828,420),HardHz,"Hard brightness",style,*this));
   controls_[ToneBypass]=attach(new IVSwitchControl(IRECT(836,328,954,378),ToneBypass,"Tone bypass",style));
   controls_[ToneCurve]=attach(new IVNumberBoxControl(IRECT(836,381,954,420),ToneCurve,nullptr,"Legacy exponent",style,true));
-  attach(new Presets(IRECT(588,429,756,456),*this));
-  attach(new Action(IRECT(766,429,854,456),*this,[]{return std::string("Undo");},[this]{UndoCurve(false);},[this]{return History().nUndo>0;}));
-  attach(new Action(IRECT(864,429,954,456),*this,[]{return std::string("Redo");},[this]{UndoCurve(true);},[this]{return History().nRedo>0;}));
-  attach(new Graph(IRECT(588,464,954,578),*this));
-  attach(new PointField(IRECT(588,585,704,613),*this,true));
-  attach(new PointField(IRECT(713,585,829,613),*this,false));
+  toneControls_.push_back(attach(new Presets(IRECT(588,429,704,456),*this)));
+  toneControls_.push_back(attach(new Action(IRECT(711,429,767,456),*this,[]{return std::string("Undo");},[this]{UndoCurve(false);},[this]{return History().nUndo>0;})));
+  toneControls_.push_back(attach(new Action(IRECT(774,429,830,456),*this,[]{return std::string("Redo");},[this]{UndoCurve(true);},[this]{return History().nRedo>0;})));
+  clipControls_.push_back(attach(new Action(IRECT(588,429,704,456),*this,[]{return std::string("Reset Length");},[this]{ResetClip();},[this]{return view_.slots[selected_].ready && !(Clip()==padsampler::ClipTrim{});} )));
+  clipControls_.push_back(attach(new Action(IRECT(711,429,767,456),*this,[]{return std::string("Undo");},[this]{UndoClip(false);},[this]{return ClipEdits().nUndo>0 && view_.slots[selected_].ready;})));
+  clipControls_.push_back(attach(new Action(IRECT(774,429,830,456),*this,[]{return std::string("Redo");},[this]{UndoClip(true);},[this]{return ClipEdits().nRedo>0 && view_.slots[selected_].ready;})));
+  attach(new Action(IRECT(837,429,954,456),*this,[this]{return clipMode_?std::string("CLIP → TONE"):std::string("TONE → CLIP");},[this]{ToggleClipMode();}));
+  toneControls_.push_back(attach(new Graph(IRECT(588,464,954,578),*this)));
+  clipControls_.push_back(attach(new ClipGraph(IRECT(588,464,954,578),*this)));
+  toneControls_.push_back(attach(new PointField(IRECT(588,585,704,613),*this,true)));
+  toneControls_.push_back(attach(new PointField(IRECT(713,585,829,613),*this,false)));
+  clipControls_.push_back(attach(new ClipField(IRECT(588,585,704,613),*this,false)));
+  clipControls_.push_back(attach(new ClipField(IRECT(713,585,829,613),*this,true)));
   class CutoffReadout : public IControl {PadSampler& p_;public:CutoffReadout(IRECT r,PadSampler& p):IControl(r),p_(p){SetIgnoreMouse(true);}void Draw(IGraphics& g)override{auto c=p_.Shape();c.Materialize(p_.Exponent());int i=std::clamp(p_.pointSelection,0,c.count-1);g.DrawText(IText(12,precision::blue),(precision::Number(p_.ToneHz(c.points[i].x*127)/1000.,"%.2f")+" kHz").c_str(),mRECT);}};
-  g->AttachControl(new CutoffReadout(IRECT(836,585,954,613),*this));
-  g->AttachControl(new ITextControl(IRECT(585,617,960,637),"Double-click adds · drag edits · Delete removes",IText(10,muted)));
+  auto* cutoff=new CutoffReadout(IRECT(836,585,954,613),*this);g->AttachControl(cutoff);toneControls_.push_back(cutoff);
+  auto* clipLength=new ClipLength(IRECT(836,585,954,613),*this);g->AttachControl(clipLength);clipControls_.push_back(clipLength);
+  auto* toneHint=new ITextControl(IRECT(585,617,960,637),"Double-click adds · drag edits · Delete removes",IText(10,muted));g->AttachControl(toneHint);toneControls_.push_back(toneHint);
+  auto* clipHint=new ITextControl(IRECT(585,617,960,637),"Space swaps handles · arrows 10 ms · Shift+arrows 1 frame",IText(10,muted));g->AttachControl(clipHint);clipControls_.push_back(clipHint);
   attach(new IVNumberBoxControl(IRECT(22,652,222,701),kAuditionVelocity,nullptr,"Audition velocity",style,true));
   button(IRECT(240,661,342,696),"Stop All",[this]{StopAll();});
   attach(new IVNumberBoxControl(IRECT(738,652,860,701),kMaster,nullptr,"Master · dB",style,true));
