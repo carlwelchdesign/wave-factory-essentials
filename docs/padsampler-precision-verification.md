@@ -25,6 +25,15 @@ This is a screenshot of the current standalone build, not a generated concept.
 - Tester packaging checks both material resources, universal architectures, signatures
   and ZIP CRC. Tester binaries are ad-hoc signed, not notarized.
 
+The final consolidated native harness also passes end to end in
+`build/evidence/padsampler/precision-ui-all/result.txt`. Standalone Settings opens
+the existing Preferences dialog and cancels cleanly.
+
+CI exposed a macOS AU registration race after installation. The validator wrapper
+retries only the exact component-not-found result, retains every attempt, and fails
+immediately on actual validation errors. Three regression cases cover delayed
+registration, permanent absence and non-retryable validation failure.
+
 Local evidence is under `build/evidence/padsampler/precision-*`. CI produces fresh
 head-specific validation and tester artifacts; consult the PR checks for their status.
 

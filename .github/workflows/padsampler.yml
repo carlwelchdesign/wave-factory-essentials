@@ -7,6 +7,8 @@ on:
       - 'plugins/shared/**'
       - 'CMakeLists.txt'
       - 'scripts/package-padsampler.py'
+      - 'scripts/validate-padsampler-au.py'
+      - 'scripts/test-validate-padsampler-au.py'
       - '.github/workflows/padsampler.yml'
 jobs:
   macos-instrument:
@@ -41,8 +43,8 @@ jobs:
           done
           ditto build/padsampler/out/Release/PadSampler.component "$HOME/Library/Audio/Plug-Ins/Components/PadSampler.component"
           trap 'rm -rf "$HOME/Library/Audio/Plug-Ins/Components/PadSampler.component"' EXIT
-          sleep 5 # Allow AudioComponentRegistrar to discover the newly installed AU.
-          auval -v aumu WfP6 WvFy 2>&1 | tee build/validation-logs/auval.txt
+          python scripts/test-validate-padsampler-au.py
+          python scripts/validate-padsampler-au.py --log build/validation-logs/auval.txt
           curl --fail --location --retry 2 https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_macOS.zip -o build/tools/pluginval.zip
           ditto -x -k build/tools/pluginval.zip build/tools
           chmod +x build/tools/pluginval.app/Contents/MacOS/pluginval
