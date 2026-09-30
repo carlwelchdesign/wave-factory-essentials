@@ -77,3 +77,29 @@ quality or round-trip latency. Verify all six hardware sources and their velocit
 ranges with the real splitter. If Tip/Ring produce the same MIDI events, software
 cannot distinguish them. Logic session recall, actual file-drop interactions, live
 rolls and device/buffer latency need the recorded host checklist in docs/padsampler.md.
+
+## Precision interface and editable curves
+
+The Precision editor uses satin aluminum, graphite pads and cobalt selection accents.
+Selection is separate from the short hit flash and each slot's load/error state. Motion
+can be disabled in the footer. Tab moves focus; Enter activates buttons or edits values;
+Space auditions a focused pad. Help includes its own Close action and Escape dismissal.
+
+Each pad has an independent tone curve with fixed endpoints and up to six interior
+points. Double-click the graph to add a point, drag it, or select it and use arrow keys
+(Shift for fine adjustment). Delete removes an interior point. The two numeric fields
+edit velocity and normalized brightness. Points cannot cross or turn downward. The
+cutoff readout translates brightness into Hz between Soft and Hard using a logarithmic
+frequency range, safely clamped below Nyquist. MIDI velocity zero does not trigger a hit.
+
+Linear, Early Open, Late Open and S-Curve presets affect only the selected pad. Edited
+patterns read Custom. Undo/Redo retains 32 curve edits per pad; an entire drag is one edit.
+Histories reset when loading a kit/session. Edits affect the next strike, never a ringing
+voice. Tone bypass preserves the curve for comparison and does not disable editing.
+
+Curves are kit/session state, not individual host automation parameters. Version-1
+kits and sessions load in Legacy mode, preserving the original exponent calculation and
+its automation. Editing a point or choosing a preset converts the selected pad to point
+mode. Undo can restore Legacy mode. The original exponent parameter retains its ID but
+has no effect in point mode. New saves use version 2; older PadSampler binaries cannot
+read version-2 kits. Existing 56 parameter IDs and plugin identity remain unchanged.

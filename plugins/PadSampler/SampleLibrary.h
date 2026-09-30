@@ -12,16 +12,39 @@
 namespace padsampler {
 using Json = nlohmann::json;
 constexpr int kSlotParams = 9, kParameterCount = kSlots * kSlotParams + 2;
+inline CurveExchange::Bank DocumentCurves(const Json& doc) {
+  CurveExchange::Bank bank;
+  if(doc.value("version",0)==1) { for(auto& c:bank) c.legacy=true; return bank; }
+  if(!doc.contains("curves") || !doc["curves"].is_array() || doc["curves"].size()!=6) throw std::runtime_error("Invalid tone curves");
+  for(int i=0;i<6;++i) {
+    const auto& c=doc["curves"][i];
+    if(!c.is_object() || !c.contains("legacy") || !c["legacy"].is_boolean() || !c.contains("points") || !c["points"].is_array() || c["points"].size()<2 || c["points"].size()>8) throw std::runtime_error("Invalid tone curve points");
+    bank[i].legacy=c["legacy"].get<bool>(); bank[i].count=int(c["points"].size());
+    for(int j=0;j<bank[i].count;++j) {
+      const auto& p=c["points"][j];
+      if(!p.is_array() || p.size()!=2 || !p[0].is_number() || !p[1].is_number()) throw std::runtime_error("Invalid tone curve coordinate");
+      bank[i].points[j]={p[0].get<double>(),p[1].get<double>()};
+    }
+    if(!bank[i].Valid()) throw std::runtime_error("Tone curve must have ordered points and rising brightness");
+  }
+  return bank;
+}
+inline Json CurveDocument(const CurveExchange::Bank& bank) {
+  Json result=Json::array();
+  for(const auto& c:bank) { Json points=Json::array(); for(int i=0;i<c.count;++i) points.push_back({c.points[i].x,c.points[i].y}); result.push_back({{"legacy",c.legacy},{"points",points}}); }
+  return result;
+}
 struct SlotView {
   std::string name, path, status = "Drop WAV / AIFF or choose Load";
   std::array<float, 128> waveform{};
 };
 struct LibraryView { std::array<SlotView, kSlots> slots; std::string message; };
 inline void ValidateDocument(const Json& doc) {
-  if (!doc.is_object() || doc.value("version", 0) != 1 || !doc.contains("slots") || !doc["slots"].is_array() || doc["slots"].size() != kSlots || !doc.contains("parameters") || !doc["parameters"].is_array() || doc["parameters"].size() != kParameterCount) throw std::runtime_error("Unsupported or malformed PadSampler kit/state");
+  if (!doc.is_object() || (doc.value("version", 0) != 1 && doc.value("version", 0) != 2) || !doc.contains("slots") || !doc["slots"].is_array() || doc["slots"].size() != kSlots || !doc.contains("parameters") || !doc["parameters"].is_array() || doc["parameters"].size() != kParameterCount) throw std::runtime_error("Unsupported or malformed PadSampler kit/state");
   for (const auto& s : doc["slots"]) {
     if (!s.is_object() || !s.contains("name") || !s["name"].is_string() || s["name"].get<std::string>().size() > 64 || !s.contains("path") || !s["path"].is_string() || s["path"].get<std::string>().size() > 4096) throw std::runtime_error("Invalid slot name or sample path");
   }
+  DocumentCurves(doc);
   for (const auto& v : doc["parameters"]) if (!v.is_number() || !std::isfinite(v.get<double>())) throw std::runtime_error("Invalid parameter value");
 }
 class SampleLibrary {
@@ -48,10 +71,10 @@ class SampleLibrary {
   void Load(int slot, std::string path) {
     Enqueue([this, slot, path] { LoadNow(slot, path, false); });
   }
-  Json Document(const std::vector<double>& parameters) const {
+  Json Document(const std::vector<double>& parameters, const CurveExchange::Bank& curves = {}) const {
     auto view = View(); Json slots = Json::array();
     for (auto& s : view.slots) slots.push_back({{"name", s.name}, {"path", s.path}});
-    return {{"version", 1}, {"parameters", parameters}, {"slots", slots}};
+    return {{"version", 2}, {"parameters", parameters}, {"slots", slots}, {"curves", CurveDocument(curves)}};
   }
   void Restore(Json doc) {
     ValidateDocument(doc);
@@ -81,8 +104,8 @@ class SampleLibrary {
     });
   }
   bool TakeReady(Json& doc) { std::lock_guard<std::mutex> lock(mutex_); if (ready_.is_null()) return false; doc = std::move(ready_); ready_ = nullptr; return true; }
-  void SaveKit(std::string path, std::vector<double> parameters) {
-    Enqueue([this, path, parameters] {
+  void SaveKit(std::string path, std::vector<double> parameters, CurveExchange::Bank curves = {}) {
+    Enqueue([this, path, parameters, curves] {
       namespace fs = std::filesystem;
       fs::path target(path), temporary; bool ownTemporary = false;
       try {
@@ -92,7 +115,7 @@ class SampleLibrary {
         if (!fs::create_directory(temporary)) throw std::runtime_error("Kit staging folder already exists; choose another name");
         ownTemporary = true;
         fs::create_directory(temporary / "Samples");
-        auto doc = Document(parameters);
+        auto doc = Document(parameters, curves);
         for (int i = 0; i < kSlots; ++i) {
           if (current_[i]) {
             std::string relative = "Samples/slot-" + std::to_string(i + 1) + ".wav";

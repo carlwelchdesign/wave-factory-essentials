@@ -13,6 +13,7 @@ endif()
 if(WFE_BUILD_PLUGINS)
   iplug_add_plugin(PadSampler
     SOURCES PadSampler.cpp PadSampler.h SamplerEngine.h IPlugFilter.h SampleLibrary.h SampleLoader.h AppleSampleLoader.cpp resources/resource.h
+    RESOURCES resources/img/precision-satin.png resources/img/precision-satin@2x.png
     FORMATS APP AU VST3)
   foreach(format app au vst3)
     set_target_properties(PadSampler-${format} PROPERTIES XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "12.0")

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <vector>
+#include "ToneCurve.h"
 
 namespace padsampler {
 constexpr int kSlots = 6, kVoices = 64;
@@ -21,11 +22,12 @@ struct Sample {
 struct Settings {
   double level = 0., pan = 0., velocityAmount = 1.;
   double softHz = 1500., hardHz = 18000., curve = 1.;
+  ToneShape shape;
   bool bypass = false;
   int note = 36, channel = 0; // channel 0 = omni, otherwise 1..16
 };
 inline double Cutoff(const Settings& s, int velocity, double rate) {
-  const double v = std::pow(std::clamp(velocity / 127., 0., 1.), s.curve);
+  const double v = s.shape.Evaluate(velocity / 127., s.curve);
   const double low = std::clamp(s.softHz, 20., rate * .45);
   const double high = std::clamp(std::max(s.softHz, s.hardHz), 20., rate * .45);
   return std::exp(std::log(low) + v * (std::log(high) - std::log(low)));

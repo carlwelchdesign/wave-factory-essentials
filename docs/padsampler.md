@@ -82,3 +82,24 @@ Windows starter run 36671995680 exposed a pre-existing parallel-link race: VST3
 and CLAP emitted the same product `.lib`/`.exp` paths and MSVC reported LNK1104.
 The starter now gives each format its own archive-output directory. Parallel builds
 remain enabled in CI as the regression reproducer; deployed bundle names are unchanged.
+
+## Precision revision
+
+The approved silver/graphite/cobalt interface replaces the initial engineering layout.
+See the product README for curve gestures, preset behavior and version-1 compatibility.
+The custom graph reuses iPlug2 input/drawing and existing parameter controls; no new UI
+framework. Code-authored satin material is generated reproducibly by
+`scripts/generate-padsampler-materials.py` at native and Retina resolution, with all text,
+knobs, values, waveforms and interaction states rendered independently.
+
+Version-2 kit/state documents retain the original 56 numeric parameters and add six
+`curves` objects, each containing `legacy` and 2–8 ordered `[x,y]` points. Endpoints are
+fixed at [0,0] and [1,1]. Invalid documents are rejected before adapter mutation. Version-1
+state retains exact power-law evaluation until an intentional conversion. Point curves
+use linear segments in normalized brightness followed by logarithmic Hz interpolation.
+Curve snapshots use atomic scalar storage and a generation check: the audio reader
+attempts once per block, retaining the prior complete snapshot on contention. Writers
+serialize off the rendering callback; no mutex, allocation or retry loop enters ProcessBlock.
+
+See [Precision verification](padsampler-precision-verification.md) for actual-renderer
+evidence, interaction regression instructions and remaining acceptance.

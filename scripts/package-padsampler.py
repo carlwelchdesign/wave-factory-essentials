@@ -26,6 +26,9 @@ def package(build, output, framework):
             raise ValueError('AU must be an instrument')
         if info.get('CFBundleShortVersionString') != '0.1.0':
             raise ValueError('Wrong bundle version')
+        for material in ('precision-satin.png', 'precision-satin@2x.png'):
+            if not (bundle / 'Contents/Resources' / material).is_file():
+                raise ValueError(f'Missing Precision material: {material}')
         binary = bundle / 'Contents/MacOS/PadSampler'
         architectures = subprocess.check_output(['lipo', '-archs', str(binary)], text=True).split()
         if set(architectures) != {'arm64', 'x86_64'}:

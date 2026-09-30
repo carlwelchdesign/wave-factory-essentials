@@ -29,8 +29,10 @@ double Energy(int velocity, bool bypass) {
   double l[4096]{}, r[4096]{}; e.Process(l, r, 4096);
   double energy = 0; for (int i = 256; i < 4096; ++i) energy += l[i] * l[i]; return energy;
 }
+#include "curve_tests.h"
 int main() {
   try {
+    TestToneCurves();
     Settings settings;
     double previous = 0;
     for (int v = 1; v <= 127; ++v) { double f = Cutoff(settings, v, 22050); Require(f >= previous && f <= 22050 * .45 + .001, "cutoff must increase and remain below Nyquist"); previous = f; }
@@ -113,7 +115,8 @@ int main() {
       wait([&] { return library.View().slots[0].status.find("Cannot open") == 0; });
       Require(library.View().slots[0].path == (directory/"source.wav").string(),"failed replacement preserves previous sample");
       std::vector<double> params(kParameterCount,0.);
-      library.SaveKit((directory/"portable.padkit").string(),params);
+      CurveExchange::Bank kitCurves; kitCurves[4]=ToneShape::Preset(3);
+      library.SaveKit((directory/"portable.padkit").string(),params,kitCurves);
       wait([&] { return std::filesystem::exists(directory/"portable.padkit/kit.json"); });
       std::filesystem::rename(directory/"portable.padkit", directory/"moved.padkit");
       std::filesystem::remove(directory/"source.wav");
@@ -121,6 +124,7 @@ int main() {
       Json restored; wait([&] { return library.TakeReady(restored); });
       Require(library.View().slots[0].path == (directory/"moved.padkit/Samples/slot-1.wav").string(),"moved kit resolves relative sample paths");
       Require(restored["parameters"].size()==kParameterCount,"kit restores all parameters");
+      Require(DocumentCurves(restored)[4]==kitCurves[4],"moved kit preserves custom tone configuration");
       library.Stop(); e.Shutdown();
     }
     std::filesystem::remove_all(directory);
