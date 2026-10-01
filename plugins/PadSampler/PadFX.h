@@ -8,18 +8,31 @@
 #include <utility>
 
 namespace padsampler {
-enum class FxType : uint8_t { Reverb, Delay, Compressor, EQ, Flanger, Count };
-constexpr int kFxTypes = 5, kFxPerPad = 29, kFxFirstParam = 56;
-constexpr std::array<int, kFxTypes> kFxOffsets{0,5,10,17,24};
-constexpr std::array<int, kFxTypes> kFxCounts{5,5,7,7,5};
-constexpr std::array<const char*, kFxTypes> kFxNames{"Reverb","Delay","Compressor","EQ","Flanger"};
-inline int FxParam(int pad, FxType type, int control) { return kFxFirstParam + pad*kFxPerPad + kFxOffsets[int(type)] + control; }
+enum class FxType : uint8_t { Reverb, Delay, Compressor, EQ, Flanger, Chorus, Saturation, Distortion, Tremolo, Count };
+// The original 29-parameter stride is part of the host automation contract.
+constexpr int kFxTypes = 9, kFxPerPad = 29, kNewFxPerPad = 21;
+constexpr int kFxValuesPerPad = kFxPerPad + kNewFxPerPad;
+constexpr int kFxFirstParam = 56, kNewFxFirstParam = 230;
+constexpr std::array<int, kFxTypes> kFxOffsets{0,5,10,17,24,29,34,39,44};
+constexpr std::array<int, kFxTypes> kFxCounts{5,5,7,7,5,5,5,5,6};
+constexpr std::array<const char*, kFxTypes> kFxNames{"Reverb","Delay","Compressor","EQ","Flanger","Chorus","Saturation","Distortion","Tremolo"};
+constexpr int FxParam(int pad, FxType type, int control) {
+  const int offset=kFxOffsets[int(type)];
+  return offset<kFxPerPad ? kFxFirstParam+pad*kFxPerPad+offset+control
+                          : kNewFxFirstParam+pad*kNewFxPerPad+offset-kFxPerPad+control;
+}
 constexpr std::array<std::pair<double,double>,kFxPerPad> kFxBounds{{
   {0,1},{0,1},{0,1},{0,1},{0,1},
   {0,1},{1,1000},{0,.9},{200,18000},{0,1},
   {0,1},{-60,0},{1,20},{.1,100},{5,1000},{-12,24},{0,1},
   {0,1},{-18,18},{-18,18},{-18,18},{100,10000},{.2,8},{0,1},
   {0,1},{.01,10},{0,10},{-.8,.8},{0,1}
+}};
+constexpr std::array<std::pair<double,double>,kNewFxPerPad> kNewFxBounds{{
+  {0,1},{.05,8},{0,10},{0,1},{0,1},
+  {0,1},{0,24},{1000,18000},{-24,6},{0,1},
+  {0,1},{0,36},{500,12000},{-36,6},{0,1},
+  {0,1},{.05,20},{0,1},{0,1},{0,180},{0,1}
 }};
 struct FxChain {
   uint8_t count = 0;
@@ -62,7 +75,7 @@ class FxChainExchange {
 };
 struct FxSettings {
   // Indexed by the fixed per-pad parameter bank. Written once per render block.
-  std::array<double,kFxPerPad> values{};
+  std::array<double,kFxValuesPerPad> values{};
   double Get(FxType type,int control) const {return values[kFxOffsets[int(type)]+control];}
 };
 }

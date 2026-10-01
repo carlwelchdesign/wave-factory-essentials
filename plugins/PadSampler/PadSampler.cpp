@@ -37,6 +37,10 @@ PadSampler::PadSampler(const InstanceInfo& info) : iplug::Plugin(info, MakeConfi
     init(FxType::Compressor,0,"Mix",1,0,1,.01);init(FxType::Compressor,1,"Threshold",-18,-60,0,.1,"dB");init(FxType::Compressor,2,"Ratio",4,1,20,.1);init(FxType::Compressor,3,"Attack",10,.1,100,.1,"ms");init(FxType::Compressor,4,"Release",100,5,1000,1,"ms");init(FxType::Compressor,5,"Makeup",0,-12,24,.1,"dB");bypass(FxType::Compressor);
     init(FxType::EQ,0,"Mix",1,0,1,.01);init(FxType::EQ,1,"Low Gain",0,-18,18,.1,"dB");init(FxType::EQ,2,"Mid Gain",0,-18,18,.1,"dB");init(FxType::EQ,3,"High Gain",0,-18,18,.1,"dB");init(FxType::EQ,4,"Mid Frequency",1000,100,10000,1,"Hz");init(FxType::EQ,5,"Mid Q",1,.2,8,.01);bypass(FxType::EQ);
     init(FxType::Flanger,0,"Mix",.25,0,1,.01);init(FxType::Flanger,1,"Rate",.25,.01,10,.01,"Hz");init(FxType::Flanger,2,"Depth",3,0,10,.1,"ms");init(FxType::Flanger,3,"Feedback",.25,-.8,.8,.01);bypass(FxType::Flanger);
+    init(FxType::Chorus,0,"Mix",.25,0,1,.01);init(FxType::Chorus,1,"Rate",.8,.05,8,.01,"Hz");init(FxType::Chorus,2,"Depth",4,0,10,.1,"ms");init(FxType::Chorus,3,"Width",.75,0,1,.01);bypass(FxType::Chorus);
+    init(FxType::Saturation,0,"Mix",.5,0,1,.01);init(FxType::Saturation,1,"Drive",6,0,24,.1,"dB");init(FxType::Saturation,2,"Tone",12000,1000,18000,1,"Hz");init(FxType::Saturation,3,"Output",-3,-24,6,.1,"dB");bypass(FxType::Saturation);
+    init(FxType::Distortion,0,"Mix",.4,0,1,.01);init(FxType::Distortion,1,"Drive",12,0,36,.1,"dB");init(FxType::Distortion,2,"Tone",7000,500,12000,1,"Hz");init(FxType::Distortion,3,"Output",-9,-36,6,.1,"dB");bypass(FxType::Distortion);
+    init(FxType::Tremolo,0,"Mix",1,0,1,.01);init(FxType::Tremolo,1,"Rate",4,.05,20,.01,"Hz");init(FxType::Tremolo,2,"Depth",.5,0,1,.01);init(FxType::Tremolo,3,"Shape",0,0,1,.01);init(FxType::Tremolo,4,"Stereo Phase",0,0,180,1,"deg");bypass(FxType::Tremolo);
   }
   view_ = library_.View();
   mMakeGraphicsFunc = [&] { return MakeGraphics(*this, PLUG_WIDTH, PLUG_HEIGHT, PLUG_FPS, GetScaleForScreen(PLUG_WIDTH, PLUG_HEIGHT)); };
@@ -60,6 +64,7 @@ void PadSampler::ProcessBlock(sample**, sample** outputs, int frames) {
     s.bypass = GetParam(p + ToneBypass)->Bool(); s.note = GetParam(p + Note)->Int(); s.channel = GetParam(p + Channel)->Int();
     engine_.fxChains[i]=audioFX_[i];
     for(int j=0;j<kFxPerPad;++j)engine_.fxSettings[i].values[j]=GetParam(kFxFirstParam+i*kFxPerPad+j)->Value();
+    for(int j=0;j<kNewFxPerPad;++j)engine_.fxSettings[i].values[kFxPerPad+j]=GetParam(kNewFxFirstParam+i*kNewFxPerPad+j)->Value();
   }
   engine_.master = std::pow(10., GetParam(kMaster)->Value() / 20.);
   if (NOutChansConnected() >= 2) engine_.Process(outputs[0], outputs[1], frames);
@@ -159,7 +164,7 @@ void PadSampler::SyncClipMode() {
   int type=selected>=0 && selected<chain.count?int(chain.order[selected]):-1;
   for(int t=0;t<kFxTypes;++t)for(int i=0;i<fxFields_[t].size();++i){
     auto* c=fxFields_[t][i];c->Hide(inspectorMode_!=2 || type!=t);
-    int param=FxParam(selected_,FxType(t),i);
+    int param=FxParam(selected_,FxType(t),i/2);
     c->SetParamIdx(param);c->SetValueFromDelegate(GetParam(param)->GetNormalized());
   }
   if(GetUI()) GetUI()->SetAllControlsDirty();
@@ -217,12 +222,13 @@ void PadSampler::BuildUI(IGraphics* g) {
   using namespace precision;
   controls_.fill(nullptr); focusOrder_.clear();toneControls_.clear();clipControls_.clear();fxControls_.clear();for(auto& group:fxFields_)group.clear();focus_=nullptr;
   g->LoadFont(DEFAULT_FONT,"Arial",ETextStyle::Normal);
+  g->LoadFont(kDisplayFont,"Arial",ETextStyle::Bold);
   g->EnableMouseOver(true);g->AttachTextEntryControl();g->AttachControl(new Backplate(g->GetBounds(),g->LoadBitmap("precision-satin.png")));
   IVStyle style(true,true,{silver,IColor(255,224,231,240),blue,muted,IColor(255,107,170,238),IColor(90,30,40,55),white,blue,ink},IText(12,ink),IText(12,ink),false,true,true,true,.15f,1,2,.8f);
   auto attach=[&](IControl* c){g->AttachControl(c);focusOrder_.push_back(c);return c;};
   auto button=[&](IRECT r,const char* label,std::function<void()> action){return attach(new Action(r,*this,[label]{return std::string(label);},action));};
-  g->AttachControl(new ITextControl(IRECT(22,12,300,41),"PadSampler",IText(26,ink,nullptr,EAlign::Near)));
-  g->AttachControl(new ITextControl(IRECT(24,40,300,59),"W A V E   F A C T O R Y   /   P R E C I S I O N",IText(9,muted,nullptr,EAlign::Near)));
+  g->AttachControl(new ITextControl(IRECT(22,10,318,42),"PadSampler",IText(30,ink,kDisplayFont,EAlign::Near)));
+  g->AttachControl(new ITextControl(IRECT(24,42,330,60),"N I N T H   C H A M B E R   /   P R E C I S I O N",IText(9,muted,nullptr,EAlign::Near)));
   button(IRECT(529,22,632,53),"Open Kit",[this]{ChooseKit(false);});
   button(IRECT(643,22,746,53),"Save Kit",[this]{ChooseKit(true);});
   button(IRECT(757,22,862,53),"Settings",[this]{Settings();});
@@ -270,12 +276,20 @@ void PadSampler::BuildUI(IGraphics* g) {
     fxControls_.push_back(attach(new Action(IRECT(830,y,900,y+27),*this,[this,row]{auto chain=FXChain(selected_);if(row>=chain.count)return std::string("Bypass");return GetParam(FxParam(selected_,chain.order[row],kFxCounts[int(chain.order[row])]-1))->Bool()?std::string("BYPASSED"):std::string("ACTIVE");},[this,row]{ToggleFXBypass(row);},[this,row]{return row<FXChain(selected_).count;})));
     fxControls_.push_back(attach(new Action(IRECT(905,y,954,y+27),*this,[]{return std::string("×");},[this,row]{SelectFX(row);RemoveFX();},[this,row]{return row<FXChain(selected_).count;})));
   }
+  const char* fxLabels[kFxTypes][6]={{"Mix","Size","Damping","Width"},{"Mix","Time · ms","Feedback","Tone · Hz"},{"Mix","Threshold · dB","Ratio","Attack · ms","Release · ms","Makeup · dB"},{"Mix","Low · dB","Mid · dB","High · dB","Mid · Hz","Q"},{"Mix","Rate · Hz","Depth · ms","Feedback"},{"Mix","Rate · Hz","Depth · ms","Width"},{"Mix","Drive · dB","Tone · Hz","Output · dB"},{"Mix","Drive · dB","Tone · Hz","Output · dB"},{"Mix","Rate · Hz","Depth","Shape","Stereo phase · deg"}};
   for(int type=0;type<kFxTypes;++type){
-    auto effect=FxType(type);const char* labels[5][6]={{"Mix","Size","Damping","Width"},{"Mix","Time · ms","Feedback","Tone · Hz"},{"Mix","Threshold · dB","Ratio","Attack · ms","Release · ms","Makeup · dB"},{"Mix","Low · dB","Mid · dB","High · dB","Mid · Hz","Q"},{"Mix","Rate · Hz","Depth · ms","Feedback"}};
-    for(int j=0;j<kFxCounts[type]-1;++j){int column=j%2,row=j/2;const char* format=(type==1 && (j==1 || j==3)) || (type==3 && j==4)?"%0.0f":"%0.2f";auto* field=attach(new NumberField(IRECT(588+column*185,500+row*43,767+column*185,539+row*43),FxParam(0,effect,j),labels[type][j],style,*this,format));fxFields_[type].push_back(field);fxControls_.push_back(field);}
+    auto effect=FxType(type);
+    for(int j=0;j<kFxCounts[type]-1;++j){
+      int column=j%2,row=j/2,x=588+column*185,y=500+row*42,param=FxParam(0,effect,j);
+      const char* format=(type==1 && (j==1 || j==3)) || (type==3 && j==4) || ((type==6 || type==7) && j==2) || (type==8 && j==4)?"%0.0f":"%0.2f";
+      auto* dial=attach(new FxKnob(IRECT(x,y,x+40,y+40),param,style,*this));
+      auto* field=attach(new NumberField(IRECT(x+46,y,x+179,y+40),param,fxLabels[type][j],style,*this,format));
+      fxFields_[type].push_back(dial);fxFields_[type].push_back(field);
+      fxControls_.push_back(dial);fxControls_.push_back(field);
+    }
   }
-  for(int type=0;type<kFxTypes;++type){auto effect=FxType(type);const char* shortNames[]={"Reverb","Delay","Comp","EQ","Flanger"};fxControls_.push_back(attach(new Action(IRECT(588+type*74,465,658+type*74,493),*this,[type,shortNames]{return std::string("+ ")+shortNames[type];},[this,effect]{AddFX(effect);},[this,effect]{auto chain=FXChain(selected_);return chain.count<3 && !chain.Contains(effect);})));}
-  auto* fxHint=new ITextControl(IRECT(588,620,954,637),"Select effect · Enter edits value · Tab moves focus",IText(10,muted));g->AttachControl(fxHint);fxControls_.push_back(fxHint);
+  fxControls_.push_back(attach(new FxPicker(IRECT(588,465,954,493),*this)));
+  auto* fxHint=new ITextControl(IRECT(588,628,954,640),"Select effect · Enter edits value · Tab moves focus",IText(10,muted));g->AttachControl(fxHint);fxControls_.push_back(fxHint);
   attach(new IVNumberBoxControl(IRECT(22,652,222,701),kAuditionVelocity,nullptr,"Audition velocity",style,true));
   button(IRECT(240,661,342,696),"Stop All",[this]{StopAll();});
   attach(new IVNumberBoxControl(IRECT(738,652,860,701),kMaster,nullptr,"Master · dB",style,true));

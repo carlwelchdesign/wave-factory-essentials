@@ -1,4 +1,4 @@
-# PadSampler 0.1.0
+# Ninth Chamber — PadSampler 0.1.0
 
 A six-slot macOS sample instrument for playing expressive one-shots from an Alesis
 SamplePad 4 or another MIDI controller. Generated from starter 1.0.0, then graduated
@@ -73,9 +73,11 @@ Parameter IDs: six contiguous blocks of nine (Level, Pan, Velocity Volume,
 Soft Brightness, Hard Brightness, Tone Curve, Tone Bypass, MIDI Note, MIDI Channel),
 then Audition Velocity=54 and Master=55. IDs 56–229 append 29 fixed FX controls
 per pad, grouped by effect type: Reverb 5, Delay 5, Compressor 7, EQ 7,
-Flanger 5. The last control in each group is Bypass. All FX controls and bypass
+Flanger 5. IDs 230–355 append a separate 21-control block per pad: Chorus 5,
+Saturation 5, Distortion 5, Tremolo 6. The last control in each group is Bypass.
+The old per-pad stride and all earlier IDs remain fixed. All FX controls and bypass
 are host-automatable; rack membership and order are saved session state.
-Kit/state schema version=4. Instruments:
+Kit/state schema version=5. Instruments:
 AU `aumu/WfP6/WvFy`; bundle IDs `com.wavefactoryessentials.{app,audiounit,vst3}.PadSampler`.
 
 Reused dependencies: pinned iPlug2/WDL controls, MIDI/APP host, SVF filter and bundled
@@ -116,10 +118,11 @@ Curves are kit/session state, not individual host automation parameters. Version
 kits and sessions load in Legacy mode, preserving the original exponent calculation and
 its automation. Editing a point or choosing a preset converts the selected pad to point
 mode. Undo can restore Legacy mode. The original exponent parameter retains its ID but
-has no effect in point mode. New saves use version 4 with per-pad start/end seconds
+has no effect in point mode. New saves use version 5 with per-pad start/end seconds
 and ordered FX racks. Version-1 and version-2 documents play their full samples;
 version-1 through version-3 documents load with empty racks and default FX settings.
-Older PadSampler binaries cannot read version-4 kits. Existing IDs 0–55 and plugin
+Version-4 documents retain their five-effect racks and load new controls at defaults.
+Older PadSampler binaries cannot read version-5 kits. Existing IDs 0–229 and plugin
 identity remain unchanged.
 
 Clip changes affect new strikes only: each voice captures an exclusive end frame and
@@ -140,7 +143,19 @@ hosted inside PadSampler. Removed effects keep their parameter values in the fix
 bank so they are available when re-added. The maximum is three distinct types per
 pad; duplicate types in one rack are rejected.
 
-The version-4 `effects` array in each slot records the ordered effect names. Its
+The version-5 `effects` array in each slot records the ordered effect names. Its
 values are the stable parameters, not separate per-rack-slot automation controls.
 Malformed racks or out-of-range FX values are rejected before the current kit is
 changed. Portable kits still collect the full source audio alongside trims and FX.
+
+The Add FX popup offers all nine effects and disables types already in the rack.
+Chorus uses two modulated delay taps per stereo channel without feedback. Saturation
+uses a gentle soft clip; Distortion uses stronger asymmetric clipping. Both nonlinear
+effects use four-times oversampling, a decimation filter, a DC blocker, post-shaping
+Tone and Output gain. Tremolo offers Rate, Depth, Shape (sine to rounded square)
+and Stereo Phase. Chorus and Tremolo run freely, without host tempo sync.
+The Precision editor uses bold, left-aligned headings and a left-aligned pad rename
+field. FX parameters use compact dials beside labeled, editable numeric readouts;
+the small increment/decrement buttons were removed from this area. Ninth Chamber
+is visible product branding; existing host identifiers and manufacturer metadata
+remain fixed for session compatibility.

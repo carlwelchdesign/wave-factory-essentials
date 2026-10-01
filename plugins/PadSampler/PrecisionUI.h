@@ -4,6 +4,7 @@
 #include <cstdlib>
 namespace precision {
 using namespace iplug; using namespace igraphics;
+constexpr const char* kDisplayFont = "PadSamplerDisplay";
 const IColor ink(255,25,32,42), muted(255,75,85,97), blue(255,20,110,224), silver(255,209,215,221), white(255,244,247,250), dark(255,31,38,47);
 inline std::string Number(double n, const char* format="%.1f") { char s[64]; std::snprintf(s,sizeof(s),format,n); return s; }
 // Keep live UTF-8 pad labels inside their allotted area; full errors stay in the footer.
@@ -44,13 +45,13 @@ class Action : public IControl {
 class NumberField : public IVNumberBoxControl {
  public:
   NumberField(IRECT r,int param,const char* label,const IVStyle& style,PadSampler& pad,const char* format)
-    :IVNumberBoxControl(r,param,nullptr,label,style,true,50.,1.,100.,format),pad_(pad){}
+    :IVNumberBoxControl(r,param,nullptr,label,style,false,50.,1.,100.,format),pad_(pad){}
   void OnMouseDown(float x,float y,const IMouseMod& mod) override {pad_.Focus(this);IVNumberBoxControl::OnMouseDown(x,y,mod);}
  private:PadSampler& pad_;
 };
 class Name : public IEditableTextControl {
  public:
-  Name(IRECT r,PadSampler& p,std::function<void(const std::string&)> edit): IEditableTextControl(r,"",IText(19,ink)),p_(p),edit_(edit) {}
+  Name(IRECT r,PadSampler& p,std::function<void(const std::string&)> edit): IEditableTextControl(r,"",IText(20,ink,kDisplayFont,EAlign::Near)),p_(p),edit_(edit) {}
   void OnMouseDown(float x,float y,const IMouseMod& m) override { p_.Focus(this); IEditableTextControl::OnMouseDown(x,y,m); }
   void OnTextEntryCompletion(const char* s,int) override { edit_(s); SetStr(s); SetDirty(false); }
   bool OnKeyDown(float,float,const IKeyPress& k) override {if(p_.Focused()!=this)return false; if(k.VK==13) { GetUI()->CreateTextEntry(*this,mText,mRECT,GetStr()); return true; } return false; }
@@ -67,7 +68,7 @@ class Pad : public IControl {
     g.PathClear();g.PathRoundRect(inner,7);g.PathFill(IPattern::CreateLinearGradient(inner,EDirection::Vertical,{{IColor(255,44,49,56),0.f},{IColor(255,32,37,44),1.f}}));
     g.DrawRoundRect(selected?blue:IColor(255,120,128,137),mRECT.GetPadded(-3),10,nullptr,selected?3:1);
     if(mMouseIsOver) g.DrawRoundRect(IColor(255,172,195,222),mRECT.GetPadded(-6),8,nullptr,1);
-    FittedText(g,IText(16,white,nullptr,EAlign::Near),s.name,IRECT(inner.L+9,inner.T+6,inner.R-35,inner.T+31));
+    FittedText(g,IText(16,white,kDisplayFont,EAlign::Near),s.name,IRECT(inner.L+9,inner.T+6,inner.R-35,inner.T+31));
     const float hit=p_.Hit(slot_); g.FillCircle(IColor(255,40+int(hit*100),90+int(hit*100),140+int(hit*100)),inner.R-16,inner.T+17,5);
     std::string filename=s.path.empty()?"Drop WAV / AIFF":std::filesystem::path(s.path).filename().string();
     FittedText(g,IText(12,white,nullptr,EAlign::Near),filename,IRECT(inner.L+9,inner.T+34,inner.R-6,inner.T+54));
@@ -223,6 +224,23 @@ class Presets : public Action {
   void OnPopupMenuSelection(IPopupMenu* menu,int) override {if(menu && menu->GetChosenItemIdx()>=0)p_.CurvePreset(menu->GetChosenItemIdx());}
  private:PadSampler& p_;IPopupMenu menu_; // macOS popup completion is asynchronous.
 };
+class FxPicker : public Action {
+ public:
+  FxPicker(IRECT r,PadSampler& p):Action(r,p,[]{return std::string("+ Add FX...");},[this]{Open();},[&p]{return p.FXChain(p.Selected()).count<3;}),p_(p){
+    for(const char* name:padsampler::kFxNames)menu_.AddItem(name);
+  }
+  void Open(){
+    openedPad_=p_.Selected();auto chain=p_.FXChain(openedPad_);
+    for(int i=0;i<padsampler::kFxTypes;++i)menu_.GetItem(i)->SetEnabled(chain.count<3 && !chain.Contains(padsampler::FxType(i)));
+    menu_.SetChosenItemIdx(-1);GetUI()->CreatePopupMenu(*this,menu_,mRECT);
+  }
+  void OnPopupMenuSelection(IPopupMenu* menu,int) override {
+    if(!menu || openedPad_!=p_.Selected())return;
+    int chosen=menu->GetChosenItemIdx();
+    if(chosen>=0 && chosen<padsampler::kFxTypes && menu_.GetItem(chosen)->GetEnabled())p_.AddFX(padsampler::FxType(chosen));
+  }
+ private:PadSampler& p_;IPopupMenu menu_;int openedPad_=-1;
+};
 class Knob : public IVKnobControl {
  public:
   Knob(IRECT r,int param,const char* label,const IVStyle& style,PadSampler& p):IVKnobControl(r,param,label,style,true),p_(p) {SetInnerPointerFrac(.3);SetOuterPointerFrac(.9);SetPointerThickness(2);}
@@ -244,6 +262,15 @@ class Knob : public IVKnobControl {
   void DrawIndicatorTrack(IGraphics& g,float angle,float cx,float cy,float radius) override {g.DrawArc(IColor(255,151,164,180),cx,cy,radius,-135,135,nullptr,3);g.DrawArc(blue,cx,cy,radius,-135,angle,nullptr,3);}
  private:PadSampler& p_;
 };
+class FxKnob : public IVKnobControl {
+ public:
+  FxKnob(IRECT r,int param,const IVStyle& style,PadSampler& p)
+    :IVKnobControl(r,param,"",style.WithShowLabel(false).WithShowValue(false)),p_(p){
+    SetInnerPointerFrac(.3);SetOuterPointerFrac(.9);SetPointerThickness(2);
+  }
+  void OnMouseDown(float x,float y,const IMouseMod& mod) override {p_.Focus(this);IVKnobControl::OnMouseDown(x,y,mod);}
+ private:PadSampler& p_;
+};
 class Backplate : public IControl {
  public:Backplate(IRECT r,IBitmap bitmap):IControl(r),bitmap_(bitmap){SetIgnoreMouse(true);}
   void Draw(IGraphics& g) override {if(bitmap_.IsValid())g.DrawBitmap(bitmap_,mRECT);else Metal(g,mRECT);g.DrawRoundRect(muted,mRECT.GetPadded(-1),7,nullptr,1);g.DrawLine(muted,568,78,568,640);g.DrawLine(muted,16,69,964,69);g.DrawLine(muted,16,642,964,642);}
@@ -261,7 +288,7 @@ class Help : public IControl {
     g.FillRect(IColor(125,22,30,42),mRECT);
     g.FillRoundRect(white,r,9);g.DrawRoundRect(blue,r,9,nullptr,2);
     g.DrawText(IText(24,ink),"PADSAMPLER / PRECISION",r.GetFromTop(60));
-    const char* lines[]={"Drop WAV / AIFF onto a pad. Click or press Space to audition.","Use MIDI Learn, then strike the hardware pad. Click again to cancel.","Standalone Settings selects audio / MIDI. In a plugin, use host routing.","TONE: Soft and Hard brightness set the low-pass cutoff range.","Double-click the graph to add a point; drag to shape it.","Arrows move selected points; Delete removes interior points.","Endpoints stay fixed; brightness never decreases with velocity.","Tone presets replace one curve; Undo / Redo remembers 32 edits.","Legacy exponent automation applies only in Legacy curve mode.","CLIP: drag start/end handles or enter times in seconds below.","Space swaps handles; arrows move 10 ms, Shift+arrows one frame.","Reset Length restores the full source; clip history is separate.","FX: add up to three distinct effects per pad; order is top to bottom.","Select, move, bypass, or remove rack entries with their row buttons.","Removed FX retain their settings; controls are host-automatable.","Tab moves focus. Enter edits fields. Motion toggles hit flashes.","Save Kit collects full audio, including excluded regions, for later edits."};
+    const char* lines[]={"Drop WAV / AIFF onto a pad. Click or press Space to audition.","Use MIDI Learn, then strike the hardware pad. Click again to cancel.","Standalone Settings selects audio / MIDI. In a plugin, use host routing.","TONE: Soft and Hard brightness set the low-pass cutoff range.","Double-click the graph to add a point; drag to shape it.","Arrows move selected points; Delete removes interior points.","Endpoints stay fixed; brightness never decreases with velocity.","Tone presets replace one curve; Undo / Redo remembers 32 edits.","Legacy exponent automation applies only in Legacy curve mode.","CLIP: drag start/end handles or enter times in seconds below.","Space swaps handles; arrows move 10 ms, Shift+arrows one frame.","Reset Length restores the full source; clip history is separate.","FX: choose up to three distinct effects per pad in the Add FX menu.","Chorus widens; Saturation warms; Distortion bites; Tremolo pulses.","Drive adds grit, Tone trims highs, Output sets level after shaping.","FX Mix, Bypass and controls automate; removed FX retain settings.","Select, move, bypass or remove rows. Enter edits; Tab moves focus."};
     for(int i=0;i<17;++i)g.DrawText(IText(13,ink,nullptr,EAlign::Near),lines[i],IRECT(r.L+24,r.T+62+i*25,r.R-24,r.T+84+i*25));
     g.DrawText(IText(17,blue),"Close · Escape",r.GetFromBottom(52));
   }
