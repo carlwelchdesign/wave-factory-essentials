@@ -14,7 +14,8 @@
 namespace padsampler {
 using Json = nlohmann::json;
 constexpr int kSlotParams = 9, kLegacyParameterCount = kSlots * kSlotParams + 2;
-constexpr int kParameterCount = kFxFirstParam + kSlots * kFxPerPad;
+constexpr int kV4ParameterCount = kNewFxFirstParam;
+constexpr int kParameterCount = kNewFxFirstParam + kSlots * kNewFxPerPad;
 constexpr std::array<std::pair<double,double>,kSlotParams> kBaseBounds{{
   {-60,12},{-1,1},{0,1},{20,20000},{20,20000},{.25,4},{0,1},{0,127},{0,16}
 }};
@@ -26,8 +27,9 @@ inline FxChainExchange::Bank DocumentFX(const Json& doc) {
     if(!effects.is_array() || effects.size()>3)throw std::runtime_error("Invalid FX rack");
     for(const auto& name:effects){
       if(!name.is_string())throw std::runtime_error("Invalid FX type");
-      int type=0;for(;type<kFxTypes;++type)if(name.get<std::string>()==kFxNames[type])break;
-      if(type==kFxTypes || !bank[i].Add(FxType(type)))throw std::runtime_error("FX rack requires distinct supported effects");
+      int type=0;const int limit=doc["version"].get<int>()>=5?kFxTypes:5;
+      for(;type<limit;++type)if(name.get<std::string>()==kFxNames[type])break;
+      if(type==limit || !bank[i].Add(FxType(type)))throw std::runtime_error("FX rack requires distinct supported effects");
     }
   }
   return bank;
@@ -76,7 +78,7 @@ inline ClipTrim DocumentTrim(const Json& doc, int slot) {
   return trim;
 }
 inline void ValidateDocument(const Json& doc) {
-  if (!doc.is_object() || !doc.contains("version") || !doc["version"].is_number_integer() || doc["version"].get<int>()<1 || doc["version"].get<int>()>4 || !doc.contains("slots") || !doc["slots"].is_array() || doc["slots"].size() != kSlots || !doc.contains("parameters") || !doc["parameters"].is_array() || doc["parameters"].size() != (doc["version"].get<int>()==4?kParameterCount:kLegacyParameterCount)) throw std::runtime_error("Unsupported or malformed PadSampler kit/state");
+  if (!doc.is_object() || !doc.contains("version") || !doc["version"].is_number_integer() || doc["version"].get<int>()<1 || doc["version"].get<int>()>5 || !doc.contains("slots") || !doc["slots"].is_array() || doc["slots"].size() != kSlots || !doc.contains("parameters") || !doc["parameters"].is_array() || doc["parameters"].size() != (doc["version"].get<int>()==5?kParameterCount:doc["version"].get<int>()==4?kV4ParameterCount:kLegacyParameterCount)) throw std::runtime_error("Unsupported or malformed PadSampler kit/state");
   for (const auto& s : doc["slots"]) {
     if (!s.is_object() || !s.contains("name") || !s["name"].is_string() || s["name"].get<std::string>().size() > 64 || !s.contains("path") || !s["path"].is_string() || s["path"].get<std::string>().size() > 4096) throw std::runtime_error("Invalid slot name or sample path");
     if (doc["version"].get<int>() >= 3) {
@@ -88,13 +90,16 @@ inline void ValidateDocument(const Json& doc) {
   DocumentCurves(doc);
   DocumentFX(doc);
   for (const auto& v : doc["parameters"]) if (!v.is_number() || !std::isfinite(v.get<double>())) throw std::runtime_error("Invalid parameter value");
-  if(doc["version"].get<int>()==4){
+  if(doc["version"].get<int>()>=4){
     for(int pad=0;pad<kSlots;++pad){
       for(int i=0;i<kSlotParams;++i){double value=doc["parameters"][pad*kSlotParams+i].get<double>();
         if(value<kBaseBounds[i].first || value>kBaseBounds[i].second || ((i==6 || i==7 || i==8) && value!=std::floor(value)))throw std::runtime_error("Pad parameter outside its supported range");
       }
       for(int i=0;i<kFxPerPad;++i){double value=doc["parameters"][kFxFirstParam+pad*kFxPerPad+i].get<double>();
         if(value<kFxBounds[i].first || value>kFxBounds[i].second || ((i==4 || i==9 || i==16 || i==23 || i==28) && value!=0. && value!=1.))throw std::runtime_error("FX parameter outside its supported range");
+      }
+      if(doc["version"].get<int>()>=5)for(int i=0;i<kNewFxPerPad;++i){double value=doc["parameters"][kNewFxFirstParam+pad*kNewFxPerPad+i].get<double>();
+        if(value<kNewFxBounds[i].first || value>kNewFxBounds[i].second || ((i==4 || i==9 || i==14 || i==20) && value!=0. && value!=1.))throw std::runtime_error("New FX parameter outside its supported range");
       }
     }
     double audition=doc["parameters"][54].get<double>(),master=doc["parameters"][55].get<double>();
@@ -156,7 +161,7 @@ class SampleLibrary {
     Json slots = Json::array();
     auto racks=FXDocument(fx);
     for (int i=0;i<kSlots;++i){auto& s=view.slots[i];slots.push_back({{"name", s.name}, {"path", s.path}, {"clip", {{"start", s.clip.start}, {"end", s.clip.end ? Json(*s.clip.end) : Json(nullptr)}}}, {"effects",racks[i]}});}
-    return {{"version", 4}, {"parameters", parameters}, {"slots", slots}, {"curves", CurveDocument(curves)}};
+    return {{"version", 5}, {"parameters", parameters}, {"slots", slots}, {"curves", CurveDocument(curves)}};
   }
   void Restore(Json doc) {
     ValidateDocument(doc);

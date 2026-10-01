@@ -149,9 +149,33 @@ fades voices and wet tails. All delay and reverb storage is fixed capacity and
 prepared before rendering, with generation tags for constant-time tail reset.
 No audio callback allocation, lock, decoding or filesystem access is introduced.
 
+## Four additional built-in effects
+
+Version-5 kits and sessions add Chorus, Saturation, Distortion and Tremolo to the
+three-position per-pad rack. The FX tab now uses an Add FX popup with unavailable
+choices disabled. Chorus is a feedback-free stereo modulation effect; Saturation
+provides gentle warmth, Distortion stronger asymmetric clipping, and Tremolo
+level modulation with adjustable waveform and stereo phase. Both nonlinear
+effects use four-times oversampling and post-shaping tone/output controls.
+All effects use automatable Mix and Bypass. Chorus and Tremolo rates are free-running.
+
+Existing parameter IDs 0–229 and plugin identifiers are unchanged. A separate
+six-pad bank at IDs 230–355 contains the four new types. Version-1 through
+version-4 documents load with new FX absent and controls at defaults; version-4
+racks keep their original effect order. Version-5 validation rejects unsupported
+types, duplicate rack entries, invalid values and malformed parameter arrays
+before replacing the current kit.
+
+The Precision editor uses bold left-aligned headings and the visible Ninth Chamber
+wordmark. The selected pad's rename text remains left-aligned in display and entry
+states. FX controls use compact iPlug2 dials beside labeled numeric readouts for
+dragging and exact entry; the old tiny increment buttons are absent from this area.
+Host-facing manufacturer metadata and plug-in identifiers remain unchanged so
+existing sessions continue to resolve the same instrument.
+
 The Precision FX tab shows the three rack positions, Add choices, selection,
 move, bypass and remove actions. Selecting an effect exposes its bounded numeric
 controls. Per-pad FX counts appear on the pads without replacing sample status,
-waveforms or trim markers. See [FX verification](padsampler-fx-verification.md) for current automated
+waveforms or trim markers. See [four-effect verification](padsampler-four-fx-verification.md) for current automated
 and actual-renderer evidence; physical trigger, Logic listening/session recall
 and measured latency remain separate release checks.

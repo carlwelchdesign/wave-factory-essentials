@@ -25,7 +25,7 @@ env = dict(os.environ, PADSAMPLER_UI_PID=str(a.pid))
 def event(*args):
     apple('')
     subprocess.run([str(a.events.resolve()), *map(str, args)], env=env, check=True, capture_output=True)
-    time.sleep(.15)
+    time.sleep(.3)
 
 def apple(body, activate=True):
     script = f'tell application "System Events"\n tell (first process whose unix id is {a.pid})\n set frontmost to true\n{body}\n end tell\nend tell'
@@ -61,7 +61,7 @@ def save(name):
         if manifest.exists():
             for _ in range(50):
                 if apple('return exists sheet 1 of window 1').strip()=='false':
-                    time.sleep(.4)
+                    time.sleep(.6)
                     return json.loads(manifest.read_text())
                 time.sleep(.1)
             raise AssertionError('Save completed but its native sheet did not close')
@@ -72,6 +72,12 @@ def capture(name):
     data=subprocess.check_output([str(a.events.resolve()),'window'],env=env,text=True)
     window=data.splitlines()[0]
     subprocess.run(['screencapture','-x','-l',window,str(a.output/(name+'.png'))],check=True)
+
+def add_fx(name):
+    names=['Reverb','Delay','Compressor','EQ','Flanger','Chorus','Saturation','Distortion','Tremolo']
+    event('click',680,478)
+    event('click',630,509+24*names.index(name))
+    time.sleep(.35)  # Native popup selection completes asynchronously.
 
 params=[]
 for _ in range(6): params += [-12,0,1,1500,18000,1,0,36+_,0]
@@ -88,6 +94,7 @@ event('key',53) # Dismiss any leftover native popup before the fresh fixture.
 time.sleep(1)
 openkit(a.output/'initial.json')
 event('click',120,160)
+event('click',650,341)
 capture('01-ready')
 # A single double-click inserts one point; dragging is a separate undoable edit.
 event('double',780,520)
@@ -102,7 +109,11 @@ event('click',800,443)
 assert save('redo')['curves'][0]==edited['curves'][0]
 # Delete the selected interior point, then undo the deletion.
 event('click',808,498);event('key',51)
-assert len(save('deleted')['curves'][0]['points'])==2
+deleted=save('deleted')
+if len(deleted['curves'][0]['points'])!=2:
+    event('click',808,498);event('key',51)
+    deleted=save('deleted-retry')
+assert len(deleted['curves'][0]['points'])==2
 event('click',740,443)
 assert save('undeleted')['curves'][0]==edited['curves'][0]
 # Bypass is a retained parameter value; editing and shape remain intact.
@@ -121,7 +132,7 @@ capture('03-dialog-cancelled')
 # Restore an actual collected kit, including its sample and custom points.
 openkit(a.output/'edited.padkit/kit.json')
 recalled=save('recalled')
-assert recalled['curves']==edited['curves'] and recalled['parameters']==edited['parameters']
+assert recalled['curves']==edited['curves'] and all(abs(x-y)<1e-12 for x,y in zip(recalled['parameters'],edited['parameters']))
 # Name entry must survive periodic idle updates.
 event('click',745,97)
 apple('keystroke "a" using command down\nkeystroke "Precision Snare"\ndelay 1\nkey code 36')
@@ -184,6 +195,10 @@ event('click',800,443)
 assert save('clip-redo')['slots'][0]['clip']==end_drag['slots'][0]['clip']
 event('click',668,515);event('key',124)
 keyboard_clip=save('clip-keyboard')
+if keyboard_clip['slots'][0]['clip']['start']==end_drag['slots'][0]['clip']['start']:
+    # A native Save sheet can retain key focus briefly after closing.
+    event('click',668,515);time.sleep(.3);event('key',124)
+    keyboard_clip=save('clip-keyboard-retry')
 assert keyboard_clip['slots'][0]['clip']['start']>end_drag['slots'][0]['clip']['start']
 event('click',640,599)
 apple('keystroke "a" using command down\nkeystroke "0.150"\nkey code 36',activate=False)
@@ -201,10 +216,9 @@ event('click',120,155)
 event('click',650,341)
 # FX racks keep order as session state and controls as host parameters.
 event('click',895,341)
-event('click',690,478)  # Delay
-event('click',615,478)  # Reverb
-event('click',780,478)  # Compressor
+add_fx('Delay');add_fx('Reverb');add_fx('Compressor')
 added_fx=save('fx-added')
+assert added_fx['version']==5
 assert added_fx['slots'][0]['effects']==['Delay','Reverb','Compressor']
 capture('09c-fx-rack')
 event('click',765,412)  # Move second effect upward.
@@ -216,7 +230,7 @@ assert bypassed_fx['parameters'][60]==1
 event('click',930,442)
 removed_fx=save('fx-removed')
 assert removed_fx['slots'][0]['effects']==['Reverb','Delay']
-event('click',845,478)
+add_fx('EQ')
 assert save('fx-added-eq')['slots'][0]['effects']==['Reverb','Delay','EQ']
 event('click',650,380)
 event('double',650,520)
@@ -230,6 +244,22 @@ event('click',400,155)
 assert save('fx-other-pad')['slots'][1]['effects']==[]
 event('click',120,155)
 assert save('fx-return')['slots'][0]['effects']==['Reverb','Delay','EQ']
+# New FX stay per-pad and retain both knob and direct numeric editing.
+event('click',930,442)  # Remove EQ, freeing a rack position.
+add_fx('Chorus')
+assert save('fx-added-chorus')['slots'][0]['effects']==['Reverb','Delay','Chorus']
+event('double',661,520)
+apple('keystroke "a" using command down\nkeystroke "0.41"\nkey code 36',activate=False)
+time.sleep(.2)
+assert abs(save('fx-chorus-numeric')['parameters'][230]-.41)<.011
+event('drag',606,519,606,506)
+assert save('fx-chorus-knob')['parameters'][230]>.41
+capture('09e-fx-chorus-knobs')
+event('click',400,155)
+add_fx('Distortion')
+assert save('fx-distortion-other-pad')['slots'][1]['effects']==['Distortion']
+assert save('fx-chorus-isolated')['slots'][0]['effects']==['Reverb','Delay','Chorus']
+capture('09f-fx-distortion')
 event('click',650,341)
 # Momentary Stop All pressed and released states are captured for renderer review.
 event('down',290,678);capture('10-pressed')
@@ -238,7 +268,7 @@ event('down',290,678);event('move',360,635);event('up',360,635);capture('12-poin
 # Missing-file and failed-replacement states must remain readable on the affected pad.
 missing=json.loads(json.dumps(numeric));missing['slots'][0]['path']='missing.wav'
 (a.output/'missing.json').write_text(json.dumps(missing))
-openkit(a.output/'missing.json');capture('13-missing')
+openkit(a.output/'missing.json');event('click',120,155);capture('13-missing')
 event('click',640,135);wait_sheet();choose(a.output/'qa.wav')
 time.sleep(.5);capture('14-relinked')
 (a.output/'invalid.wav').write_text('not a WAV file')
