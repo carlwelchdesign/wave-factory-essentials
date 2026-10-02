@@ -62,6 +62,7 @@ class Pad : public IControl {
   Pad(IRECT r,PadSampler& p,int slot):IControl(r),p_(p),slot_(slot) {}
   void Draw(IGraphics& g) override {
     auto& s=p_.View().slots[slot_]; bool selected=p_.Selected()==slot_;
+    SetTooltip(s.status.c_str());
     g.FillRoundRect(IColor(255,100,108,118),mRECT,12);
     g.FillRoundRect(IColor(255,18,24,31),mRECT.GetPadded(-3),10);
     const auto inner=mRECT.GetPadded(-7);
@@ -70,7 +71,7 @@ class Pad : public IControl {
     if(mMouseIsOver) g.DrawRoundRect(IColor(255,172,195,222),mRECT.GetPadded(-6),8,nullptr,1);
     FittedText(g,IText(16,white,kDisplayFont,EAlign::Near),s.name,IRECT(inner.L+9,inner.T+6,inner.R-35,inner.T+31));
     const float hit=p_.Hit(slot_); g.FillCircle(IColor(255,40+int(hit*100),90+int(hit*100),140+int(hit*100)),inner.R-16,inner.T+17,5);
-    std::string filename=s.path.empty()?"Drop WAV / AIFF":std::filesystem::path(s.path).filename().string();
+    std::string filename=s.path.empty()?"Drop WAV / AIFF":s.displayName.empty()?std::filesystem::path(s.path).filename().string():s.displayName;
     FittedText(g,IText(12,white,nullptr,EAlign::Near),filename,IRECT(inner.L+9,inner.T+34,inner.R-6,inner.T+54));
     auto wave=IRECT(inner.L+10,inner.T+59,inner.R-10,inner.B-29);
     for(int i=0;i<128;++i) { float x=wave.L+wave.W()*i/127.f,h=std::min(1.f,s.waveform[i])*wave.H()*.45f; g.DrawLine(selected?IColor(255,110,184,255):IColor(255,187,203,220),x,wave.MH()-h,x,wave.MH()+h,nullptr,1); }

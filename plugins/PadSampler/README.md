@@ -13,6 +13,10 @@ to a product-owned instrument; `starter-manifest.json` records its origin.
    instrument track and route the SamplePad's MIDI to it instead.
 3. Drop a mono/stereo uncompressed WAV or AIFF onto a pad, or select it and use Load.
    Click to audition at the chosen audition velocity. Click the selected name to rename.
+   In sandboxed hosts such as Logic, PadSampler copies a selected file into its
+   private Application Support storage while macOS grants access. The original
+   filename remains visible. Keep the private copy for DAW session recall, or
+   save a portable kit to collect the samples with the project.
 4. Select each slot and press MIDI Learn, then strike its hardware pad. Repeat for
    External Tip and External Ring with the splitter. Channel 0 means all channels.
    Duplicate note/channel mappings are flagged and intentionally trigger both slots.

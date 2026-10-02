@@ -12,13 +12,13 @@ if(BUILD_TESTING)
 endif()
 if(WFE_BUILD_PLUGINS)
   iplug_add_plugin(PadSampler
-    SOURCES PadSampler.cpp PadSampler.h SamplerEngine.h PadFX.h FxDSP.h IPlugFilter.h SampleLibrary.h SampleLoader.h AppleSampleLoader.cpp resources/resource.h
+    SOURCES PadSampler.cpp PadSampler.h SamplerEngine.h PadFX.h FxDSP.h IPlugFilter.h SampleLibrary.h SampleLoader.h AppleSampleLoader.cpp SampleImport.h SampleImport.mm resources/resource.h
     RESOURCES resources/img/precision-satin.png resources/img/precision-satin@2x.png
     FORMATS APP AU VST3)
   foreach(format app au vst3)
     set_target_properties(PadSampler-${format} PROPERTIES XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "12.0")
     target_include_directories(PadSampler-${format} PRIVATE ${padsampler_includes})
-    target_link_libraries(PadSampler-${format} PRIVATE "-framework AudioToolbox" "-framework CoreFoundation")
+    target_link_libraries(PadSampler-${format} PRIVATE "-framework AudioToolbox" "-framework CoreFoundation" "-framework AppKit")
   endforeach()
   add_custom_target(padsampler-formats DEPENDS PadSampler-app PadSampler-au PadSampler-vst3)
 endif()

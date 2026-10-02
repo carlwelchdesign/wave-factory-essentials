@@ -1,6 +1,7 @@
 #include "PadSampler.h"
 #include "IPlug_include_in_plug_src.h"
 #include "IControls.h"
+#include "SampleImport.h"
 #include "../shared/WaveFactoryUI.h"
 #include <filesystem>
 #if defined(APP_API)
@@ -76,10 +77,17 @@ void PadSampler::Select(int slot) {
   name_->SetStr(view_.slots[slot].name.c_str()); SyncClipMode(); GetUI()->SetAllControlsDirty();
 }
 void PadSampler::Audition(int slot) { engine_.auditions[slot].store(GetParam(kAuditionVelocity)->Int()); }
-void PadSampler::Load(int slot, const std::string& path) { library_.Load(slot, path); }
+void PadSampler::Load(int slot, const std::string& path) {
+  auto imported = padsampler::ImportDroppedSample(path);
+  if (!imported.error.empty()) library_.ImportError(slot, imported.error);
+  else library_.Load(slot, imported.path, imported.name);
+}
 void PadSampler::ChooseSample() {
-  WDL_String file, folder; int slot = selected_;
-  GetUI()->PromptForFile(file, folder, EFileAction::Open, "wav aif aiff", [this, slot](const WDL_String& path, const WDL_String&) { if (path.GetLength()) Load(slot, path.Get()); });
+  const int slot = selected_;
+  auto imported = padsampler::ChooseImportedSample();
+  if (imported.cancelled) return;
+  if (!imported.error.empty()) library_.ImportError(slot, imported.error);
+  else library_.Load(slot, imported.path, imported.name);
 }
 void PadSampler::ChooseKit(bool save) {
   WDL_String file, folder;
