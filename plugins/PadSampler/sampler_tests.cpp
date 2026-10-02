@@ -114,8 +114,16 @@ int main() {
       Engine<IPlugFilter> e;
       SampleLibrary library([&](int slot, Sample* s) { return e.Publish(slot,s); }, [&] { e.Shutdown(); });
       auto wait = [&](auto predicate) { for(int i=0;i<500;++i) { double l[64]{},r[64]{}; e.Process(l,r,64); if(predicate()) return; std::this_thread::sleep_for(std::chrono::milliseconds(5)); } throw std::runtime_error("library operation timed out"); };
-      library.Load(0,(directory/"source.wav").string());
+      library.Load(0,(directory/"source.wav").string(),"original-kick.wav");
       wait([&] { return library.View().slots[0].status.find("Ready") == 0; });
+      Require(library.View().slots[0].displayName=="original-kick.wav","import keeps the source filename visible");
+      auto state=library.Document(std::vector<double>(kParameterCount,0.));
+      Require(state["slots"][0]["displayName"]=="original-kick.wav","session state retains the source filename");
+      auto invalidName=state;invalidName["slots"][0]["displayName"]=Json::array();
+      rejected=false;try{ValidateDocument(invalidName);}catch(...){rejected=true;}
+      Require(rejected,"invalid display filename is rejected before restore");
+      library.ImportError(0,"Cannot access dropped file");
+      Require(library.View().slots[0].ready && library.View().slots[0].path==(directory/"source.wav").string(),"import permission error preserves playable sample");
       Require(library.SetTrim(0,{.02,.08}),"loaded sample accepts frame-bounded trim");
       Require(DocumentTrim(library.Document(std::vector<double>(kParameterCount,0.)),0)==ClipTrim{.02,.08},"immediate session save captures committed clip");
       library.Load(0,(directory/"missing.wav").string());
